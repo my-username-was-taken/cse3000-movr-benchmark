@@ -22,7 +22,6 @@ from proto.configuration_pb2 import Configuration, Region
 
 LOG = logging.getLogger("experiment")
 
-
 def generate_config(
     settings: dict,
     template_path: str,
@@ -102,7 +101,6 @@ def generate_config(
 
     return config_path
 
-
 def cleanup(username: str, config_path: str, image: str):
     LOG.info("STOP ANY RUNNING EXPERIMENT")
     # fmt: off
@@ -118,7 +116,6 @@ def cleanup(username: str, config_path: str, image: str):
         ]
     )
     # fmt: on
-
 
 def start_server(username: str, config_path: str, image: str, binary="slog"):
     LOG.info("START SERVERS")
@@ -140,12 +137,10 @@ def start_server(username: str, config_path: str, image: str, binary="slog"):
         "--no-pull",
     ])
 
-
 def collect_client_data(username: str, config_path: str, out_dir: str, tag: str):
     admin.main(
         ["collect_client", config_path, tag, "--user", username, "--out-dir", out_dir]
     )
-
 
 def collect_server_data(
     username: str, config_path: str, image: str, out_dir: str, tag: str
@@ -164,7 +159,6 @@ def collect_server_data(
         ]
     )
     # fmt: on
-
 
 def collect_data(
     username: str,
@@ -260,7 +254,6 @@ def combine_parameters(params, default_params, workload_settings):
     
     return combinations
     
-
 class Experiment:
     """
     A base class for an experiment.
@@ -391,7 +384,6 @@ class Experiment:
                     values,
                 )
 
-
     @classmethod
     def _run_benchmark(cls, args, image, settings, config_path, config_name, values):
         out_dir = os.path.join(
@@ -460,7 +452,6 @@ class Experiment:
         if args.dry_run:
             pprint([{ k:v for k, v in p.items() if k in tag_keys} for p in values])
 
-
 class YCSBExperiment(Experiment):
     NAME = "ycsb"
     WORKLOAD_PARAMS = [
@@ -483,10 +474,8 @@ class YCSBExperiment(Experiment):
         "mh_zipf": 1,
     }}
 
-
 class YCSB2Experiment(YCSBExperiment):
     NAME = "ycsb2"
-
 
 class YCSBLatencyExperiment(Experiment):
     NAME = "ycsb-latency"
@@ -509,7 +498,6 @@ class YCSBLatencyExperiment(Experiment):
         "mh_homes": 2,
         "mh_zipf": 1,
     }}
-
 
 class YCSBNetworkExperiment(Experiment):
     ec2_region = ""
@@ -552,7 +540,6 @@ class YCSBNetworkExperiment(Experiment):
                 PluginName="aws:RunShellScript",
             )
             print(f"Executed netem script {file_name}.sh for {instance}")
-
 
 class YCSBAsymmetryExperiment(YCSBNetworkExperiment):
     NAME = "ycsb-asym"
@@ -625,7 +612,6 @@ class YCSBAsymmetryExperiment(YCSBNetworkExperiment):
             cls.run_netem_script(cls.FILE_NAME.format(ratio))
             sleep(5)
 
-
 class YCSBJitterExperiment(YCSBNetworkExperiment):
     NAME = "ycsb-jitter"
     WORKLOAD_PARAMS = [
@@ -684,21 +670,17 @@ class YCSBJitterExperiment(YCSBNetworkExperiment):
             cls.run_netem_script(f"{cls.FILE_NAME}_{jitter}")
             sleep(5)
 
-
 class TPCCExperiment(Experiment):
     NAME = "tpcc"
     WORKLOAD_PARAMS = ["mh_zipf", "sh_only"]
-
 
 class CockroachExperiment(Experiment):
     NAME = "cockroach"
     WORKLOAD_PARAMS = ["records", "hot", "mh"]
 
-
 class CockroachLatencyExperiment(Experiment):
     NAME = "cockroach-latency"
     WORKLOAD_PARAMS = ["records", "hot", "mh"]
-
 
 if __name__ == "__main__":
 
@@ -714,45 +696,21 @@ if __name__ == "__main__":
     }
 
     parser = argparse.ArgumentParser(description="Run an experiment")
-    parser.add_argument(
-        "experiment", choices=EXPERIMENTS.keys(), help="Name of the experiment to run"
-    )
-    parser.add_argument(
-        "--settings", "-s", default="experiments/settings.json", help="Path to the settings file"
-    )
-    parser.add_argument(
-        "--out-dir", "-o", default=".", help="Path to the output directory"
-    )
-    parser.add_argument(
-        "--name", "-n", help="Override name of the experiment directory"
-    )
-    parser.add_argument(
-        "--tag-keys",
-        nargs="*",
-        help="Keys to include in the tag",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Check the settings and generate configs without running the experiment",
-    )
-    parser.add_argument(
-        "--skip-starting-server", action="store_true", help="Skip starting server step"
-    )
-    parser.add_argument(
-        "--no-client-data", action="store_true", help="Don't collect client data"
-    )
-    parser.add_argument(
-        "--no-server-data", action="store_true", help="Don't collect server data"
-    )
-    parser.add_argument("--seed", default=0, help="Seed for the random engine")
+    parser.add_argument("-e",  "experiment", choices=EXPERIMENTS.keys(), help="Name of the experiment to run")
+    parser.add_argument("-s",  "--settings", default="experiments/settings.json", help="Path to the settings file")
+    parser.add_argument("-o",  "--out-dir", default=".", help="Path to the output directory")
+    parser.add_argument("-n",  "--name", help="Override name of the experiment directory")
+    parser.add_argument(       "--tag-keys", nargs="*", help="Keys to include in the tag")
+    parser.add_argument("-d",  "--dry-run", action="store_true", help="Check the settings and generate configs without running the experiment")
+    parser.add_argument("-s",  "--skip-starting-server", action="store_true", help="Skip starting server step")
+    parser.add_argument("-nc", "--no-client-data", action="store_true", help="Don't collect client data")
+    parser.add_argument("-ns", "--no-server-data", action="store_true", help="Don't collect server data")
+    parser.add_argument("-se", "--seed", default=0, help="Seed for the random engine")
     args = parser.parse_args()
 
     if args.dry_run:
-
         def noop(cmd):
             print(f"\t{shlex.join(cmd)}\n")
-
         admin.main = noop
 
     EXPERIMENTS[args.experiment].run(args)
