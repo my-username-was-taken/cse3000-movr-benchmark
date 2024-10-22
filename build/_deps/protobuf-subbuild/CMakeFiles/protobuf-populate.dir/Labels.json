@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-build.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-download.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-install.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-test.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"protobuf-populate"
+		],
+		"name" : "protobuf-populate"
+	}
+}

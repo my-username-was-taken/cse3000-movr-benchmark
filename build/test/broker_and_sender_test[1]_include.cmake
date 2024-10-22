@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/broker_and_sender_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/broker_and_sender_test[1]_tests.cmake")
+else()
+  add_test(broker_and_sender_test_NOT_BUILT broker_and_sender_test_NOT_BUILT)
+endif()

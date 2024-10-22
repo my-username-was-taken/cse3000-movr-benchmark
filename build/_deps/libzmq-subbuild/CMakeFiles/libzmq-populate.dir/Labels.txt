@@ -1,0 +1,14 @@
+# Target labels
+ libzmq-populate
+# Source files and their labels
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate-complete.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-build.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-configure.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-download.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-install.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-mkdir.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-patch.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-test.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-update.rule

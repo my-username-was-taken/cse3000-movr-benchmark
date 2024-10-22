@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/CMakeFiles/libzmq-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-build.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-download.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-install.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-test.rule"
+		},
+		{
+			"file" : "/Users/non-admin/Documents/GitHub/Detock/build/_deps/libzmq-subbuild/libzmq-populate-prefix/src/libzmq-populate-stamp/libzmq-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"libzmq-populate"
+		],
+		"name" : "libzmq-populate"
+	}
+}

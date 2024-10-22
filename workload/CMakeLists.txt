@@ -1,0 +1,11 @@
+target_sources(slog-core
+  PRIVATE
+    basic.cpp
+    basic.h
+    cockroach.cpp
+    cockroach.h
+    remastering.cpp
+    remastering.h
+    tpcc.cpp
+    tpcc.h
+    workload.h)

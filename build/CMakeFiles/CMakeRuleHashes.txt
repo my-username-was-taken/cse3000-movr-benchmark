@@ -1,0 +1,19 @@
+# Hashes of file build rules.
+4e8657eeb264e6e0dbc3fde343f2969c /Users/non-admin/Documents/GitHub/Detock/tools/proto/configuration_pb2.py
+018eab8a716cae5a97878f8977dbfe89 /Users/non-admin/Documents/GitHub/Detock/tools/proto/modules_pb2.py
+dee95bfe40c7392551e0c3ca3faa3295 /Users/non-admin/Documents/GitHub/Detock/tools/proto/offline_data_pb2.py
+9401d6d93c568b6faa7595bd31b209aa /Users/non-admin/Documents/GitHub/Detock/tools/proto/transaction_pb2.py
+2e27367b0b64c36c6f618f77531b771a CMakeFiles/proto_py
+06c9d3f099b4ab1ca753e4b751bec954 _deps/libzmq-build/CMakeFiles/clang-format
+1334b98e143150fb35f84a4fdc054765 _deps/libzmq-build/CMakeFiles/clang-format-check
+d8db86b8c78111e63438b96e0cef1f5b _deps/libzmq-build/CMakeFiles/clang-format-diff
+ceccdd919d462972ea5891a95e872e69 proto/api.pb.h
+32786678f605632c3025d635d0beb77f proto/configuration.pb.h
+fe3028a46c6a443b5f5bddb00c4696fa proto/configuration_pb2.py
+f947907fcbbe6b7da0e7745a5956e6cd proto/internal.pb.h
+aefa6fa120aa2fdb3474f8425863618f proto/modules.pb.h
+bd4238597a929ed8fc6c100c60ab387a proto/modules_pb2.py
+9d9fb0ac21bbedf02302949129fa11f6 proto/offline_data.pb.h
+0be3ca08aa8e212e3bf19e470d08d79e proto/offline_data_pb2.py
+112ec0d1b7af03ab256fced6fea0d00c proto/transaction.pb.h
+d65f0d0f5d62a1ccc91b6efcc743c1b4 proto/transaction_pb2.py

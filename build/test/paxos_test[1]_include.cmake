@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/paxos_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/paxos_test[1]_tests.cmake")
+else()
+  add_test(paxos_test_NOT_BUILT paxos_test_NOT_BUILT)
+endif()

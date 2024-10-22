@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/e2e_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/e2e_test[1]_tests.cmake")
+else()
+  add_test(e2e_test_NOT_BUILT e2e_test_NOT_BUILT)
+endif()

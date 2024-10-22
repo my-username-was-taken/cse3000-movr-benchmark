@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/simple_remaster_manager_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/simple_remaster_manager_test[1]_tests.cmake")
+else()
+  add_test(simple_remaster_manager_test_NOT_BUILT simple_remaster_manager_test_NOT_BUILT)
+endif()

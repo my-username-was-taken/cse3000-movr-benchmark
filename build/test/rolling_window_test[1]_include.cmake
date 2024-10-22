@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/rolling_window_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/rolling_window_test[1]_tests.cmake")
+else()
+  add_test(rolling_window_test_NOT_BUILT rolling_window_test_NOT_BUILT)
+endif()

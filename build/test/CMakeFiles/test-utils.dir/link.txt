@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libtest-utils.a "CMakeFiles/test-utils.dir/test_utils.cpp.o"
+/Library/Developer/CommandLineTools/usr/bin/ranlib libtest-utils.a

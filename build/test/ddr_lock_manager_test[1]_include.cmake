@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/ddr_lock_manager_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/ddr_lock_manager_test[1]_tests.cmake")
+else()
+  add_test(ddr_lock_manager_test_NOT_BUILT ddr_lock_manager_test_NOT_BUILT)
+endif()

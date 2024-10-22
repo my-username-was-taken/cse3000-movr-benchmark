@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/c++ -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/protoc.dir/__/src/google/protobuf/compiler/main.cc.o -o protoc-3.14.0.0  libprotoc.a libprotobuf.a /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk/usr/lib/libz.tbd

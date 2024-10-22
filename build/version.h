@@ -1,0 +1,6 @@
+#pragma once
+
+#define SLOG_VERSION "1.0.1124"
+#define SLOG_VERSION_MAJOR 1
+#define SLOG_VERSION_MINOR 0
+#define SLOG_VERSION_PATCH 1124

@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libproto.a CMakeFiles/proto.dir/proto/api.pb.cc.o CMakeFiles/proto.dir/proto/configuration.pb.cc.o CMakeFiles/proto.dir/proto/internal.pb.cc.o CMakeFiles/proto.dir/proto/offline_data.pb.cc.o CMakeFiles/proto.dir/proto/modules.pb.cc.o CMakeFiles/proto.dir/proto/transaction.pb.cc.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib libproto.a

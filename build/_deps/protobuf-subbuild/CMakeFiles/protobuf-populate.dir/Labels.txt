@@ -1,0 +1,14 @@
+# Target labels
+ protobuf-populate
+# Source files and their labels
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/CMakeFiles/protobuf-populate-complete.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-build.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-configure.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-download.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-install.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-mkdir.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-patch.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-test.rule
+/Users/non-admin/Documents/GitHub/Detock/build/_deps/protobuf-subbuild/protobuf-populate-prefix/src/protobuf-populate-stamp/protobuf-populate-update.rule

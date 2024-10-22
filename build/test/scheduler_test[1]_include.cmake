@@ -1,0 +1,5 @@
+if(EXISTS "/Users/non-admin/Documents/GitHub/Detock/build/test/scheduler_test[1]_tests.cmake")
+  include("/Users/non-admin/Documents/GitHub/Detock/build/test/scheduler_test[1]_tests.cmake")
+else()
+  add_test(scheduler_test_NOT_BUILT scheduler_test_NOT_BUILT)
+endif()
