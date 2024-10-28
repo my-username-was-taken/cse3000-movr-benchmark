@@ -1,3 +1,4 @@
+# Build Stage (just for compiling and building the project). Kind of like bazel build in TF?
 FROM ubuntu:focal AS builder
     ARG CMAKE_OPTIONS
 
@@ -19,6 +20,7 @@ FROM ubuntu:focal AS builder
         && make -j$(nproc) \
         && cd ..
 
+# Runtime Stage (add anything you want in the actual running container here)
 FROM ubuntu:focal AS runner
     # If set (to anything), also create an image with tools (exclude the toolings)
     ARG INCLUDE_TOOLS
@@ -31,6 +33,8 @@ FROM ubuntu:focal AS runner
     COPY --from=builder /src/build/scheduler_benchmark .
     COPY --from=builder /src/examples/*.conf ./
     COPY --from=builder /src/tools/ tools/
+
+    RUN apt-get update && apt-get -y install netcat
 
     RUN if [ -n "$INCLUDE_TOOLS" ]; then \
         apt-get update; \

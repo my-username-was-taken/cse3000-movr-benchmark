@@ -125,6 +125,8 @@ void RunBenchmark(vector<unique_ptr<ModuleRunner>>& generators) {
   size_t last_num_restarted_txns = 0;
   auto last_print_time = std::chrono::steady_clock::now();
   timespec sigpoll_time = {.tv_sec = 0, .tv_nsec = 0};
+
+  // Main experiment is going on here! We continue untill the benchmark reports that it is finished
   for (;;) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 

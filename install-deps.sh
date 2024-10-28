@@ -174,5 +174,3 @@ if need_install 'rapidjson' 'rapidjson*'; then
   cd ..
   rm -rf $DOWNLOAD_DIR
 fi
-
-
