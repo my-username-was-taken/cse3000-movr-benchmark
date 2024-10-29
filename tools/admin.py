@@ -230,6 +230,8 @@ class AdminCommand(Command):
                     self.remote_procs.append(
                         RemoteProcess(None, pub_addr, priv_addr, reg, rep, p)
                     )
+        LOG.info('Spawned all "%s" remote processes', len(self.remote_procs))
+        print(self.remote_procs)
 
         def init_docker_client(remote_proc):
             addr = remote_proc.public_address
@@ -253,10 +255,7 @@ class AdminCommand(Command):
 
     def pull_slog_image(self, args):
         if len(self.remote_procs) == 0 or args.no_pull:
-            LOG.info(
-                'Skipped image pulling. Using the local version of "%s"',
-                args.image,
-            )
+            LOG.info('Skipped image pulling. Using the local version of "%s"', args.image)
             return
         LOG.info(
             'Pulling image "%s" for each node. ' "This might take a while.", args.image
@@ -476,7 +475,6 @@ class LogsCommand(AdminCommand):
                 print()
         else:
             print(c.logs(tail=args.tail).decode(), end="")
-
 
 class LocalCommand(AdminCommand):
 
@@ -832,7 +830,6 @@ class CollectClientCommand(AdminCommand):
             for j, c in enumerate(r.client_addresses)
         ]
         fetch_data(machines, args.user, args.tag, client_out_dir)
-
 
 class CollectServerCommand(AdminCommand):
 
