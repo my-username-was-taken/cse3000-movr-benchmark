@@ -57,16 +57,13 @@ RemoteProcess = collections.namedtuple(
     ],
 )
 
-
 def public_addresses(reg: Region):
     if reg.public_addresses:
         return reg.public_addresses
     return reg.addresses
 
-
 def private_addresses(reg: Region):
     return reg.addresses
-
 
 def cleanup_container(
     client: docker.DockerClient,
@@ -87,7 +84,6 @@ def cleanup_container(
     except:
         pass
 
-
 def get_container_status(client: docker.DockerClient, name: str) -> str:
     if client is None:
         return "network unavailable"
@@ -100,7 +96,6 @@ def get_container_status(client: docker.DockerClient, name: str) -> str:
         except:
             pass
     return "unknown"
-
 
 def wait_for_containers(containers: List[Tuple[Container, str]]) -> None:
     """
@@ -119,7 +114,6 @@ def wait_for_containers(containers: List[Tuple[Container, str]]) -> None:
                 c.name,
             )
 
-
 def parse_envs(envs: List[str]) -> Dict[str, str]:
     """Parses a list of environment variables
 
@@ -134,7 +128,6 @@ def parse_envs(envs: List[str]) -> Dict[str, str]:
         return {}
     env_var_tuples = [env.split("=") for env in envs]
     return {env[0]: env[1] for env in env_var_tuples}
-
 
 def fetch_data(machines, user, tag, out_path):
     """Fetch data from remote machines
@@ -176,7 +169,6 @@ def fetch_data(machines, user, tag, out_path):
     LOG.info("Executing commands:\n%s", "\n".join(commands))
     os.system("".join(commands) + " wait")
 
-
 class AdminCommand(Command):
     """Base class for a command.
 
@@ -196,22 +188,10 @@ class AdminCommand(Command):
         self.config_name = None
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "config",
-            nargs="?",
-            default="",
-            metavar="config_file",
-            help="Path to a config file",
-        )
-        parser.add_argument(
-            "--no-pull", action="store_true", help="Skip image pulling step"
-        )
-        parser.add_argument(
-            "--image", default=SLOG_IMG, help="Name of the Docker image to use"
-        )
-        parser.add_argument(
-            "--user", "-u", default=USER, help="Username of the target machines"
-        )
+        parser.add_argument("config", nargs="?", default="", metavar="config_file", help="Path to a config file",)
+        parser.add_argument("--no-pull", action="store_true", help="Skip image pulling step")
+        parser.add_argument("--image", default=SLOG_IMG, help="Name of the Docker image to use")
+        parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
 
     def initialize_and_do_command(self, args):
         # The initialization phase is broken down into smaller methods so
@@ -293,7 +273,6 @@ class AdminCommand(Command):
             base_url=f"ssh://{user}@{addr}",
         )
 
-
 class StartCommand(AdminCommand):
 
     NAME = "start"
@@ -301,15 +280,9 @@ class StartCommand(AdminCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument(
-            "--bin", default="slog", help="Name of the binary file to run"
-        )
-        parser.add_argument(
-            "-e",
-            nargs="*",
-            help="Environment variables to pass to the container. For example, "
-            "use -e GLOG_v=1 to turn on verbose logging at level 1.",
-        )
+        parser.add_argument("--bin", default="slog", help="Name of the binary file to run")
+        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
+            "use -e GLOG_v=1 to turn on verbose logging at level 1.")
 
     def do_command(self, args):
         if len(self.remote_procs) == 0:
@@ -358,7 +331,6 @@ class StartCommand(AdminCommand):
         with Pool(processes=len(self.remote_procs)) as pool:
             pool.map(start_container, self.remote_procs)
 
-
 class StopCommand(AdminCommand):
 
     NAME = "stop"
@@ -386,7 +358,6 @@ class StopCommand(AdminCommand):
         with Pool(processes=len(self.remote_procs)) as pool:
             pool.map(stop_container, self.remote_procs)
 
-
 class StatusCommand(AdminCommand):
 
     NAME = "status"
@@ -407,7 +378,6 @@ class StatusCommand(AdminCommand):
                 status = get_container_status(client, SLOG_CONTAINER_NAME)
                 print(f"\tPartition {part} ({addr}): {status}")
 
-
 class LogsCommand(AdminCommand):
 
     NAME = "logs"
@@ -417,32 +387,13 @@ class LogsCommand(AdminCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument(
-            "-a", metavar="ADDRESS", help="Address of the machine to stream logs from"
-        )
-        group.add_argument(
-            "-rp",
-            nargs=2,
-            type=int,
-            metavar=("REGION", "PARTITION"),
-            help="Two numbers representing the region and"
-            "partition of the machine to stream log from.",
-        )
-        parser.add_argument(
-            "-f", "--follow", action="store_true", help="Follow log output"
-        )
-        parser.add_argument(
-            "-n",
-            "--tail",
-            type=int,
-            help="Number of lines at the end of the log to output",
-        )
-        parser.add_argument(
-            "--container", help="Name of the Docker container to show logs from"
-        )
-        parser.add_argument(
-            "--client", action="store_true", help="Use the client address lists"
-        )
+        group.add_argument("-a", metavar="ADDRESS", help="Address of the machine to stream logs from")
+        group.add_argument("-rp", nargs=2, type=int, metavar=("REGION", "PARTITION"), help="Two numbers representing the region and"
+            "partition of the machine to stream log from.")
+        parser.add_argument("-f", "--follow", action="store_true", help="Follow log output")
+        parser.add_argument("-n", "--tail", type=int, help="Number of lines at the end of the log to output",)
+        parser.add_argument("--container", help="Name of the Docker container to show logs from")
+        parser.add_argument("--client", action="store_true", help="Use the client address lists")
 
     def init_remote_processes(self, args):
         """
@@ -548,26 +499,12 @@ class LocalCommand(AdminCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument(
-            "--start", action="store_true", help="Start the local cluster"
-        )
+        group.add_argument("--start", action="store_true", help="Start the local cluster")
         group.add_argument("--stop", action="store_true", help="Stop the local cluster")
-        group.add_argument(
-            "--remove",
-            action="store_true",
-            help="Remove all containers of the local cluster",
-        )
-        group.add_argument(
-            "--status",
-            action="store_true",
-            help="Get status of the local cluster",
-        )
-        parser.add_argument(
-            "-e",
-            nargs="*",
-            help="Environment variables to pass to the container. For example, "
-            "use -e GLOG_v=1 to turn on verbose logging at level 1.",
-        )
+        group.add_argument("--remove", action="store_true", help="Remove all containers of the local cluster")
+        group.add_argument("--status", action="store_true", help="Get status of the local cluster")
+        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
+            "use -e GLOG_v=1 to turn on verbose logging at level 1.")
 
     def load_config(self, args):
         super().load_config(args)
@@ -707,7 +644,6 @@ class LocalCommand(AdminCommand):
                 status = get_container_status(self.client, container_name)
                 print(f"\tAddress {a} ({addr}): {status}")
 
-
 class BenchmarkCommand(AdminCommand):
 
     NAME = "benchmark"
@@ -715,74 +651,20 @@ class BenchmarkCommand(AdminCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument(
-            "--txns",
-            type=int,
-            required=True,
-            help="Number of transactions generated per benchmark machine",
-        )
-        parser.add_argument(
-            "--duration",
-            type=int,
-            default=0,
-            help="How long the benchmark is run in seconds",
-        )
-        parser.add_argument(
-            "--tag", help="Tag of this benchmark run. Auto-generated if not provided"
-        )
-        parser.add_argument(
-            "--workload",
-            "-wl",
-            default="basic",
-            help="Name of the workload to run benchmark with",
-        )
+        parser.add_argument("--txns", type=int, required=True, help="Number of transactions generated per benchmark machine")
+        parser.add_argument("--duration", type=int, default=0, help="How long the benchmark is run in seconds",)
+        parser.add_argument("--tag", help="Tag of this benchmark run. Auto-generated if not provided")
+        parser.add_argument("--workload", "-wl", default="basic", help="Name of the workload to run benchmark with",)
         parser.add_argument("--params", default="", help="Parameters of the workload")
-        parser.add_argument(
-            "--rate",
-            type=int,
-            default=0,
-            help="Maximum number of transactions sent per second"
-        )
-        parser.add_argument(
-            "--clients",
-            type=int,
-            default=0,
-            help="Number of clients sending synchronized txns"
-        )
-        parser.add_argument(
-            "--generators",
-            type=int,
-            default=1,
-            help="Number of threads for each benchmark machine",
-        )
-        parser.add_argument(
-            "--sample",
-            type=int,
-            default=10,
-            help="Percent of sampled transactions to be written to result files",
-        )
-        parser.add_argument(
-            "--txn-profiles",
-            action="store_true",
-            help="Output the profile of the sampled txns",
-        )
-        parser.add_argument(
-            "-e",
-            nargs="*",
-            help="Environment variables to pass to the container. For example, "
-            "use -e GLOG_v=1 to turn on verbose logging at level 1.",
-        )
-        parser.add_argument(
-            "--seed",
-            type=int,
-            default=-1,
-            help="Seed for the randomization in the benchmark. Set to -1 for random seed",
-        )
-        parser.add_argument(
-            "--cleanup",
-            action="store_true",
-            help="Clean up all running benchmarks then exit",
-        )
+        parser.add_argument("--rate", type=int, default=0, help="Maximum number of transactions sent per second")
+        parser.add_argument("--clients", type=int, default=0, help="Number of clients sending synchronized txns")
+        parser.add_argument("--generators", type=int, default=1, help="Number of threads for each benchmark machine",)
+        parser.add_argument("--sample", type=int, default=10, help="Percent of sampled transactions to be written to result files",)
+        parser.add_argument("--txn-profiles", action="store_true", help="Output the profile of the sampled txns",)
+        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
+            "use -e GLOG_v=1 to turn on verbose logging at level 1.",)
+        parser.add_argument("--seed", type=int, default=-1, help="Seed for the randomization in the benchmark. Set to -1 for random seed",)
+        parser.add_argument("--cleanup", action="store_true", help="Clean up all running benchmarks then exit")
 
     def init_remote_processes(self, args):
         self.remote_procs = []
@@ -926,18 +808,10 @@ class CollectClientCommand(AdminCommand):
     HELP = "Collect benchmark data from the clients"
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "config",
-            metavar="config_file",
-            help="Path to a config file",
-        )
+        parser.add_argument("config", metavar="config_file", help="Path to a config file")
         parser.add_argument("tag", help="Tag of the benchmark data")
-        parser.add_argument(
-            "--out-dir", default="", help="Directory to put the collected data"
-        )
-        parser.add_argument(
-            "--user", "-u", default=USER, help="Username of the target machines"
-        )
+        parser.add_argument("--out-dir", default="", help="Directory to put the collected data")
+        parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
 
     def init_remote_processes(self, _):
         pass
@@ -963,18 +837,10 @@ class CollectServerCommand(AdminCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument("--tag", default="test", help="Tag of the metrics data")
-        parser.add_argument(
-            "--out-dir", default="", help="Directory to put the collected data"
-        )
+        parser.add_argument("--out-dir", default="", help="Directory to put the collected data")
         group = parser.add_mutually_exclusive_group()
-        group.add_argument(
-            "--flush-only",
-            action="store_true",
-            help="Only trigger flushing metrics to disk",
-        )
-        group.add_argument(
-            "--download-only", action="store_true", help="Only download the data files"
-        )
+        group.add_argument("--flush-only", action="store_true", help="Only trigger flushing metrics to disk")
+        group.add_argument("--download-only", action="store_true", help="Only download the data files")
 
     def init_remote_processes(self, _):
         pass
@@ -1035,31 +901,19 @@ class CollectServerCommand(AdminCommand):
         ]
         fetch_data(machines, args.user, args.tag, server_out_dir)
 
-
 class GenNetEmCommand(AdminCommand):
 
     NAME = "gen_netem"
     HELP = "Generate netem scripts for every server"
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "config",
-            metavar="config_file",
-            help="Path to a config file",
-        )
-        parser.add_argument(
-            "latency",
-            help="Path to a csv file containing a matrix of one-way latency between regions",
-        )
-        parser.add_argument(
-            "--user", "-u", default=USER, help="Username of the target machines"
-        )
+        parser.add_argument("config", metavar="config_file", help="Path to a config file")
+        parser.add_argument("latency", help="Path to a csv file containing a matrix of one-way latency between regions")
+        parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
         parser.add_argument("--out", "-o", default="netem.sh")
         parser.add_argument("--dev", default="ens5")
         parser.add_argument("--jitter", type=float, default=1, help="Delay jitter in ms")
-        parser.add_argument(
-            "--offset", type=int, default=0, help="Extra delay added to all links ms"
-        )
+        parser.add_argument("--offset", type=int, default=0, help="Extra delay added to all links ms")
         parser.add_argument("--dry-run", action="store_true")
 
     def init_remote_processes(self, _):
@@ -1123,7 +977,6 @@ class GenNetEmCommand(AdminCommand):
         if not args.dry_run:
             os.system("".join(commands) + " wait")
 
-
 def main(args):
     start_time = time.time()
     initialize_and_run_commands(
@@ -1142,7 +995,6 @@ def main(args):
         args,
     )
     LOG.info("Elapsed time: %.1f sec", time.time() - start_time)
-
 
 if __name__ == "__main__":
     import sys
