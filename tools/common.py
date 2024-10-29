@@ -4,7 +4,6 @@ import logging
 LOG_FORMAT = "%(asctime)s %(name)10s %(levelname)s: %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
-
 class Command:
     """Base class for a command"""
 
@@ -25,7 +24,6 @@ class Command:
 
     def initialize_and_do_command(self, args):
         pass
-
 
 def initialize_and_run_commands(description, commands, args=None):
     parser = argparse.ArgumentParser(description=description)

@@ -211,9 +211,16 @@ class AdminCommand(Command):
     def init_remote_processes(self, args):
         # Create a docker client for each node
         self.remote_procs = []
+        #print(self.config)
+        #print(self.config.regions)
+        #print(self.config.regions[0].addresses)
         for reg, reg_info in enumerate(self.config.regions):
+            print("new region")
+            print(reg_info)
             pub_addresses = public_addresses(reg_info)
             priv_addresses = private_addresses(reg_info)
+            print(pub_addresses)
+            print(priv_addresses)
             for rep in range(reg_info.num_replicas):
                 for p in range(self.config.num_partitions):
                     idx = rep*self.config.num_partitions + p
@@ -269,9 +276,7 @@ class AdminCommand(Command):
         """
         Gets a new Docker client for a given address.
         """
-        return docker.DockerClient(
-            base_url=f"ssh://{user}@{addr}",
-        )
+        return docker.DockerClient(base_url=f"ssh://{user}@{addr}")
 
 class StartCommand(AdminCommand):
 
@@ -979,6 +984,7 @@ class GenNetEmCommand(AdminCommand):
 
 def main(args):
     start_time = time.time()
+    LOG.info("Starting experiment at time " + str(start_time))
     initialize_and_run_commands(
         "Controls deployment and experiment of SLOG",
         [
