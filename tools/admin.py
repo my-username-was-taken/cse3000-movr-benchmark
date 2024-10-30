@@ -654,7 +654,7 @@ class BenchmarkCommand(AdminCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument("--txns", type=int, required=True, help="Number of transactions generated per benchmark machine")
+        parser.add_argument("--txns", type=int, default=10, required=True, help="Number of transactions generated per benchmark machine")
         parser.add_argument("--duration", type=int, default=0, help="How long the benchmark is run in seconds",)
         parser.add_argument("--tag", help="Tag of this benchmark run. Auto-generated if not provided")
         parser.add_argument("--workload", "-wl", default="basic", help="Name of the workload to run benchmark with",)
@@ -688,6 +688,8 @@ class BenchmarkCommand(AdminCommand):
                 self.remote_procs.append(RemoteProcess(None, addr, None, reg, reg_info.num_replicas - 1, j))
                 i += 1
                 j += 1
+
+        LOG.info('Benchmark: Spawned remote processes: "%s"', len(self.remote_procs))
 
         def init_docker_client(proc):
             client = None
