@@ -806,7 +806,6 @@ class BenchmarkCommand(AdminCommand):
         wait_for_containers(containers)
         LOG.info("Tag: %s", tag)
 
-
 class CollectClientCommand(AdminCommand):
 
     NAME = "collect_client"

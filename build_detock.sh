@@ -3,6 +3,7 @@
 IMAGE_NAME=${1:-detock}
 
 base_repo_address=omraz
+repo_name=seq_eval
 tag=latest
 
 # Create a Python 3.8 virtual environment if it doesn't already exist
@@ -22,3 +23,7 @@ pip install -r tools/requirements.txt
 push_address=${base_repo_address}/${IMAGE_NAME}:${tag}
 docker build . -t "$IMAGE_NAME" -t ${push_address}
 docker push ${push_address}
+
+# Tag and push the Detock img
+docker tag $IMAGE_NAME ${base_repo_address}/${repo_name}:${tag}
+docker push ${base_repo_address}/${repo_name}:${tag}

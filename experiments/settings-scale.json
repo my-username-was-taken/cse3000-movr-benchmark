@@ -146,7 +146,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8",
+        "image": "omraz/seq_eval:latest",
         "num_partitions": [3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
       }
     ],

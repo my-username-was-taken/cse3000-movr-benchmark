@@ -696,13 +696,13 @@ if __name__ == "__main__":
     }
 
     parser = argparse.ArgumentParser(description="Run an experiment")
-    parser.add_argument("-e",  "experiment", choices=EXPERIMENTS.keys(), help="Name of the experiment to run")
+    parser.add_argument("-e",  "--experiment", choices=EXPERIMENTS.keys(), help="Name of the experiment to run")
     parser.add_argument("-s",  "--settings", default="experiments/settings.json", help="Path to the settings file")
     parser.add_argument("-o",  "--out-dir", default=".", help="Path to the output directory")
     parser.add_argument("-n",  "--name", help="Override name of the experiment directory")
     parser.add_argument(       "--tag-keys", nargs="*", help="Keys to include in the tag")
     parser.add_argument("-d",  "--dry-run", action="store_true", help="Check the settings and generate configs without running the experiment")
-    parser.add_argument("-s",  "--skip-starting-server", action="store_true", help="Skip starting server step")
+    parser.add_argument("-sk",  "--skip-starting-server", action="store_true", help="Skip starting server step")
     parser.add_argument("-nc", "--no-client-data", action="store_true", help="Don't collect client data")
     parser.add_argument("-ns", "--no-server-data", action="store_true", help="Don't collect server data")
     parser.add_argument("-se", "--seed", default=0, help="Seed for the random engine")

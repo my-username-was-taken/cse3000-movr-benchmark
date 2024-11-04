@@ -164,7 +164,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/baseline.conf",
@@ -172,7 +172,7 @@
       },
       {
         "config": "ycsb/ddr_only.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "num_log_managers": 5,
@@ -215,7 +215,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/baseline.conf",
@@ -223,7 +223,7 @@
       },
       {
         "config": "ycsb/ddr_only.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "num_log_managers": 4,
@@ -254,7 +254,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/baseline.conf",
@@ -262,7 +262,7 @@
       },
       {
         "config": "ycsb/ddr_only.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "basic",
@@ -279,7 +279,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "basic",
@@ -295,7 +295,7 @@
     "servers": [
       {
         "config": "ycsb/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "basic",
@@ -315,7 +315,7 @@
       },
       {
         "config": "tpcc/ddr_ts.conf",
-        "image": "ctring/slog:ddr-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "tpcc",
