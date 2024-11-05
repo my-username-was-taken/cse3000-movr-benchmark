@@ -275,6 +275,7 @@ class AdminCommand(Command):
         """
         Gets a new Docker client for a given address.
         """
+        LOG.info('Launching Docker client of user %s and address %s', user, addr)
         return docker.DockerClient(base_url=f"ssh://{user}@{addr}")
 
 class StartCommand(AdminCommand):

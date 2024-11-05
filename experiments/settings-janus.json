@@ -164,7 +164,7 @@
     "servers": [
       {
         "config": "ycsb/janus.conf",
-        "image": "ctring/slog:ddr-57d2556",
+        "image": "omraz/seq_eval:latest",
         "binary": "janus"
       }
     ],
@@ -179,7 +179,7 @@
     "servers": [
       {
         "config": "ycsb/janus.conf",
-        "image": "ctring/slog:ddr-57d2556",
+        "image": "omraz/seq_eval:latest",
         "binary": "janus"
       }
     ],
@@ -197,7 +197,7 @@
     "servers": [
       {
         "config": "ycsb/janus.conf",
-        "image": "ctring/slog:ddr-57d2556",
+        "image": "omraz/seq_eval:latest",
         "binary": "janus"
       }
     ],

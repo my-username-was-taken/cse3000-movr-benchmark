@@ -168,7 +168,7 @@
       },
       {
         "config": "ycsb/baseline.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/ddr_only.conf",
@@ -219,7 +219,7 @@
       },
       {
         "config": "ycsb/baseline.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/ddr_only.conf",
@@ -258,7 +258,7 @@
       },
       {
         "config": "ycsb/baseline.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "ycsb/ddr_only.conf",
@@ -311,7 +311,7 @@
     "servers": [
       {
         "config": "tpcc/baseline.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       },
       {
         "config": "tpcc/ddr_ts.conf",

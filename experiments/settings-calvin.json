@@ -106,7 +106,7 @@
     "servers": [
       { 
         "config": "ycsb/calvin.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "basic",
@@ -121,7 +121,7 @@
     "servers": [
       {
         "config": "ycsb/calvin.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "basic",
@@ -138,7 +138,7 @@
     "servers": [
       {
         "config": "tpcc/calvin.conf",
-        "image": "ctring/slog:rma-fe9a7d8"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "tpcc",

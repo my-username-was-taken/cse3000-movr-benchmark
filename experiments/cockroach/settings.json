@@ -100,7 +100,7 @@
     "servers": [
       {
         "config": "ddr_ts.conf",
-        "image": "ctring/slog:ddr-69545bf"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "cockroach",
@@ -116,7 +116,7 @@
     "servers": [
       {
         "config": "ddr_ts.conf",
-        "image": "ctring/slog:ddr-69545bf"
+        "image": "omraz/seq_eval:latest"
       }
     ],
     "workload": "cockroach",
