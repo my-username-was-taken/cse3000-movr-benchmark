@@ -30,7 +30,7 @@ LOG = logging.getLogger("admin")
 
 SSH = 'ssh "-o StrictHostKeyChecking no"'
 
-USER = "ubuntu"
+USER = "omraz"
 CONTAINER_DATA_DIR = "/var/tmp"
 HOST_DATA_DIR = "/var/tmp"
 
