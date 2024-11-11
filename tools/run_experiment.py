@@ -22,12 +22,7 @@ from proto.configuration_pb2 import Configuration, Region
 
 LOG = logging.getLogger("experiment")
 
-def generate_config(
-    settings: dict,
-    template_path: str,
-    orig_num_partitions: int,
-    num_log_mangers: int,
-):
+def generate_config(settings: dict, template_path: str, orig_num_partitions: int, num_log_mangers: int):
     config = Configuration()
     with open(template_path, "r") as f:
         text_format.Parse(f.read(), config)
@@ -371,6 +366,8 @@ class Experiment:
                         server.get("binary", "slog")
                     )
 
+                LOG.info('Servers set up!')
+
                 config_name = os.path.splitext(os.path.basename(server["config"]))[0]
                 if num_partitions is not None:
                     config_name += f"-sz{num_partitions}"
@@ -386,9 +383,8 @@ class Experiment:
 
     @classmethod
     def _run_benchmark(cls, args, image, settings, config_path, config_name, values):
-        out_dir = os.path.join(
-            args.out_dir, cls.NAME if args.name is None else args.name
-        )
+        LOG.info('Running benchmark!')
+        out_dir = os.path.join(args.out_dir, cls.NAME if args.name is None else args.name)
         sample = settings.get("sample", 10)
         trials = settings.get("trials", 1)
         workload_settings = settings[cls.NAME]
@@ -415,7 +411,6 @@ class Experiment:
 
                 params = ",".join(f"{k}={val[k]}" for k in cls.WORKLOAD_PARAMS)
 
-                LOG.info("RUN BENCHMARK")
                 # fmt: off
                 benchmark_args = [
                     "benchmark",
@@ -435,6 +430,7 @@ class Experiment:
                     # The image has already been pulled in the cleanup step
                     "--no-pull",
                 ]
+                LOG.info("RUN BENCHMARK with config %s", benchmark_args)
                 # fmt: on
                 admin.main(benchmark_args)
 
@@ -702,7 +698,7 @@ if __name__ == "__main__":
     parser.add_argument("-n",  "--name", help="Override name of the experiment directory")
     parser.add_argument(       "--tag-keys", nargs="*", help="Keys to include in the tag")
     parser.add_argument("-d",  "--dry-run", action="store_true", help="Check the settings and generate configs without running the experiment")
-    parser.add_argument("-sk",  "--skip-starting-server", action="store_true", help="Skip starting server step")
+    parser.add_argument("-sk", "--skip-starting-server", action="store_true", help="Skip starting server step")
     parser.add_argument("-nc", "--no-client-data", action="store_true", help="Don't collect client data")
     parser.add_argument("-ns", "--no-server-data", action="store_true", help="Don't collect server data")
     parser.add_argument("-se", "--seed", default=0, help="Seed for the random engine")
