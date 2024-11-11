@@ -113,24 +113,26 @@ def cleanup(username: str, config_path: str, image: str):
     # fmt: on
 
 def start_server(username: str, config_path: str, image: str, binary="slog"):
-    LOG.info("START SERVERS")
-    admin.main([
+    start_server_cmd = [
         "start",
         config_path,
         "--user", username,
         "--image", image,
         "--bin", binary,
-    ])
+    ]
+    LOG.info("START SERVERS with command %s", start_server_cmd)
+    admin.main(start_server_cmd)
 
-    LOG.info("WAIT FOR ALL SERVERS TO BE ONLINE")
-    admin.main([
+    wait_for_servers_up_cmd = [
         "collect_server",
         config_path,
         "--user", username,
         "--image", image,
         "--flush-only",
         "--no-pull",
-    ])
+    ]
+    LOG.info("WAIT FOR ALL SERVERS TO BE ONLINE with command %s", wait_for_servers_up_cmd)
+    admin.main(wait_for_servers_up_cmd)
 
 def collect_client_data(username: str, config_path: str, out_dir: str, tag: str):
     admin.main(

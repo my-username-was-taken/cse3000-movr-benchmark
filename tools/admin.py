@@ -983,7 +983,7 @@ class GenNetEmCommand(AdminCommand):
 
 def main(args):
     start_time = time.time()
-    LOG.info("Starting experiment at time " + str(start_time))
+    LOG.info("Calling admin.py at time " + str(start_time))
     initialize_and_run_commands(
         "Controls deployment and experiment of SLOG",
         [
