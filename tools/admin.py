@@ -82,7 +82,7 @@ def cleanup_container(
             name,
         )
     except:
-        pass
+        LOG.info("No containers to clean!")
 
 def get_container_status(client: docker.DockerClient, name: str) -> str:
     if client is None:
@@ -878,15 +878,18 @@ class CollectServerCommand(AdminCommand):
                 i, address = enumerated_address
                 out_dir = os.path.join(CONTAINER_DATA_DIR, args.tag)
                 container_name = f"{SLOG_CLIENT_CONTAINER_NAME}_{i}"
+                LOG.info("Cleaning container %s (if necessary)", container_name)
                 cleanup_container(docker_client, container_name)
-                docker_client.containers.run(
-                    args.image,
-                    name=f"{SLOG_CLIENT_CONTAINER_NAME}_{i}",
-                    command=[
+                run_cmd = [
                         "/bin/sh",
                         "-c",
                         f"client metrics {out_dir} --host {address} --port {self.config.server_port}",
-                    ],
+                    ]
+                LOG.info("Running command %s", run_cmd)
+                docker_client.containers.run(
+                    args.image,
+                    name=f"{SLOG_CLIENT_CONTAINER_NAME}_{i}",
+                    command=run_cmd,
                     remove=True,
                 )
                 LOG.info("%s: Triggered flushing metrics to disk", address)
