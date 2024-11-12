@@ -21,7 +21,7 @@ alias python="python3.8"
 pip install -r tools/requirements.txt
 
 push_address=${base_repo_address}/${repo_name}:${IMAGE_NAME}
-docker build . -t "$IMAGE_NAME" -t ${push_address}
+docker build . -t ${push_address}
 #docker push ${push_address}
 
 # Tag and push the Detock img

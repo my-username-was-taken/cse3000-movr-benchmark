@@ -341,6 +341,7 @@ class Experiment:
 
         num_log_managers = workload_settings.get("num_log_managers", None)
 
+        LOG.info('Will run the following DB configs: %s', workload_settings["servers"])
         for server in workload_settings["servers"]:
             template_path = os.path.join(settings_dir, server["config"])
             # Special config that contains all server ip addresses
