@@ -31,8 +31,8 @@ LOG = logging.getLogger("admin")
 SSH = 'ssh "-o StrictHostKeyChecking no"'
 
 USER = "omraz"
-CONTAINER_DATA_DIR = "~/data"
-HOST_DATA_DIR = "~/data"
+CONTAINER_DATA_DIR = "/home/omraz/data"
+HOST_DATA_DIR = "/home/omraz/data"
 
 SLOG_IMG = "ctring/slog"
 SLOG_CONTAINER_NAME = "slog"
