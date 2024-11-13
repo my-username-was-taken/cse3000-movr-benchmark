@@ -214,10 +214,6 @@
   "tpcc": {
     "servers": [
       {
-        "config": "tpcc/baseline.conf",
-        "image": "omraz/seq_eval:slog"
-      },
-      {
         "config": "tpcc/ddr_ts.conf",
         "image": "omraz/seq_eval:latest"
       }

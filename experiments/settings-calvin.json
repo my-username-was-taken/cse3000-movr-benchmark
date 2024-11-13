@@ -3,7 +3,7 @@
   "sample": 10,
   "regions": ["global"],
   "num_replicas": {
-    "global": 1
+    "global": 4
   },
   "distance_ranking": {
     "global": [
