@@ -1,0 +1,1782 @@
+Last login: Wed Oct 30 18:35:18 on ttys006
+non-admin@Otos-MacBook-Pro ~ % ls
+Applications	Desktop		Documents	Downloads	Library		Movies		Music		Pictures	Public		ipt-brain
+non-admin@Otos-MacBook-Pro ~ % cd Documents 
+non-admin@Otos-MacBook-Pro Documents % ls
+ source ~
+2023.findings-acl.233.pdf
+ATC_Flugticket.pdf
+ATC_Pecan.pdf
+Delft University of Technology.html
+Delft University of Technology_files
+Getting_started.pdf
+GitHub
+Gmail - Wichtige Reiseinformation Glacier Express am 24.08.2024 _ Urgent Travel Information Glacier Express 24th August 2024.pdf
+OTO_MRAZ_cropped.jpg
+Sanitas_Dokumente
+Screenshot 2024-10-23 at 10.49.40.png
+Screenshot 2024-10-23 at 10.49.53.png
+Screenshot 2024-10-23 at 11.30.44.png
+Screenshot 2024-10-23 at 17.19.01.png
+Screenshot 2024-10-24 at 08.49.28.png
+Screenshot 2024-10-24 at 08.50.00.png
+Screenshot 2024-10-24 at 23.52.40.png
+Screenshot 2024-10-24 at 23.52.58.png
+Screenshot 2024-10-25 at 00.11.36.png
+Screenshot 2024-10-25 at 09.12.13.png
+Screenshot 2024-10-25 at 10.47.12.png
+Screenshot 2024-10-25 at 10.47.28.png
+Screenshot 2024-10-27 at 23.32.53.png
+Screenshot 2024-10-27 at 23.33.07.png
+Screenshot 2024-10-27 at 23.33.22.png
+Screenshot 2024-10-28 at 14.00.12 1.png
+Screenshot 2024-10-28 at 14.00.12.png
+Screenshot 2024-10-28 at 14.01.19.png
+Screenshot 2024-10-28 at 23.00.05.png
+Screenshot 2024-10-29 at 09.34.57.png
+Screenshot 2024-10-29 at 09.35.19.png
+Screenshot 2024-10-29 at 09.35.33.png
+Screenshot 2024-10-29 at 15.01.11.png
+Screenshot 2024-10-29 at 15.23.14.png
+Screenshot 2024-10-30 at 09.51.23.png
+Screenshot 2024-10-30 at 09.51.39.png
+Screenshot 2024-10-30 at 15.30.35.png
+Screenshot 2024-10-30 at 18.52.46.png
+Screenshot 2024-10-31 at 09.56.09.png
+Screenshot 2024-10-31 at 09.56.25.png
+Screenshot 2024-10-31 at 20.32.15.png
+Screenshot 2024-10-31 at 20.36.36.png
+Screenshot 2024-11-01 at 08.26.34.png
+Screenshot 2024-11-01 at 08.56.33.png
+Screenshot 2024-11-01 at 08.56.51.png
+Screenshot 2024-11-01 at 21.37.15.png
+Screenshot 2024-11-02 at 10.19.24.png
+Screenshot 2024-11-02 at 13.54.16.png
+Screenshot 2024-11-02 at 19.18.22.png
+Screenshot 2024-11-02 at 21.01.20.png
+Screenshot 2024-11-03 at 12.01.35.png
+Screenshot 2024-11-03 at 12.01.55.png
+Screenshot 2024-11-03 at 12.02.16.png
+Screenshot 2024-11-03 at 12.02.33.png
+Screenshot 2024-11-03 at 12.02.51.png
+Screenshot 2024-11-03 at 12.03.04.png
+Screenshot 2024-11-03 at 18.59.02.png
+Screenshot 2024-11-03 at 19.08.00.png
+Screenshot 2024-11-04 at 07.11.07.png
+Screenshot 2024-11-05 at 11.06.23.png
+Screenshot 2024-11-06 at 07.12.36.png
+Screenshot 2024-11-06 at 07.13.34.png
+Screenshot 2024-11-07 at 10.01.10.png
+Screenshot 2024-11-08 at 10.01.54.png
+Screenshot 2024-11-09 at 10.03.29.png
+Screenshot 2024-11-09 at 12.17.12.png
+Screenshot 2024-11-09 at 12.17.30.png
+Screenshot 2024-11-09 at 12.28.39.png
+Screenshot 2024-11-09 at 12.32.12.png
+Screenshot 2024-11-09 at 14.29.31.png
+Screenshot 2024-11-10 at 18.58.14.png
+Styx
+Swiss_Passy.pdf
+THIC_employee_08-02-2024_2.pdf
+TU_Delft
+atc_venv
+google-cloud-sdk
+ipt
+ipt-brain
+non-admin@Otos-MacBook-Pro Documents % cd TU_Delft 
+non-admin@Otos-MacBook-Pro TU_Delft % cd ../GitHub/Detock/output 
+non-admin@Otos-MacBook-Pro output % scp -r st1:/var/tmp/2024-11-04-11-24-46 ~/local/destination/
+
+scp: mkdir /Users/non-admin/local/destination/: No such file or directory
+non-admin@Otos-MacBook-Pro output % scp -r st1:/var/tmp/2024-11-04-11-24-46 .                   
+non-admin@Otos-MacBook-Pro output % ls
+2024-11-04-11-24-46
+non-admin@Otos-MacBook-Pro output % scp -r st1:/var/tmp/2024-11-04-11-35-34 .
+transactions.csv                                                                                                                                                                    100% 1977KB  16.6MB/s   00:00    
+metadata.csv                                                                                                                                                                        100%  236    20.2KB/s   00:00    
+txn_events.csv                                                                                                                                                                      100%   31     2.7KB/s   00:00    
+summary.csv                                                                                                                                                                         100%  163    11.6KB/s   00:00    
+non-admin@Otos-MacBook-Pro output % ssh st5                                  
+omraz@st5.ewi.tudelft.nl's password: 
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-171-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Mon 11 Nov 2024 05:10:37 PM CET
+
+  System load:                      0.06
+  Usage of /:                       28.0% of 98.25GB
+  Memory usage:                     2%
+  Swap usage:                       0%
+  Processes:                        2319
+  Users logged in:                  0
+  IPv4 address for br-5e0b9e4b9cae: 10.5.0.1
+  IPv4 address for br-770dd432a284: 172.29.0.1
+  IPv4 address for br-83446bc6d6a7: 192.168.49.1
+  IPv4 address for br-8fd9f1c11872: 192.168.96.1
+  IPv4 address for br-e767258d6a59: 172.28.0.1
+  IPv4 address for br-f136b798fcc7: 192.168.64.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for eno33np0:        131.180.125.57
+New release '22.04.5 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+Last login: Mon Nov 11 08:54:19 2024 from 131.180.123.195
+omraz@st5:~$ omraz@131.180.125.42
+omraz@131.180.125.42: command not found
+omraz@st5:~$ ssh omraz@131.180.125.42
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Mon 11 Nov 2024 05:10:52 PM CET
+
+  System load:                      0.05
+  Usage of /:                       32.9% of 97.87GB
+  Memory usage:                     3%
+  Swap usage:                       0%
+  Processes:                        2314
+  Users logged in:                  0
+  IPv4 address for br-c6ebdd035a7b: 172.18.0.1
+  IPv4 address for br-fdd0db13a959: 172.19.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for eno33:           131.180.125.42
+  IPv4 address for weave:           10.44.0.0
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+55 updates can be applied immediately.
+2 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+1 additional security update can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '22.04.5 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+*** System restart required ***
+Last login: Mon Nov 11 08:53:20 2024 from 131.180.123.195
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+omraz@st3:~$ logout
+Connection to 131.180.125.42 closed.
+omraz@st5:~$ cd /var/tmp/
+omraz@st5:/var/tmp$ ls -l
+total 3272
+-rw-rw-r-- 1 omraz omraz     967 Oct 29 23:27 1-1.tar.gz
+drwxr-xr-x 2 root  root     4096 Oct 30 14:41 2024-10-30-14-41-03
+drwxr-xr-x 2 root  root     4096 Oct 30 14:45 2024-10-30-14-45-47
+drwxr-xr-x 2 root  root     4096 Nov  4 11:24 2024-11-04-11-24-46
+drwxr-xr-x 2 root  root     4096 Nov  4 11:28 2024-11-04-11-28-07
+drwxr-xr-x 2 root  root     4096 Nov  4 11:30 2024-11-04-11-29-05
+drwxr-xr-x 2 root  root     4096 Nov  4 11:36 2024-11-04-11-35-34
+drwxr-xr-x 2 root  root     4096 Nov  4 12:57 2024-11-04-12-55-59
+drwxr-xr-x 2 root  root     4096 Nov  4 13:04 2024-11-04-13-03-00
+drwxr-xr-x 2 root  root     4096 Nov  4 14:02 2024-11-04-14-01-02
+drwxr-xr-x 2 root  root     4096 Nov  4 15:18 2024-11-04-15-17-29
+-rw-rw-r-- 1 omraz omraz 3239667 Nov 11 12:05 3-0.tar.gz
+drwxr-xr-x 2 root  root     4096 Nov 11 11:54 baseline-clients1
+drwxr-xr-x 2 root  root     4096 Nov 11 11:59 baseline-clients100
+drwxr-xr-x 2 root  root     4096 Nov 11 12:00 baseline-clients125
+drwxr-xr-x 2 root  root     4096 Nov 11 12:02 baseline-clients150
+drwxr-xr-x 2 root  root     4096 Nov 11 12:03 baseline-clients175
+drwxr-xr-x 2 root  root     4096 Nov 11 12:04 baseline-clients200
+drwxr-xr-x 2 root  root     4096 Nov 11 12:05 baseline-clients225
+drwxr-xr-x 2 root  root     4096 Nov 11 11:56 baseline-clients25
+drwxr-xr-x 2 root  root     4096 Nov 11 11:57 baseline-clients50
+drwxr-xr-x 2 root  root     4096 Nov 11 11:58 baseline-clients75
+-rw-r--r-- 1 root  root     1502 Nov 11 16:57 baseline.conf
+drwx------ 3 root  root     4096 Feb  8  2024 systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-logind.service-SPAADg
+drwx------ 3 root  root     4096 Feb  8  2024 systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-resolved.service-AWEF3i
+drwx------ 3 root  root     4096 Feb  8  2024 systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-timesyncd.service-AqQqfj
+drwxrwxr-x 2 omraz omraz    4096 Nov 11 16:57 test
+-rw-r--r-- 1 root  root      648 Nov  4 15:17 tu_cluster.conf
+omraz@st5:/var/tmp$ ls test/
+baseline.conf
+omraz@st5:/var/tmp$ cat test/baseline.conf 
+protocol: "tcp"
+regions {
+  addresses: "131.180.125.40"
+  public_addresses: "131.180.125.40"
+  client_addresses: "131.180.125.40"
+  distance_ranking: "1,2,3"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.41"
+  public_addresses: "131.180.125.41"
+  client_addresses: "131.180.125.41"
+  distance_ranking: "0,3,2"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.42"
+  public_addresses: "131.180.125.42"
+  client_addresses: "131.180.125.42"
+  distance_ranking: "3,0,1"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.57"
+  public_addresses: "131.180.125.57"
+  client_addresses: "131.180.125.57"
+  distance_ranking: "2,1,0"
+  num_replicas: 1
+}
+broker_ports: 2020
+server_port: 2021
+forwarder_port: 2022
+sequencer_port: 2023
+num_partitions: 1
+tpcc_partitioning {
+  warehouses: 1200
+}
+num_workers: 3
+num_log_managers: 4
+mh_orderer_batch_duration: 5
+forwarder_batch_duration: 1
+sequencer_batch_duration: 5
+sequencer_batch_size: 100
+sequencer_rrr: true
+replication_factor: 1
+enabled_events: ENTER_SERVER
+enabled_events: ENTER_LOG_MANAGER_IN_BATCH
+enabled_events: EXIT_LOG_MANAGER
+enabled_events: ENTER_SCHEDULER
+enabled_events: ENTER_SCHEDULER_LO
+enabled_events: ENTER_LOCK_MANAGER
+enabled_events: DISPATCHED
+enabled_events: DISPATCHED_FAST
+enabled_events: DISPATCHED_SLOW
+enabled_events: DISPATCHED_SLOW_DEADLOCKED
+enabled_events: ENTER_WORKER
+enabled_events: EXIT_WORKER
+enabled_events: EXIT_SERVER_TO_CLIENT
+execution_type: TPC_C
+broker_rcvbuf: 10485760
+long_sender_sndbuf: 10485760
+
+omraz@st5:/var/tmp$ docker container ls
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED         STATUS        PORTS                                                                                                                                  NAMES
+00f751df60d3   gcr.io/k8s-minikube/kicbase:v0.0.42   "/usr/local/bin/entr…"   9 months ago    Up 9 months   127.0.0.1:32787->22/tcp, 127.0.0.1:32786->2376/tcp, 127.0.0.1:32785->5000/tcp, 127.0.0.1:32784->8443/tcp, 127.0.0.1:32783->32443/tcp   minikube
+a15e378cb146   ckoutras/matching_dev                 "python3"                17 months ago   Up 4 months                                                                                                                                          ckoutras_matching
+omraz@st5:/var/tmp$ docker ps -f "status=exited"
+CONTAINER ID   IMAGE                                              COMMAND                  CREATED          STATUS                        PORTS     NAMES
+c1c8ed48a332   omraz/seq_eval:slog                                "/bin/sh -c 'echo 'p…"   18 minutes ago   Exited (134) 18 minutes ago             slog
+f20e5f170ec9   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 fervent_boyd
+d5c3565357fb   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 objective_thompson
+3b725f503a72   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 elated_einstein
+b245eb742d15   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 distracted_lamarr
+f316bf4f0adf   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 naughty_wilson
+8758e038ce81   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 thirsty_tu
+39938201bb52   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 youthful_spence
+fc83dc85aaaf   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 elated_turing
+0c9476381e31   aria_cpp-worker1                                   "bash /app/bench_ycs…"   9 months ago     Exited (0) 9 months ago                 aria_cpp-worker1-1
+8ef228e407a1   aria_cpp-worker0                                   "bash /app/bench_ycs…"   9 months ago     Exited (0) 9 months ago                 aria_cpp-worker0-1
+bc03d09dc720   aria                                               "/app/run.sh"            10 months ago    Exited (0) 10 months ago                nervous_newton
+2221279eb8bd   aria                                               "/app/run.sh"            11 months ago    Exited (130) 11 months ago              festive_shamir
+17f4c214d96a   aria                                               "/app/echo_example.sh"   11 months ago    Exited (0) 11 months ago                elastic_shamir
+74d88b8b2bb3   aria                                               "/app/echo_example.sh"   11 months ago    Exited (0) 11 months ago                cool_rubin
+7d8d31bf3603   aria                                               "/bin/bash"              11 months ago    Exited (0) 11 months ago                naughty_jennings
+cdee9d6641f7   81abb3297b4f                                       "./run.sh ./echo_exm…"   11 months ago    Exited (0) 11 months ago                gracious_austin
+21c1fdc0a55d   81abb3297b4f                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                happy_germain
+0f94612fdb00   899b0ba97bf2                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                compassionate_dirac
+934a9f6de161   899b0ba97bf2                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                youthful_wescoff
+9b8cf4bfaf0a   93bf8a821b2c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                wonderful_shaw
+a9847bc031f1   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              vigilant_varahamihira
+cb17ca6795b8   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              distracted_wiles
+73cc6b3b749b   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                inspiring_chaplygin
+239d23333af4   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              intelligent_liskov
+6ad35c123eb4   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                dreamy_cori
+2720b3358bbd   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                lucid_rosalind
+6be7c2c78d0e   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                adoring_satoshi
+354584371ec1   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                nervous_allen
+e8edf432bfab   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                thirsty_gould
+e86f7b3b72c7   91d3d8603bb6                                       "/app/bench_ycsb"        11 months ago    Exited (0) 11 months ago                practical_ramanujan
+a79d9ff6202e   91d3d8603bb6                                       "/bin/bash"              11 months ago    Exited (130) 11 months ago              charming_gould
+5c0d379612f5   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                naughty_lovelace
+e654d8eb707f   91d3d8603bb6                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                vigilant_wright
+9bb9c6cdbaee   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                distracted_beaver
+64fdc0fa9ecf   91d3d8603bb6                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                agitated_jennings
+e81870d405bb   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                condescending_montalcini
+976196b53231   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                laughing_ellis
+285bed6ef02f   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                condescending_wilson
+ac00424bb555   f901ed94067c                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                fervent_bhaskara
+6cdeafb8a50c   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (2) 11 months ago                lucid_spence
+62c85947fad4   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (127) 11 months ago              epic_ellis
+9a1926e802c5   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                dazzling_keldysh
+8e0ef1284850   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                distracted_snyder
+9396e2538797   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                upbeat_chatterjee
+1236fbda9834   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                ecstatic_hofstadter
+ce7cdedef888   2faef46c0553                                       "./run.sh "              11 months ago    Exited (1) 11 months ago                nervous_sanderson
+f28a11537607   f801663d050e                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                modest_goldwasser
+17118c7e9a20   f37b69ae1e7c                                       "/bin/sh -c 'chmod+x…"   11 months ago    Exited (127) 11 months ago              vibrant_mcclintock
+a8f42b6084a1   b6548eacb063                                       "/bin/sh -c 'apt-get…"   11 months ago    Exited (100) 11 months ago              wonderful_nash
+b27e88115fe0   b6548eacb063                                       "/bin/sh -c 'sudo ap…"   11 months ago    Exited (127) 11 months ago              optimistic_northcutt
+2aaca7d9edcb   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_1
+aa08b452707e   dev/styx-coordinator:latest                        "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_coordinator_1
+d89cde0cb17b   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_4
+645588a6f849   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_3
+3254d1ac097b   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_2
+eabae3c3390c   nginx:1.19.2-alpine                                "/docker-entrypoint.…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_nginx_1
+664823511c3c   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio3_1
+7dc8dad8b74f   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio2_1
+b8186d929c0c   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio1_1
+e71c3a90b885   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio4_1
+bc6319d2f73b   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka2_1
+50fe88f41600   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka3_1
+af5cc73d67ba   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka1_1
+57eff2ade9cd   bitnami/zookeeper:3.8.0                            "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_zookeeper_1
+a129173e40b3   ckoutras/starmie_exp                               "python3"                17 months ago    Exited (137) 9 months ago               starmie_exp
+8ac18ca37104   222a1e1cc541                                       "/bin/sh -c 'apt-get…"   20 months ago    Exited (1) 20 months ago                elated_mirzakhani
+928debfcf565   hello-world                                        "/hello"                 21 months ago    Exited (0) 21 months ago                funny_euclid
+1d829f68ed6f   hello-world                                        "/hello"                 21 months ago    Exited (0) 21 months ago                flamboyant_driscoll
+omraz@st5:/var/tmp$ docker logs c1c8ed48a332
+I1111 16:25:41.664053     7 slog.cpp:141] SLOG version: 1.0.735
+I1111 16:25:41.664085     7 slog.cpp:143] ZMQ version 4.3.3
+I1111 16:25:41.664088     7 slog.cpp:151] Counterless remaster protocol
+[libprotobuf ERROR /src/.deps/download/protobuf-3.14.0/src/google/protobuf/text_format.cc:319] Error parsing text-format slog.internal.Configuration: 2:9: Message type "slog.internal.Configuration" has no field named "regions".
+F1111 16:25:41.664336     7 configuration.cpp:46] Check failed: config_.broker_ports_size() > 0 (0 vs. 0) There must be at least one broker
+*** Check failure stack trace: ***
+    @     0x5653a7d7d3e3  google::LogMessage::Fail()
+    @     0x5653a7d7f864  google::LogMessage::SendToLog()
+    @     0x5653a7d7cedf  google::LogMessage::Flush()
+    @     0x5653a7d7fe0f  google::LogMessageFatal::~LogMessageFatal()
+    @     0x5653a7b97f20  slog::Configuration::Configuration()
+    @     0x5653a7b98755  slog::Configuration::FromFile()
+    @     0x5653a7b887d3  main
+    @     0x7f1966481083  __libc_start_main
+    @     0x5653a7b90aae  _start
+    @              (nil)  (unknown)
+Aborted (core dumped)
+omraz@st5:/var/tmp$ ls
+1-1.tar.gz           2024-11-04-12-55-59  baseline-clients125  baseline-clients75
+2024-10-30-14-41-03  2024-11-04-13-03-00  baseline-clients150  baseline.conf
+2024-10-30-14-45-47  2024-11-04-14-01-02  baseline-clients175  systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-logind.service-SPAADg
+2024-11-04-11-24-46  2024-11-04-15-17-29  baseline-clients200  systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-resolved.service-AWEF3i
+2024-11-04-11-28-07  3-0.tar.gz           baseline-clients225  systemd-private-78c7e2caeb7c49fe99a3cea9d2ff9155-systemd-timesyncd.service-AqQqfj
+2024-11-04-11-29-05  baseline-clients1    baseline-clients25   test
+2024-11-04-11-35-34  baseline-clients100  baseline-clients50   tu_cluster.conf
+omraz@st5:/var/tmp$ ls test/ -l
+total 4
+-rw-r--r-- 1 omraz omraz 1502 Nov 11 17:25 baseline.conf
+omraz@st5:/var/tmp$ cat test/baseline.conf 
+protocol: "tcp"
+regions {
+  addresses: "131.180.125.40"
+  public_addresses: "131.180.125.40"
+  client_addresses: "131.180.125.40"
+  distance_ranking: "1,2,3"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.41"
+  public_addresses: "131.180.125.41"
+  client_addresses: "131.180.125.41"
+  distance_ranking: "0,3,2"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.42"
+  public_addresses: "131.180.125.42"
+  client_addresses: "131.180.125.42"
+  distance_ranking: "3,0,1"
+  num_replicas: 1
+}
+regions {
+  addresses: "131.180.125.57"
+  public_addresses: "131.180.125.57"
+  client_addresses: "131.180.125.57"
+  distance_ranking: "2,1,0"
+  num_replicas: 1
+}
+broker_ports: 2020
+server_port: 2021
+forwarder_port: 2022
+sequencer_port: 2023
+num_partitions: 1
+tpcc_partitioning {
+  warehouses: 1200
+}
+num_workers: 3
+num_log_managers: 4
+mh_orderer_batch_duration: 5
+forwarder_batch_duration: 1
+sequencer_batch_duration: 5
+sequencer_batch_size: 100
+sequencer_rrr: true
+replication_factor: 1
+enabled_events: ENTER_SERVER
+enabled_events: ENTER_LOG_MANAGER_IN_BATCH
+enabled_events: EXIT_LOG_MANAGER
+enabled_events: ENTER_SCHEDULER
+enabled_events: ENTER_SCHEDULER_LO
+enabled_events: ENTER_LOCK_MANAGER
+enabled_events: DISPATCHED
+enabled_events: DISPATCHED_FAST
+enabled_events: DISPATCHED_SLOW
+enabled_events: DISPATCHED_SLOW_DEADLOCKED
+enabled_events: ENTER_WORKER
+enabled_events: EXIT_WORKER
+enabled_events: EXIT_SERVER_TO_CLIENT
+execution_type: TPC_C
+broker_rcvbuf: 10485760
+long_sender_sndbuf: 10485760
+
+omraz@st5:/var/tmp$ docker ps -f "status=exited"
+CONTAINER ID   IMAGE                                              COMMAND                  CREATED          STATUS                        PORTS     NAMES
+5126713b4088   omraz/seq_eval:slog                                "/bin/sh -c 'echo 'p…"   52 seconds ago   Exited (134) 52 seconds ago             slog
+f20e5f170ec9   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 fervent_boyd
+d5c3565357fb   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 objective_thompson
+3b725f503a72   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 elated_einstein
+b245eb742d15   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 distracted_lamarr
+f316bf4f0adf   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 naughty_wilson
+8758e038ce81   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 thirsty_tu
+39938201bb52   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 youthful_spence
+fc83dc85aaaf   python:3.7-alpine                                  "python3 setup.py sd…"   8 months ago     Exited (0) 8 months ago                 elated_turing
+0c9476381e31   aria_cpp-worker1                                   "bash /app/bench_ycs…"   9 months ago     Exited (0) 9 months ago                 aria_cpp-worker1-1
+8ef228e407a1   aria_cpp-worker0                                   "bash /app/bench_ycs…"   9 months ago     Exited (0) 9 months ago                 aria_cpp-worker0-1
+bc03d09dc720   aria                                               "/app/run.sh"            10 months ago    Exited (0) 10 months ago                nervous_newton
+2221279eb8bd   aria                                               "/app/run.sh"            11 months ago    Exited (130) 11 months ago              festive_shamir
+17f4c214d96a   aria                                               "/app/echo_example.sh"   11 months ago    Exited (0) 11 months ago                elastic_shamir
+74d88b8b2bb3   aria                                               "/app/echo_example.sh"   11 months ago    Exited (0) 11 months ago                cool_rubin
+7d8d31bf3603   aria                                               "/bin/bash"              11 months ago    Exited (0) 11 months ago                naughty_jennings
+cdee9d6641f7   81abb3297b4f                                       "./run.sh ./echo_exm…"   11 months ago    Exited (0) 11 months ago                gracious_austin
+21c1fdc0a55d   81abb3297b4f                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                happy_germain
+0f94612fdb00   899b0ba97bf2                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                compassionate_dirac
+934a9f6de161   899b0ba97bf2                                       "./run.sh"               11 months ago    Exited (0) 11 months ago                youthful_wescoff
+9b8cf4bfaf0a   93bf8a821b2c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                wonderful_shaw
+a9847bc031f1   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              vigilant_varahamihira
+cb17ca6795b8   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              distracted_wiles
+73cc6b3b749b   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                inspiring_chaplygin
+239d23333af4   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (139) 11 months ago              intelligent_liskov
+6ad35c123eb4   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                dreamy_cori
+2720b3358bbd   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                lucid_rosalind
+6be7c2c78d0e   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                adoring_satoshi
+354584371ec1   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                nervous_allen
+e8edf432bfab   91d3d8603bb6                                       "/app/bench_ycsb --l…"   11 months ago    Exited (0) 11 months ago                thirsty_gould
+e86f7b3b72c7   91d3d8603bb6                                       "/app/bench_ycsb"        11 months ago    Exited (0) 11 months ago                practical_ramanujan
+a79d9ff6202e   91d3d8603bb6                                       "/bin/bash"              11 months ago    Exited (130) 11 months ago              charming_gould
+5c0d379612f5   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                naughty_lovelace
+e654d8eb707f   91d3d8603bb6                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                vigilant_wright
+9bb9c6cdbaee   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                distracted_beaver
+64fdc0fa9ecf   91d3d8603bb6                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                agitated_jennings
+e81870d405bb   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                condescending_montalcini
+976196b53231   91d3d8603bb6                                       "/app/run.sh"            11 months ago    Exited (1) 11 months ago                laughing_ellis
+285bed6ef02f   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                condescending_wilson
+ac00424bb555   f901ed94067c                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                fervent_bhaskara
+6cdeafb8a50c   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (2) 11 months ago                lucid_spence
+62c85947fad4   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (127) 11 months ago              epic_ellis
+9a1926e802c5   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                dazzling_keldysh
+8e0ef1284850   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                distracted_snyder
+9396e2538797   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                upbeat_chatterjee
+1236fbda9834   f901ed94067c                                       "/bin/bash"              11 months ago    Exited (0) 11 months ago                ecstatic_hofstadter
+ce7cdedef888   2faef46c0553                                       "./run.sh "              11 months ago    Exited (1) 11 months ago                nervous_sanderson
+f28a11537607   f801663d050e                                       "./run.sh"               11 months ago    Exited (1) 11 months ago                modest_goldwasser
+17118c7e9a20   f37b69ae1e7c                                       "/bin/sh -c 'chmod+x…"   11 months ago    Exited (127) 11 months ago              vibrant_mcclintock
+a8f42b6084a1   b6548eacb063                                       "/bin/sh -c 'apt-get…"   11 months ago    Exited (100) 11 months ago              wonderful_nash
+b27e88115fe0   b6548eacb063                                       "/bin/sh -c 'sudo ap…"   11 months ago    Exited (127) 11 months ago              optimistic_northcutt
+2aaca7d9edcb   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_1
+aa08b452707e   dev/styx-coordinator:latest                        "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_coordinator_1
+d89cde0cb17b   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_4
+645588a6f849   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_3
+3254d1ac097b   dev/styx:latest                                    "/usr/local/bin/star…"   16 months ago    Exited (137) 9 months ago               sfaas-dataflow_worker_2
+eabae3c3390c   nginx:1.19.2-alpine                                "/docker-entrypoint.…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_nginx_1
+664823511c3c   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio3_1
+7dc8dad8b74f   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio2_1
+b8186d929c0c   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio1_1
+e71c3a90b885   quay.io/minio/minio:RELEASE.2023-03-09T23-16-13Z   "/usr/bin/docker-ent…"   16 months ago    Exited (0) 9 months ago                 sfaas-dataflow_minio4_1
+bc6319d2f73b   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka2_1
+50fe88f41600   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka3_1
+af5cc73d67ba   bitnami/kafka:3.2.0                                "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_kafka1_1
+57eff2ade9cd   bitnami/zookeeper:3.8.0                            "/opt/bitnami/script…"   16 months ago    Exited (143) 9 months ago               sfaas-dataflow_zookeeper_1
+a129173e40b3   ckoutras/starmie_exp                               "python3"                17 months ago    Exited (137) 9 months ago               starmie_exp
+8ac18ca37104   222a1e1cc541                                       "/bin/sh -c 'apt-get…"   20 months ago    Exited (1) 20 months ago                elated_mirzakhani
+928debfcf565   hello-world                                        "/hello"                 21 months ago    Exited (0) 21 months ago                funny_euclid
+1d829f68ed6f   hello-world                                        "/hello"                 21 months ago    Exited (0) 21 months ago                flamboyant_driscoll
+omraz@st5:/var/tmp$ docker logs 5126713b4088
+I1111 17:06:31.807499     7 slog.cpp:141] SLOG version: 1.0.735
+I1111 17:06:31.807529     7 slog.cpp:143] ZMQ version 4.3.3
+I1111 17:06:31.807531     7 slog.cpp:151] Counterless remaster protocol
+[libprotobuf ERROR /src/.deps/download/protobuf-3.14.0/src/google/protobuf/text_format.cc:319] Error parsing text-format slog.internal.Configuration: 2:9: Message type "slog.internal.Configuration" has no field named "regions".
+F1111 17:06:31.807776     7 configuration.cpp:46] Check failed: config_.broker_ports_size() > 0 (0 vs. 0) There must be at least one broker
+*** Check failure stack trace: ***
+    @     0x558bff1fd3e3  google::LogMessage::Fail()
+    @     0x558bff1ff864  google::LogMessage::SendToLog()
+    @     0x558bff1fcedf  google::LogMessage::Flush()
+    @     0x558bff1ffe0f  google::LogMessageFatal::~LogMessageFatal()
+    @     0x558bff017f20  slog::Configuration::Configuration()
+    @     0x558bff018755  slog::Configuration::FromFile()
+    @     0x558bff0087d3  main
+    @     0x7f635f2c9083  __libc_start_main
+    @     0x558bff010aae  _start
+    @              (nil)  (unknown)
+Aborted (core dumped)
+omraz@st5:/var/tmp$ docker ps -f "status=exited"Connection to linux-bastion.tudelft.nl closed by remote host.
+client_loop: send disconnect: Broken pipe
+Connection to st5.ewi.tudelft.nl closed by remote host.
+Connection to st5.ewi.tudelft.nl closed.
+non-admin@Otos-MacBook-Pro output % ssh st1                                  
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Tue 12 Nov 2024 04:24:04 PM CET
+
+  System load:                      0.01
+  Usage of /:                       28.9% of 97.87GB
+  Memory usage:                     4%
+  Swap usage:                       0%
+  Processes:                        2326
+  Users logged in:                  1
+  IPv4 address for br-637ab75ff7e0: 172.27.0.1
+  IPv4 address for br-8628ef18e5f7: 172.28.5.0
+  IPv4 address for br-a4119059ce41: 192.168.49.1
+  IPv4 address for br-ac6795a68298: 172.18.0.1
+  IPv4 address for br-b8a24e631289: 172.22.0.1
+  IPv4 address for br-cf49b7003347: 172.19.0.1
+  IPv4 address for br-f049a5f87f67: 172.21.0.1
+  IPv4 address for br-f1d51d61b762: 172.20.0.1
+  IPv4 address for br-f6f0af975d2e: 172.25.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for docker_gwbridge: 172.23.0.1
+  IPv4 address for eno33:           131.180.125.40
+  IPv4 address for weave:           10.36.0.0
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+62 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+7 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '22.04.5 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+*** System restart required ***
+Last login: Tue Nov 12 14:59:33 2024 from 131.180.123.195
+omraz@st1:~$ cd Detock/
+omraz@st1:~/Detock$ source build_detock/bin/activate
+(build_detock) omraz@st1:~/Detock$ git pull
+Username for 'https://github.com': omrazCZ
+Password for 'https://omrazCZ@github.com': 
+remote: Enumerating objects: 7, done.
+remote: Counting objects: 100% (7/7), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 4 (delta 3), reused 4 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 337 bytes | 337.00 KiB/s, done.
+From https://github.com/delftdata/Detock
+   af88358..85f7d02  main       -> origin/main
+Updating af88358..85f7d02
+Fast-forward
+ experiments/settings-calvin.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+(build_detock) omraz@st1:~/Detock$ 
+(build_detock) omraz@st1:~/Detock$ python tools/run_experiment.py --experiment tpcc -s experiments/settings-calvin.json
+2024-11-12 16:24:47,946 experiment INFO: Will run the following DB configs: [{'config': 'tpcc/calvin.conf', 'image': 'omraz/seq_eval:latest'}]
+2024-11-12 16:24:47,949 experiment INFO: ============ GENERATED CONFIG "/tmp/calvin.conf" ============
+2024-11-12 16:24:47,949 experiment INFO: STOP ANY RUNNING EXPERIMENT
+2024-11-12 16:24:47,949      admin INFO: Calling admin.py at time 1731425087.9493496
+2024-11-12 16:24:47,953      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-12 16:24:47,957      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-12 16:24:47,957      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-12 16:24:47,958      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-12 16:24:47,958      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-12 16:24:48,639      admin INFO: Connected to 131.180.125.57
+2024-11-12 16:24:48,729      admin INFO: Connected to 131.180.125.40
+2024-11-12 16:24:48,910      admin INFO: Connected to 131.180.125.42
+2024-11-12 16:24:48,990      admin INFO: Connected to 131.180.125.41
+2024-11-12 16:24:48,992      admin INFO: Pulling image "omraz/seq_eval:latest" for each node. This might take a while.
+2024-11-12 16:24:53,052      admin INFO: No containers to clean!
+2024-11-12 16:24:53,054      admin INFO: No containers to clean!
+2024-11-12 16:24:53,057      admin INFO: No containers to clean!
+2024-11-12 16:24:53,061      admin INFO: No containers to clean!
+2024-11-12 16:24:53,074      admin INFO: No containers to clean!
+2024-11-12 16:24:53,086      admin INFO: No containers to clean!
+2024-11-12 16:24:53,090      admin INFO: No containers to clean!
+2024-11-12 16:24:53,093      admin INFO: No containers to clean!
+2024-11-12 16:24:53,412      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-12 16:24:53,494      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-12 16:24:53,512      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-12 16:24:53,529      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-12 16:24:53,530      admin INFO: Delay per client: {'131.180.125.40': '0.41', '131.180.125.41': '0.43', '131.180.125.42': '0.42', '131.180.125.57': '0.34'}
+2024-11-12 16:24:53,531      admin INFO: Elapsed time: 5.6 sec
+2024-11-12 16:24:53,531 experiment INFO: START SERVERS with command ['start', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--bin', 'slog']
+2024-11-12 16:24:53,531      admin INFO: Calling admin.py at time 1731425093.5312955
+new region
+addresses: "131.180.125.40"
+addresses: "131.180.125.41"
+addresses: "131.180.125.42"
+addresses: "131.180.125.57"
+public_addresses: "131.180.125.40"
+public_addresses: "131.180.125.41"
+public_addresses: "131.180.125.42"
+public_addresses: "131.180.125.57"
+client_addresses: "131.180.125.40"
+client_addresses: "131.180.125.41"
+client_addresses: "131.180.125.42"
+client_addresses: "131.180.125.57"
+distance_ranking: "1,2,3,0,2,3,0,1,3,0,1,2"
+num_replicas: 1
+
+['131.180.125.40', '131.180.125.41', '131.180.125.42', '131.180.125.57']
+['131.180.125.40', '131.180.125.41', '131.180.125.42', '131.180.125.57']
+2024-11-12 16:24:53,540      admin INFO: Spawned all "4" remote processes
+[RemoteProcess(docker_client=None, public_address='131.180.125.40', private_address='131.180.125.40', region=0, replica=0, partition=0), RemoteProcess(docker_client=None, public_address='131.180.125.41', private_address='131.180.125.41', region=0, replica=0, partition=1), RemoteProcess(docker_client=None, public_address='131.180.125.42', private_address='131.180.125.42', region=0, replica=0, partition=2), RemoteProcess(docker_client=None, public_address='131.180.125.57', private_address='131.180.125.57', region=0, replica=0, partition=3)]
+2024-11-12 16:24:53,542      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-12 16:24:53,542      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-12 16:24:53,543      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-12 16:24:53,544      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-12 16:24:54,175      admin INFO: Connected to 131.180.125.57
+2024-11-12 16:24:54,510      admin INFO: Connected to 131.180.125.40
+2024-11-12 16:24:54,528      admin INFO: Connected to 131.180.125.41
+2024-11-12 16:24:54,539      admin INFO: Connected to 131.180.125.42
+2024-11-12 16:24:54,541      admin INFO: Pulling image "omraz/seq_eval:latest" for each node. This might take a while.
+2024-11-12 16:24:58,615      admin INFO: 131.180.125.57: Cleaned up container "slog"
+2024-11-12 16:24:58,625      admin INFO: 131.180.125.40: Cleaned up container "slog"
+2024-11-12 16:24:58,630      admin INFO: 131.180.125.42: Cleaned up container "slog"
+2024-11-12 16:24:58,632      admin INFO: 131.180.125.41: Cleaned up container "slog"
+2024-11-12 16:24:58,832      admin INFO: 131.180.125.57: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.57 --data-dir /var/tmp 
+2024-11-12 16:24:58,879      admin INFO: 131.180.125.42: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.42 --data-dir /var/tmp 
+2024-11-12 16:24:58,902      admin INFO: 131.180.125.40: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.40 --data-dir /var/tmp 
+2024-11-12 16:24:58,924      admin INFO: 131.180.125.41: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.41 --data-dir /var/tmp 
+2024-11-12 16:24:58,926      admin INFO: Elapsed time: 5.4 sec
+2024-11-12 16:24:58,926 experiment INFO: WAIT FOR ALL SERVERS TO BE ONLINE with command ['collect_server', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--flush-only', '--no-pull']
+2024-11-12 16:24:58,926      admin INFO: Calling admin.py at time 1731425098.9263968
+2024-11-12 16:24:58,934      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+2024-11-12 16:24:59,755      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-12 16:24:59,756      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-12 16:24:59,758      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-12 16:24:59,761      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-12 16:25:00,442      admin INFO: Cleaned up container "slog_client_2"
+2024-11-12 16:25:00,443      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.42 --port 2021']
+2024-11-12 16:25:00,521      admin INFO: Cleaned up container "slog_client_3"
+2024-11-12 16:25:00,521      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.57 --port 2021']
+2024-11-12 16:25:00,628      admin INFO: Cleaned up container "slog_client_0"
+2024-11-12 16:25:00,629      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.40 --port 2021']
+2024-11-12 16:25:00,741      admin INFO: Cleaned up container "slog_client_1"
+2024-11-12 16:25:00,741      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.41 --port 2021']
+Connection to linux-bastion.tudelft.nl closed by remote host.
+client_loop: send disconnect: Broken pipe
+Connection to st1.ewi.tudelft.nl closed by remote host.
+Connection to st1.ewi.tudelft.nl closed.
+client_loop: send disconnect: Broken pipe
+non-admin@Otos-MacBook-Pro output % ssh st1
+omraz@linux-bastion.tudelft.nl's password: 
+
+^C
+non-admin@Otos-MacBook-Pro output % 
+non-admin@Otos-MacBook-Pro output % ssh st1
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Wed 13 Nov 2024 09:29:54 AM CET
+
+  System load:                      0.02
+  Usage of /:                       28.9% of 97.87GB
+  Memory usage:                     13%
+  Swap usage:                       0%
+  Processes:                        2333
+  Users logged in:                  0
+  IPv4 address for br-637ab75ff7e0: 172.27.0.1
+  IPv4 address for br-8628ef18e5f7: 172.28.5.0
+  IPv4 address for br-a4119059ce41: 192.168.49.1
+  IPv4 address for br-ac6795a68298: 172.18.0.1
+  IPv4 address for br-b8a24e631289: 172.22.0.1
+  IPv4 address for br-cf49b7003347: 172.19.0.1
+  IPv4 address for br-f049a5f87f67: 172.21.0.1
+  IPv4 address for br-f1d51d61b762: 172.20.0.1
+  IPv4 address for br-f6f0af975d2e: 172.25.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for docker_gwbridge: 172.23.0.1
+  IPv4 address for eno33:           131.180.125.40
+  IPv4 address for weave:           10.36.0.0
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+62 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+7 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+*** System restart required ***
+Last login: Tue Nov 12 16:24:05 2024 from 131.180.123.195
+omraz@st1:~$ cd Detock/
+omraz@st1:~/Detock$ source build_detock/bin/activate
+(build_detock) omraz@st1:~/Detock$ python3 tools/admin.py status --image omraz/seq_eval:latest
+2024-11-13 09:36:17,964      admin INFO: Calling admin.py at time 1731486977.9642773
+Traceback (most recent call last):
+  File "tools/admin.py", line 1010, in <module>
+    main(sys.argv[1:])
+  File "tools/admin.py", line 990, in main
+    initialize_and_run_commands(
+  File "/home/omraz/Detock/tools/common.py", line 37, in initialize_and_run_commands
+    parsed_args.run(parsed_args)
+  File "tools/admin.py", line 199, in initialize_and_do_command
+    self.load_config(args)
+  File "tools/admin.py", line 207, in load_config
+    with open(args.config, "r") as f:
+FileNotFoundError: [Errno 2] No such file or directory: ''
+(build_detock) omraz@st1:~/Detock$ python3 tools/admin.py status --image omraz/seq_eval:latest ex
+examples/    execution/   experiments/ 
+(build_detock) omraz@st1:~/Detock$ python3 tools/admin.py status --image omraz/seq_eval:latest experiments/tpcc/calvin.conf 
+2024-11-13 09:37:21,363      admin INFO: Calling admin.py at time 1731487041.363514
+2024-11-13 09:37:21,368      admin INFO: Spawned all "0" remote processes
+[]
+Traceback (most recent call last):
+  File "tools/admin.py", line 1010, in <module>
+    main(sys.argv[1:])
+  File "tools/admin.py", line 990, in main
+    initialize_and_run_commands(
+  File "/home/omraz/Detock/tools/common.py", line 37, in initialize_and_run_commands
+    parsed_args.run(parsed_args)
+  File "tools/admin.py", line 200, in initialize_and_do_command
+    self.init_remote_processes(args)
+  File "tools/admin.py", line 253, in init_remote_processes
+    with Pool(processes=len(self.remote_procs)) as pool:
+  File "/usr/lib/python3.8/multiprocessing/dummy/__init__.py", line 124, in Pool
+    return ThreadPool(processes, initializer, initargs)
+  File "/usr/lib/python3.8/multiprocessing/pool.py", line 925, in __init__
+    Pool.__init__(self, processes, initializer, initargs)
+  File "/usr/lib/python3.8/multiprocessing/pool.py", line 205, in __init__
+    raise ValueError("Number of processes must be at least 1")
+ValueError: Number of processes must be at least 1
+(build_detock) omraz@st1:~/Detock$ docker container ls
+CONTAINER ID   IMAGE                   COMMAND                  CREATED        STATUS        PORTS     NAMES
+8a1c188cabdb   omraz/seq_eval:latest   "/bin/sh -c 'echo 'p…"   17 hours ago   Up 17 hours             slog
+4f1bc1ed8cc3   tpcc_benchmark_image    "/bin/sh -c 'bash -c…"   8 weeks ago    Up 8 weeks              tpc_container
+(build_detock) omraz@st1:~/Detock$ python3 tools/admin.py stop --image omraz/seq_eval:latest experiments/tpcc/calvin.conf 
+2024-11-13 09:37:55,162      admin INFO: Calling admin.py at time 1731487075.1619768
+2024-11-13 09:37:55,166      admin INFO: Spawned all "0" remote processes
+[]
+Traceback (most recent call last):
+  File "tools/admin.py", line 1010, in <module>
+    main(sys.argv[1:])
+  File "tools/admin.py", line 990, in main
+    initialize_and_run_commands(
+  File "/home/omraz/Detock/tools/common.py", line 37, in initialize_and_run_commands
+    parsed_args.run(parsed_args)
+  File "tools/admin.py", line 200, in initialize_and_do_command
+    self.init_remote_processes(args)
+  File "tools/admin.py", line 253, in init_remote_processes
+    with Pool(processes=len(self.remote_procs)) as pool:
+  File "/usr/lib/python3.8/multiprocessing/dummy/__init__.py", line 124, in Pool
+    return ThreadPool(processes, initializer, initargs)
+  File "/usr/lib/python3.8/multiprocessing/pool.py", line 925, in __init__
+    Pool.__init__(self, processes, initializer, initargs)
+  File "/usr/lib/python3.8/multiprocessing/pool.py", line 205, in __init__
+    raise ValueError("Number of processes must be at least 1")
+ValueError: Number of processes must be at least 1
+(build_detock) omraz@st1:~/Detock$ python tools/run_experiment.py --experiment tpcc -s experiments/settings-calvin.json
+2024-11-13 09:38:02,114 experiment INFO: Will run the following DB configs: [{'config': 'tpcc/calvin.conf', 'image': 'omraz/seq_eval:latest'}]
+2024-11-13 09:38:02,117 experiment INFO: ============ GENERATED CONFIG "/tmp/calvin.conf" ============
+2024-11-13 09:38:02,117 experiment INFO: STOP ANY RUNNING EXPERIMENT
+2024-11-13 09:38:02,117      admin INFO: Calling admin.py at time 1731487082.1171522
+2024-11-13 09:38:02,121      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:38:02,125      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:38:02,126      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:38:02,126      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:38:02,127      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:38:02,811      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:38:02,861      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:38:03,177      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:38:03,279      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:38:03,281      admin INFO: Pulling image "omraz/seq_eval:latest" for each node. This might take a while.
+2024-11-13 09:38:08,254      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:38:08,257      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:38:08,261      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:38:08,267      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:38:08,278      admin INFO: No containers to clean!
+2024-11-13 09:38:08,285      admin INFO: No containers to clean!
+2024-11-13 09:38:08,290      admin INFO: No containers to clean!
+2024-11-13 09:38:08,295      admin INFO: No containers to clean!
+2024-11-13 09:38:08,583      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:38:08,690      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:38:08,734      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:38:08,739      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:38:08,741      admin INFO: Delay per client: {'131.180.125.40': '0.44', '131.180.125.41': '0.41', '131.180.125.42': '0.44', '131.180.125.57': '0.30'}
+2024-11-13 09:38:08,741      admin INFO: Elapsed time: 6.6 sec
+2024-11-13 09:38:08,741 experiment INFO: START SERVERS with command ['start', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--bin', 'slog']
+2024-11-13 09:38:08,742      admin INFO: Calling admin.py at time 1731487088.7419934
+new region
+addresses: "131.180.125.40"
+addresses: "131.180.125.41"
+addresses: "131.180.125.42"
+addresses: "131.180.125.57"
+public_addresses: "131.180.125.40"
+public_addresses: "131.180.125.41"
+public_addresses: "131.180.125.42"
+public_addresses: "131.180.125.57"
+client_addresses: "131.180.125.40"
+client_addresses: "131.180.125.41"
+client_addresses: "131.180.125.42"
+client_addresses: "131.180.125.57"
+distance_ranking: "1,2,3,0,2,3,0,1,3,0,1,2"
+num_replicas: 1
+
+['131.180.125.40', '131.180.125.41', '131.180.125.42', '131.180.125.57']
+['131.180.125.40', '131.180.125.41', '131.180.125.42', '131.180.125.57']
+2024-11-13 09:38:08,749      admin INFO: Spawned all "4" remote processes
+[RemoteProcess(docker_client=None, public_address='131.180.125.40', private_address='131.180.125.40', region=0, replica=0, partition=0), RemoteProcess(docker_client=None, public_address='131.180.125.41', private_address='131.180.125.41', region=0, replica=0, partition=1), RemoteProcess(docker_client=None, public_address='131.180.125.42', private_address='131.180.125.42', region=0, replica=0, partition=2), RemoteProcess(docker_client=None, public_address='131.180.125.57', private_address='131.180.125.57', region=0, replica=0, partition=3)]
+2024-11-13 09:38:08,752      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:38:08,752      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:38:08,753      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:38:08,754      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:38:09,366      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:38:09,554      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:38:09,747      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:38:10,129      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:38:10,131      admin INFO: Pulling image "omraz/seq_eval:latest" for each node. This might take a while.
+2024-11-13 09:38:14,976      admin INFO: 131.180.125.57: Cleaned up container "slog"
+2024-11-13 09:38:14,994      admin INFO: 131.180.125.41: Cleaned up container "slog"
+2024-11-13 09:38:15,286      admin INFO: 131.180.125.42: Cleaned up container "slog"
+2024-11-13 09:38:15,771      admin INFO: 131.180.125.40: Cleaned up container "slog"
+2024-11-13 09:38:15,954      admin INFO: 131.180.125.57: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.57 --data-dir /var/tmp 
+2024-11-13 09:38:16,026      admin INFO: 131.180.125.41: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.41 --data-dir /var/tmp 
+2024-11-13 09:38:16,029      admin INFO: 131.180.125.42: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.42 --data-dir /var/tmp 
+2024-11-13 09:38:16,085      admin INFO: 131.180.125.40: Synced config and ran command: slog --config /var/tmp/calvin.conf --address 131.180.125.40 --data-dir /var/tmp 
+2024-11-13 09:38:16,088      admin INFO: Elapsed time: 7.3 sec
+2024-11-13 09:38:16,088 experiment INFO: WAIT FOR ALL SERVERS TO BE ONLINE with command ['collect_server', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--flush-only', '--no-pull']
+2024-11-13 09:38:16,088      admin INFO: Calling admin.py at time 1731487096.0884242
+2024-11-13 09:38:16,097      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/test && mkdir -p /var/tmp/test && cp /var/tmp/calvin.conf /var/tmp/test") & 
+2024-11-13 09:38:16,912      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:38:16,914      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:38:16,916      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:38:16,918      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:38:16,922      admin INFO: No containers to clean!
+2024-11-13 09:38:16,923      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.42 --port 2021']
+2024-11-13 09:38:16,925      admin INFO: No containers to clean!
+2024-11-13 09:38:16,925      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.41 --port 2021']
+2024-11-13 09:38:16,927      admin INFO: No containers to clean!
+2024-11-13 09:38:16,927      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.40 --port 2021']
+2024-11-13 09:38:16,930      admin INFO: No containers to clean!
+2024-11-13 09:38:16,930      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/test --host 131.180.125.57 --port 2021']
+2024-11-13 09:45:36,716      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:45:36,850      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:45:46,800      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:45:51,660      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:45:51,665      admin INFO: Elapsed time: 455.6 sec
+2024-11-13 09:45:51,665 experiment INFO: Servers set up!
+2024-11-13 09:45:51,665 experiment INFO: Running benchmark!
+2024-11-13 09:45:51,665 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '50', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients50', '--no-pull']
+2024-11-13 09:45:51,665      admin INFO: Calling admin.py at time 1731487551.665736
+2024-11-13 09:45:51,673      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:45:51,676      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:45:51,677      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:45:51,678      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:45:51,679      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:45:52,291      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:45:52,440      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:45:52,496      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:45:52,520      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:45:52,522      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:45:52,557      admin INFO: No containers to clean!
+2024-11-13 09:45:52,564      admin INFO: No containers to clean!
+2024-11-13 09:45:52,568      admin INFO: No containers to clean!
+2024-11-13 09:45:52,571      admin INFO: No containers to clean!
+2024-11-13 09:45:52,579      admin INFO: No containers to clean!
+2024-11-13 09:45:52,598      admin INFO: No containers to clean!
+2024-11-13 09:45:52,602      admin INFO: No containers to clean!
+2024-11-13 09:45:52,606      admin INFO: No containers to clean!
+2024-11-13 09:45:52,901      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:45:53,005      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:45:53,021      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:45:53,044      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:45:53,046      admin INFO: Delay per client: {'131.180.125.40': '0.44', '131.180.125.41': '0.42', '131.180.125.42': '0.40', '131.180.125.57': '0.32'}
+2024-11-13 09:45:53,049      admin INFO: 131.180.125.40: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:45:53,049      admin INFO: 131.180.125.41: Delay for 0.014030 seconds before running the benchmark
+2024-11-13 09:45:53,050      admin INFO: 131.180.125.42: Delay for 0.033557 seconds before running the benchmark
+2024-11-13 09:45:53,050      admin INFO: 131.180.125.57: Delay for 0.115166 seconds before running the benchmark
+2024-11-13 09:45:53,302      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients50 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 50 
+2024-11-13 09:45:53,303      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients50 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 50 
+2024-11-13 09:45:53,326      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients50 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 50 
+2024-11-13 09:45:53,375      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients50 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 50 
+2024-11-13 09:45:53,643      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:45:53,673      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:45:53,706      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:45:53,730      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:45:53,730      admin INFO: Tag: calvin-clients50
+2024-11-13 09:45:53,730      admin INFO: Elapsed time: 2.1 sec
+2024-11-13 09:45:53,730 experiment INFO: COLLECT DATA
+2024-11-13 09:45:53,739      admin INFO: Calling admin.py at time 1731487553.7389174
+2024-11-13 09:45:53,740      admin INFO: Calling admin.py at time 1731487553.7400432
+2024-11-13 09:45:53,746      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients50 && mkdir -p /var/tmp/calvin-clients50 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients50") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients50 && mkdir -p /var/tmp/calvin-clients50 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients50") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients50 && mkdir -p /var/tmp/calvin-clients50 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients50") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients50 && mkdir -p /var/tmp/calvin-clients50 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients50") & 
+2024-11-13 09:45:53,750      admin INFO: Removed existing directory: ./tpcc/calvin-clients50/client
+2024-11-13 09:45:53,750      admin INFO: Created directory: ./tpcc/calvin-clients50/client
+2024-11-13 09:45:53,750      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients50/client && tar -xzf ./tpcc/calvin-clients50/client/0-0.tar.gz -C ./tpcc/calvin-clients50/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients50/client && tar -xzf ./tpcc/calvin-clients50/client/0-1.tar.gz -C ./tpcc/calvin-clients50/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients50/client && tar -xzf ./tpcc/calvin-clients50/client/0-2.tar.gz -C ./tpcc/calvin-clients50/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients50/client && tar -xzf ./tpcc/calvin-clients50/client/0-3.tar.gz -C ./tpcc/calvin-clients50/client/0-3) & 
+rm: cannot remove '/var/tmp/calvin-clients50/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients50/summary.csv': Permission denied
+2024-11-13 09:45:54,800      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:45:54,802      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:45:54,804      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:45:54,807      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:45:54,808      admin INFO: No containers to clean!
+2024-11-13 09:45:54,810      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients50 --host 131.180.125.42 --port 2021']
+2024-11-13 09:45:54,812      admin INFO: No containers to clean!
+2024-11-13 09:45:54,812      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients50 --host 131.180.125.41 --port 2021']
+2024-11-13 09:45:54,815      admin INFO: No containers to clean!
+2024-11-13 09:45:54,815      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients50 --host 131.180.125.40 --port 2021']
+2024-11-13 09:45:54,816      admin INFO: No containers to clean!
+2024-11-13 09:45:54,818      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients50 --host 131.180.125.57 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 265 bytes  616.00 bytes/sec
+total size is 177  speedup is 0.57
+0-1.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 182  speedup is 0.58
+0-2.tar.gz
+
+sent 43 bytes  received 268 bytes  207.33 bytes/sec
+total size is 180  speedup is 0.58
+0-0.tar.gz
+
+sent 43 bytes  received 265 bytes  205.33 bytes/sec
+total size is 177  speedup is 0.57
+2024-11-13 09:45:55,615      admin INFO: Elapsed time: 1.9 sec
+2024-11-13 09:45:56,102      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:45:56,338      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:45:56,491      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:45:56,622      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:45:56,626      admin INFO: Removed existing directory: ./tpcc/calvin-clients50/server
+2024-11-13 09:45:56,627      admin INFO: Created directory: ./tpcc/calvin-clients50/server
+2024-11-13 09:45:56,627      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients50/server && tar -xzf ./tpcc/calvin-clients50/server/0-0.tar.gz -C ./tpcc/calvin-clients50/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients50/server && tar -xzf ./tpcc/calvin-clients50/server/0-1.tar.gz -C ./tpcc/calvin-clients50/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients50/server && tar -xzf ./tpcc/calvin-clients50/server/0-2.tar.gz -C ./tpcc/calvin-clients50/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients50 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients50/server && tar -xzf ./tpcc/calvin-clients50/server/0-3.tar.gz -C ./tpcc/calvin-clients50/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 815 bytes  1.72K bytes/sec
+total size is 728  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 818 bytes  574.00 bytes/sec
+total size is 730  speedup is 0.85
+0-2.tar.gz
+
+sent 43 bytes  received 813 bytes  570.67 bytes/sec
+total size is 725  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 817 bytes  573.33 bytes/sec
+total size is 729  speedup is 0.85
+2024-11-13 09:45:58,230      admin INFO: Elapsed time: 4.5 sec
+2024-11-13 09:45:58,234 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '75', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients75', '--no-pull']
+2024-11-13 09:45:58,235      admin INFO: Calling admin.py at time 1731487558.2352993
+2024-11-13 09:45:58,246      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:45:58,250      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:45:58,251      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:45:58,252      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:45:58,254      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:45:58,876      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:45:59,013      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:45:59,034      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:45:59,067      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:45:59,069      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:45:59,136      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:45:59,150      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:45:59,153      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:45:59,163      admin INFO: No containers to clean!
+2024-11-13 09:45:59,180      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:45:59,183      admin INFO: No containers to clean!
+2024-11-13 09:45:59,184      admin INFO: No containers to clean!
+2024-11-13 09:45:59,215      admin INFO: No containers to clean!
+2024-11-13 09:45:59,495      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:45:59,585      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:45:59,609      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:45:59,630      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:45:59,632      admin INFO: Delay per client: {'131.180.125.40': '0.40', '131.180.125.41': '0.42', '131.180.125.42': '0.42', '131.180.125.57': '0.33'}
+2024-11-13 09:45:59,636      admin INFO: 131.180.125.40: Delay for 0.021333 seconds before running the benchmark
+2024-11-13 09:45:59,636      admin INFO: 131.180.125.41: Delay for 0.006792 seconds before running the benchmark
+2024-11-13 09:45:59,637      admin INFO: 131.180.125.42: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:45:59,640      admin INFO: 131.180.125.57: Delay for 0.090532 seconds before running the benchmark
+2024-11-13 09:45:59,890      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients75 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 75 
+2024-11-13 09:45:59,895      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients75 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 75 
+2024-11-13 09:45:59,926      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients75 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 75 
+2024-11-13 09:45:59,936      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients75 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 75 
+2024-11-13 09:46:00,145      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:00,176      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:00,208      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:00,231      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:00,232      admin INFO: Tag: calvin-clients75
+2024-11-13 09:46:00,232      admin INFO: Elapsed time: 2.0 sec
+2024-11-13 09:46:00,232 experiment INFO: COLLECT DATA
+2024-11-13 09:46:00,238      admin INFO: Calling admin.py at time 1731487560.2386074
+2024-11-13 09:46:00,240      admin INFO: Calling admin.py at time 1731487560.240056
+2024-11-13 09:46:00,251      admin INFO: Removed existing directory: ./tpcc/calvin-clients75/client
+2024-11-13 09:46:00,251      admin INFO: Created directory: ./tpcc/calvin-clients75/client
+2024-11-13 09:46:00,251      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients75/client && tar -xzf ./tpcc/calvin-clients75/client/0-0.tar.gz -C ./tpcc/calvin-clients75/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients75/client && tar -xzf ./tpcc/calvin-clients75/client/0-1.tar.gz -C ./tpcc/calvin-clients75/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients75/client && tar -xzf ./tpcc/calvin-clients75/client/0-2.tar.gz -C ./tpcc/calvin-clients75/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients75/client && tar -xzf ./tpcc/calvin-clients75/client/0-3.tar.gz -C ./tpcc/calvin-clients75/client/0-3) & 
+2024-11-13 09:46:00,252      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients75 && mkdir -p /var/tmp/calvin-clients75 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients75") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients75 && mkdir -p /var/tmp/calvin-clients75 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients75") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients75 && mkdir -p /var/tmp/calvin-clients75 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients75") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients75 && mkdir -p /var/tmp/calvin-clients75 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients75") & 
+rm: cannot remove '/var/tmp/calvin-clients75/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients75/txn_events.csv': Permission denied
+2024-11-13 09:46:01,391      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:01,391      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:01,396      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:01,398      admin INFO: No containers to clean!
+2024-11-13 09:46:01,398      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients75 --host 131.180.125.40 --port 2021']
+2024-11-13 09:46:01,400      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:01,405      admin INFO: No containers to clean!
+2024-11-13 09:46:01,405      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients75 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:01,406      admin INFO: No containers to clean!
+2024-11-13 09:46:01,407      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients75 --host 131.180.125.41 --port 2021']
+2024-11-13 09:46:01,410      admin INFO: No containers to clean!
+2024-11-13 09:46:01,410      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients75 --host 131.180.125.57 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 265 bytes  205.33 bytes/sec
+total size is 177  speedup is 0.57
+0-2.tar.gz
+
+sent 43 bytes  received 266 bytes  618.00 bytes/sec
+total size is 179  speedup is 0.58
+0-0.tar.gz
+
+sent 43 bytes  received 264 bytes  614.00 bytes/sec
+total size is 177  speedup is 0.58
+0-1.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 182  speedup is 0.58
+2024-11-13 09:46:02,167      admin INFO: Elapsed time: 1.9 sec
+2024-11-13 09:46:02,758      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:46:02,872      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:46:02,990      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:46:03,113      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:46:03,118      admin INFO: Removed existing directory: ./tpcc/calvin-clients75/server
+2024-11-13 09:46:03,118      admin INFO: Created directory: ./tpcc/calvin-clients75/server
+2024-11-13 09:46:03,118      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients75/server && tar -xzf ./tpcc/calvin-clients75/server/0-0.tar.gz -C ./tpcc/calvin-clients75/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients75/server && tar -xzf ./tpcc/calvin-clients75/server/0-1.tar.gz -C ./tpcc/calvin-clients75/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients75/server && tar -xzf ./tpcc/calvin-clients75/server/0-2.tar.gz -C ./tpcc/calvin-clients75/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients75 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients75/server && tar -xzf ./tpcc/calvin-clients75/server/0-3.tar.gz -C ./tpcc/calvin-clients75/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 819 bytes  574.67 bytes/sec
+total size is 727  speedup is 0.84
+0-2.tar.gz
+
+sent 43 bytes  received 812 bytes  570.00 bytes/sec
+total size is 724  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 816 bytes  572.67 bytes/sec
+total size is 728  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 817 bytes  573.33 bytes/sec
+total size is 729  speedup is 0.85
+2024-11-13 09:46:04,730      admin INFO: Elapsed time: 4.5 sec
+2024-11-13 09:46:04,735 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '100', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients100', '--no-pull']
+2024-11-13 09:46:04,735      admin INFO: Calling admin.py at time 1731487564.7356231
+2024-11-13 09:46:04,745      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:46:04,748      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:46:04,749      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:46:04,751      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:46:04,753      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:46:05,372      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:46:05,543      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:46:05,560      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:46:05,580      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:46:05,582      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:46:05,642      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:46:05,663      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:46:05,666      admin INFO: No containers to clean!
+2024-11-13 09:46:05,669      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:46:05,695      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:46:05,698      admin INFO: No containers to clean!
+2024-11-13 09:46:05,702      admin INFO: No containers to clean!
+2024-11-13 09:46:05,733      admin INFO: No containers to clean!
+2024-11-13 09:46:05,966      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:46:06,117      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:46:06,123      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:46:06,196      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:46:06,198      admin INFO: Delay per client: {'131.180.125.40': '0.46', '131.180.125.41': '0.41', '131.180.125.42': '0.42', '131.180.125.57': '0.30'}
+2024-11-13 09:46:06,201      admin INFO: 131.180.125.40: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:46:06,202      admin INFO: 131.180.125.41: Delay for 0.048161 seconds before running the benchmark
+2024-11-13 09:46:06,202      admin INFO: 131.180.125.42: Delay for 0.038207 seconds before running the benchmark
+2024-11-13 09:46:06,203      admin INFO: 131.180.125.57: Delay for 0.162885 seconds before running the benchmark
+2024-11-13 09:46:06,533      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients100 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 100 
+2024-11-13 09:46:06,547      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients100 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 100 
+2024-11-13 09:46:06,548      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients100 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 100 
+2024-11-13 09:46:06,554      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients100 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 100 
+2024-11-13 09:46:06,783      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:06,821      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:06,852      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:06,874      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:06,874      admin INFO: Tag: calvin-clients100
+2024-11-13 09:46:06,875      admin INFO: Elapsed time: 2.1 sec
+2024-11-13 09:46:06,875 experiment INFO: COLLECT DATA
+2024-11-13 09:46:06,882      admin INFO: Calling admin.py at time 1731487566.8819351
+2024-11-13 09:46:06,884      admin INFO: Calling admin.py at time 1731487566.8846078
+2024-11-13 09:46:06,894      admin INFO: Removed existing directory: ./tpcc/calvin-clients100/client
+2024-11-13 09:46:06,894      admin INFO: Created directory: ./tpcc/calvin-clients100/client
+2024-11-13 09:46:06,894      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients100/client && tar -xzf ./tpcc/calvin-clients100/client/0-0.tar.gz -C ./tpcc/calvin-clients100/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients100/client && tar -xzf ./tpcc/calvin-clients100/client/0-1.tar.gz -C ./tpcc/calvin-clients100/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients100/client && tar -xzf ./tpcc/calvin-clients100/client/0-2.tar.gz -C ./tpcc/calvin-clients100/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients100/client && tar -xzf ./tpcc/calvin-clients100/client/0-3.tar.gz -C ./tpcc/calvin-clients100/client/0-3) & 
+2024-11-13 09:46:06,895      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients100 && mkdir -p /var/tmp/calvin-clients100 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients100") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients100 && mkdir -p /var/tmp/calvin-clients100 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients100") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients100 && mkdir -p /var/tmp/calvin-clients100 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients100") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients100 && mkdir -p /var/tmp/calvin-clients100 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients100") & 
+rm: cannot remove '/var/tmp/calvin-clients100/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients100/summary.csv': Permission denied
+2024-11-13 09:46:07,783      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:07,785      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:07,787      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:07,788      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:07,792      admin INFO: No containers to clean!
+2024-11-13 09:46:07,792      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients100 --host 131.180.125.57 --port 2021']
+2024-11-13 09:46:07,795      admin INFO: No containers to clean!
+2024-11-13 09:46:07,795      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients100 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:07,799      admin INFO: No containers to clean!
+2024-11-13 09:46:07,800      admin INFO: No containers to clean!
+2024-11-13 09:46:07,801      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients100 --host 131.180.125.40 --port 2021']
+2024-11-13 09:46:07,801      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients100 --host 131.180.125.41 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 178  speedup is 0.57
+0-2.tar.gz
+
+sent 43 bytes  received 268 bytes  207.33 bytes/sec
+total size is 180  speedup is 0.58
+0-1.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 182  speedup is 0.58
+0-0.tar.gz
+
+sent 43 bytes  received 266 bytes  123.60 bytes/sec
+total size is 178  speedup is 0.58
+2024-11-13 09:46:09,252      admin INFO: Elapsed time: 2.4 sec
+2024-11-13 09:46:09,267      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:46:09,353      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:46:09,523      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:46:09,619      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:46:09,624      admin INFO: Removed existing directory: ./tpcc/calvin-clients100/server
+2024-11-13 09:46:09,624      admin INFO: Created directory: ./tpcc/calvin-clients100/server
+2024-11-13 09:46:09,624      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients100/server && tar -xzf ./tpcc/calvin-clients100/server/0-0.tar.gz -C ./tpcc/calvin-clients100/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients100/server && tar -xzf ./tpcc/calvin-clients100/server/0-1.tar.gz -C ./tpcc/calvin-clients100/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients100/server && tar -xzf ./tpcc/calvin-clients100/server/0-2.tar.gz -C ./tpcc/calvin-clients100/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients100 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients100/server && tar -xzf ./tpcc/calvin-clients100/server/0-3.tar.gz -C ./tpcc/calvin-clients100/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 817 bytes  1.72K bytes/sec
+total size is 730  speedup is 0.85
+0-2.tar.gz
+
+sent 43 bytes  received 814 bytes  571.33 bytes/sec
+total size is 726  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 818 bytes  574.00 bytes/sec
+total size is 730  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 817 bytes  573.33 bytes/sec
+total size is 729  speedup is 0.85
+2024-11-13 09:46:11,270      admin INFO: Elapsed time: 4.4 sec
+2024-11-13 09:46:11,275 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '125', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients125', '--no-pull']
+2024-11-13 09:46:11,276      admin INFO: Calling admin.py at time 1731487571.2760937
+2024-11-13 09:46:11,286      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:46:11,289      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:46:11,289      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:46:11,290      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:46:11,291      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:46:11,915      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:46:12,089      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:46:12,100      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:46:12,142      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:46:12,144      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:46:12,209      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:46:12,224      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:46:12,228      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:46:12,232      admin INFO: No containers to clean!
+2024-11-13 09:46:12,235      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:46:12,254      admin INFO: No containers to clean!
+2024-11-13 09:46:12,257      admin INFO: No containers to clean!
+2024-11-13 09:46:12,266      admin INFO: No containers to clean!
+2024-11-13 09:46:12,524      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:46:12,653      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:46:12,683      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:46:12,699      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:46:12,700      admin INFO: Delay per client: {'131.180.125.40': '0.42', '131.180.125.41': '0.40', '131.180.125.42': '0.45', '131.180.125.57': '0.29'}
+2024-11-13 09:46:12,704      admin INFO: 131.180.125.40: Delay for 0.028139 seconds before running the benchmark
+2024-11-13 09:46:12,704      admin INFO: 131.180.125.41: Delay for 0.048945 seconds before running the benchmark
+2024-11-13 09:46:12,705      admin INFO: 131.180.125.42: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:46:12,707      admin INFO: 131.180.125.57: Delay for 0.153302 seconds before running the benchmark
+2024-11-13 09:46:12,991      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients125 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 125 
+2024-11-13 09:46:13,042      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients125 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 125 
+2024-11-13 09:46:13,050      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients125 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 125 
+2024-11-13 09:46:13,109      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients125 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 125 
+2024-11-13 09:46:13,330      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:13,362      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:13,395      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:13,418      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:13,418      admin INFO: Tag: calvin-clients125
+2024-11-13 09:46:13,418      admin INFO: Elapsed time: 2.1 sec
+2024-11-13 09:46:13,418 experiment INFO: COLLECT DATA
+2024-11-13 09:46:13,425      admin INFO: Calling admin.py at time 1731487573.4255648
+2024-11-13 09:46:13,427      admin INFO: Calling admin.py at time 1731487573.427422
+2024-11-13 09:46:13,438      admin INFO: Removed existing directory: ./tpcc/calvin-clients125/client
+2024-11-13 09:46:13,438      admin INFO: Created directory: ./tpcc/calvin-clients125/client
+2024-11-13 09:46:13,438      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients125/client && tar -xzf ./tpcc/calvin-clients125/client/0-0.tar.gz -C ./tpcc/calvin-clients125/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients125/client && tar -xzf ./tpcc/calvin-clients125/client/0-1.tar.gz -C ./tpcc/calvin-clients125/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients125/client && tar -xzf ./tpcc/calvin-clients125/client/0-2.tar.gz -C ./tpcc/calvin-clients125/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients125/client && tar -xzf ./tpcc/calvin-clients125/client/0-3.tar.gz -C ./tpcc/calvin-clients125/client/0-3) & 
+2024-11-13 09:46:13,438      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients125 && mkdir -p /var/tmp/calvin-clients125 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients125") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients125 && mkdir -p /var/tmp/calvin-clients125 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients125") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients125 && mkdir -p /var/tmp/calvin-clients125 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients125") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients125 && mkdir -p /var/tmp/calvin-clients125 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients125") & 
+rm: cannot remove '/var/tmp/calvin-clients125/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients125/txn_events.csv': Permission denied
+2024-11-13 09:46:14,284      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:14,286      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:14,287      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:14,291      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:14,292      admin INFO: No containers to clean!
+2024-11-13 09:46:14,295      admin INFO: No containers to clean!
+2024-11-13 09:46:14,296      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients125 --host 131.180.125.40 --port 2021']
+2024-11-13 09:46:14,297      admin INFO: No containers to clean!
+2024-11-13 09:46:14,297      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients125 --host 131.180.125.41 --port 2021']
+2024-11-13 09:46:14,298      admin INFO: No containers to clean!
+2024-11-13 09:46:14,300      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients125 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:14,302      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients125 --host 131.180.125.57 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 264 bytes  614.00 bytes/sec
+total size is 177  speedup is 0.58
+0-1.tar.gz
+
+sent 43 bytes  received 269 bytes  624.00 bytes/sec
+total size is 182  speedup is 0.58
+0-2.tar.gz
+
+sent 43 bytes  received 266 bytes  618.00 bytes/sec
+total size is 179  speedup is 0.58
+0-0.tar.gz
+
+sent 43 bytes  received 265 bytes  205.33 bytes/sec
+total size is 177  speedup is 0.57
+2024-11-13 09:46:15,196      admin INFO: Elapsed time: 1.8 sec
+2024-11-13 09:46:15,745      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:46:15,930      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:46:15,984      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:46:16,196      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:46:16,200      admin INFO: Removed existing directory: ./tpcc/calvin-clients125/server
+2024-11-13 09:46:16,200      admin INFO: Created directory: ./tpcc/calvin-clients125/server
+2024-11-13 09:46:16,201      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients125/server && tar -xzf ./tpcc/calvin-clients125/server/0-0.tar.gz -C ./tpcc/calvin-clients125/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients125/server && tar -xzf ./tpcc/calvin-clients125/server/0-1.tar.gz -C ./tpcc/calvin-clients125/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients125/server && tar -xzf ./tpcc/calvin-clients125/server/0-2.tar.gz -C ./tpcc/calvin-clients125/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients125 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients125/server && tar -xzf ./tpcc/calvin-clients125/server/0-3.tar.gz -C ./tpcc/calvin-clients125/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 817 bytes  573.33 bytes/sec
+total size is 729  speedup is 0.85
+0-2.tar.gz
+
+sent 43 bytes  received 812 bytes  570.00 bytes/sec
+total size is 724  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 818 bytes  574.00 bytes/sec
+total size is 730  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 817 bytes  1.72K bytes/sec
+total size is 730  speedup is 0.85
+2024-11-13 09:46:17,830      admin INFO: Elapsed time: 4.4 sec
+2024-11-13 09:46:17,834 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '150', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients150', '--no-pull']
+2024-11-13 09:46:17,835      admin INFO: Calling admin.py at time 1731487577.835237
+2024-11-13 09:46:17,842      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:46:17,845      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:46:17,846      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:46:17,847      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:46:17,850      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:46:18,480      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:46:18,645      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:46:18,661      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:46:18,701      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:46:18,703      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:46:18,772      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:46:18,779      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:46:18,783      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:46:18,786      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:46:18,793      admin INFO: No containers to clean!
+2024-11-13 09:46:18,807      admin INFO: No containers to clean!
+2024-11-13 09:46:18,815      admin INFO: No containers to clean!
+2024-11-13 09:46:18,818      admin INFO: No containers to clean!
+2024-11-13 09:46:19,130      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:46:19,206      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:46:19,244      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:46:19,257      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:46:19,259      admin INFO: Delay per client: {'131.180.125.40': '0.39', '131.180.125.41': '0.43', '131.180.125.42': '0.45', '131.180.125.57': '0.34'}
+2024-11-13 09:46:19,262      admin INFO: 131.180.125.40: Delay for 0.060891 seconds before running the benchmark
+2024-11-13 09:46:19,262      admin INFO: 131.180.125.41: Delay for 0.019991 seconds before running the benchmark
+2024-11-13 09:46:19,262      admin INFO: 131.180.125.42: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:46:19,263      admin INFO: 131.180.125.57: Delay for 0.112193 seconds before running the benchmark
+2024-11-13 09:46:19,517      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients150 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 150 
+2024-11-13 09:46:19,563      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients150 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 150 
+2024-11-13 09:46:19,583      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients150 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 150 
+2024-11-13 09:46:19,659      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients150 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 150 
+2024-11-13 09:46:19,875      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:19,904      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:19,932      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:19,955      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:19,955      admin INFO: Tag: calvin-clients150
+2024-11-13 09:46:19,956      admin INFO: Elapsed time: 2.1 sec
+2024-11-13 09:46:19,956 experiment INFO: COLLECT DATA
+2024-11-13 09:46:19,963      admin INFO: Calling admin.py at time 1731487579.9632125
+2024-11-13 09:46:19,965      admin INFO: Calling admin.py at time 1731487579.9653556
+2024-11-13 09:46:19,975      admin INFO: Removed existing directory: ./tpcc/calvin-clients150/client
+2024-11-13 09:46:19,975      admin INFO: Created directory: ./tpcc/calvin-clients150/client
+2024-11-13 09:46:19,975      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients150/client && tar -xzf ./tpcc/calvin-clients150/client/0-0.tar.gz -C ./tpcc/calvin-clients150/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients150/client && tar -xzf ./tpcc/calvin-clients150/client/0-1.tar.gz -C ./tpcc/calvin-clients150/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients150/client && tar -xzf ./tpcc/calvin-clients150/client/0-2.tar.gz -C ./tpcc/calvin-clients150/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients150/client && tar -xzf ./tpcc/calvin-clients150/client/0-3.tar.gz -C ./tpcc/calvin-clients150/client/0-3) & 
+2024-11-13 09:46:19,977      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients150 && mkdir -p /var/tmp/calvin-clients150 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients150") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients150 && mkdir -p /var/tmp/calvin-clients150 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients150") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients150 && mkdir -p /var/tmp/calvin-clients150 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients150") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients150 && mkdir -p /var/tmp/calvin-clients150 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients150") & 
+rm: cannot remove '/var/tmp/calvin-clients150/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients150/summary.csv': Permission denied
+2024-11-13 09:46:20,852      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:20,854      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:20,856      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:20,859      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:20,860      admin INFO: No containers to clean!
+2024-11-13 09:46:20,861      admin INFO: No containers to clean!
+2024-11-13 09:46:20,862      admin INFO: No containers to clean!
+2024-11-13 09:46:20,864      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients150 --host 131.180.125.40 --port 2021']
+2024-11-13 09:46:20,864      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients150 --host 131.180.125.41 --port 2021']
+2024-11-13 09:46:20,864      admin INFO: No containers to clean!
+2024-11-13 09:46:20,865      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients150 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:20,868      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients150 --host 131.180.125.57 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 178  speedup is 0.57
+0-2.tar.gz
+
+sent 43 bytes  received 267 bytes  206.67 bytes/sec
+total size is 179  speedup is 0.58
+0-1.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 182  speedup is 0.58
+0-0.tar.gz
+
+sent 43 bytes  received 266 bytes  123.60 bytes/sec
+total size is 178  speedup is 0.58
+2024-11-13 09:46:22,077      admin INFO: Elapsed time: 2.1 sec
+2024-11-13 09:46:22,133      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:46:22,515      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+2024-11-13 09:46:22,649      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:46:22,778      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:46:22,783      admin INFO: Removed existing directory: ./tpcc/calvin-clients150/server
+2024-11-13 09:46:22,783      admin INFO: Created directory: ./tpcc/calvin-clients150/server
+2024-11-13 09:46:22,783      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients150/server && tar -xzf ./tpcc/calvin-clients150/server/0-0.tar.gz -C ./tpcc/calvin-clients150/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients150/server && tar -xzf ./tpcc/calvin-clients150/server/0-1.tar.gz -C ./tpcc/calvin-clients150/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients150/server && tar -xzf ./tpcc/calvin-clients150/server/0-2.tar.gz -C ./tpcc/calvin-clients150/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients150 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients150/server && tar -xzf ./tpcc/calvin-clients150/server/0-3.tar.gz -C ./tpcc/calvin-clients150/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 821 bytes  576.00 bytes/sec
+total size is 729  speedup is 0.84
+0-2.tar.gz
+
+sent 43 bytes  received 813 bytes  570.67 bytes/sec
+total size is 725  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 816 bytes  572.67 bytes/sec
+total size is 728  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 816 bytes  572.67 bytes/sec
+total size is 728  speedup is 0.85
+2024-11-13 09:46:24,442      admin INFO: Elapsed time: 4.5 sec
+2024-11-13 09:46:24,447 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '175', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients175', '--no-pull']
+2024-11-13 09:46:24,447      admin INFO: Calling admin.py at time 1731487584.4476557
+2024-11-13 09:46:24,457      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:46:24,461      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:46:24,462      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:46:24,463      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:46:24,463      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:46:25,100      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:46:25,261      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:46:25,270      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:46:25,305      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:46:25,307      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:46:25,371      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:46:25,383      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:46:25,389      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:46:25,393      admin INFO: No containers to clean!
+2024-11-13 09:46:25,397      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:46:25,411      admin INFO: No containers to clean!
+2024-11-13 09:46:25,421      admin INFO: No containers to clean!
+2024-11-13 09:46:25,430      admin INFO: No containers to clean!
+2024-11-13 09:46:25,709      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:46:25,814      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:46:25,852      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:46:25,854      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:46:25,856      admin INFO: Delay per client: {'131.180.125.40': '0.43', '131.180.125.41': '0.40', '131.180.125.42': '0.42', '131.180.125.57': '0.32'}
+2024-11-13 09:46:25,860      admin INFO: 131.180.125.40: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:46:25,862      admin INFO: 131.180.125.41: Delay for 0.030115 seconds before running the benchmark
+2024-11-13 09:46:25,863      admin INFO: 131.180.125.42: Delay for 0.011767 seconds before running the benchmark
+2024-11-13 09:46:25,863      admin INFO: 131.180.125.57: Delay for 0.117230 seconds before running the benchmark
+2024-11-13 09:46:26,122      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients175 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 175 
+2024-11-13 09:46:26,141      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients175 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 175 
+2024-11-13 09:46:26,143      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients175 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 175 
+2024-11-13 09:46:26,157      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients175 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 175 
+2024-11-13 09:46:26,360      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:26,391      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:26,420      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:26,443      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:26,443      admin INFO: Tag: calvin-clients175
+2024-11-13 09:46:26,444      admin INFO: Elapsed time: 2.0 sec
+2024-11-13 09:46:26,444 experiment INFO: COLLECT DATA
+2024-11-13 09:46:26,452      admin INFO: Calling admin.py at time 1731487586.4521189
+2024-11-13 09:46:26,454      admin INFO: Calling admin.py at time 1731487586.4541202
+2024-11-13 09:46:26,465      admin INFO: Removed existing directory: ./tpcc/calvin-clients175/client
+2024-11-13 09:46:26,465      admin INFO: Created directory: ./tpcc/calvin-clients175/client
+2024-11-13 09:46:26,465      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients175/client && tar -xzf ./tpcc/calvin-clients175/client/0-0.tar.gz -C ./tpcc/calvin-clients175/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients175/client && tar -xzf ./tpcc/calvin-clients175/client/0-1.tar.gz -C ./tpcc/calvin-clients175/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients175/client && tar -xzf ./tpcc/calvin-clients175/client/0-2.tar.gz -C ./tpcc/calvin-clients175/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients175/client && tar -xzf ./tpcc/calvin-clients175/client/0-3.tar.gz -C ./tpcc/calvin-clients175/client/0-3) & 
+2024-11-13 09:46:26,465      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients175 && mkdir -p /var/tmp/calvin-clients175 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients175") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients175 && mkdir -p /var/tmp/calvin-clients175 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients175") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients175 && mkdir -p /var/tmp/calvin-clients175 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients175") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients175 && mkdir -p /var/tmp/calvin-clients175 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients175") & 
+rm: cannot remove '/var/tmp/calvin-clients175/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients175/summary.csv': Permission denied
+2024-11-13 09:46:27,357      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:27,359      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:27,361      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:27,362      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:27,366      admin INFO: No containers to clean!
+2024-11-13 09:46:27,366      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients175 --host 131.180.125.40 --port 2021']
+2024-11-13 09:46:27,369      admin INFO: No containers to clean!
+2024-11-13 09:46:27,369      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients175 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:27,370      admin INFO: No containers to clean!
+2024-11-13 09:46:27,370      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients175 --host 131.180.125.41 --port 2021']
+2024-11-13 09:46:27,374      admin INFO: No containers to clean!
+2024-11-13 09:46:27,374      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients175 --host 131.180.125.57 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 264 bytes  614.00 bytes/sec
+total size is 177  speedup is 0.58
+0-1.tar.gz
+
+sent 43 bytes  received 270 bytes  208.67 bytes/sec
+total size is 182  speedup is 0.58
+0-2.tar.gz
+
+sent 43 bytes  received 267 bytes  206.67 bytes/sec
+total size is 179  speedup is 0.58
+2024-11-13 09:46:28,520      admin INFO: 131.180.125.42: Triggered flushing metrics to disk
+2024-11-13 09:46:28,653      admin INFO: 131.180.125.41: Triggered flushing metrics to disk
+0-0.tar.gz
+
+sent 43 bytes  received 265 bytes  123.20 bytes/sec
+total size is 177  speedup is 0.57
+2024-11-13 09:46:29,025      admin INFO: Elapsed time: 2.6 sec
+2024-11-13 09:46:29,030      admin INFO: 131.180.125.57: Triggered flushing metrics to disk
+2024-11-13 09:46:29,185      admin INFO: 131.180.125.40: Triggered flushing metrics to disk
+2024-11-13 09:46:29,214      admin INFO: Removed existing directory: ./tpcc/calvin-clients175/server
+2024-11-13 09:46:29,214      admin INFO: Created directory: ./tpcc/calvin-clients175/server
+2024-11-13 09:46:29,214      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients175/server && tar -xzf ./tpcc/calvin-clients175/server/0-0.tar.gz -C ./tpcc/calvin-clients175/server/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients175/server && tar -xzf ./tpcc/calvin-clients175/server/0-1.tar.gz -C ./tpcc/calvin-clients175/server/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients175/server && tar -xzf ./tpcc/calvin-clients175/server/0-2.tar.gz -C ./tpcc/calvin-clients175/server/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients175 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients175/server && tar -xzf ./tpcc/calvin-clients175/server/0-3.tar.gz -C ./tpcc/calvin-clients175/server/0-3) & 
+0-3.tar.gz
+
+sent 43 bytes  received 818 bytes  574.00 bytes/sec
+total size is 730  speedup is 0.85
+0-2.tar.gz
+
+sent 43 bytes  received 812 bytes  570.00 bytes/sec
+total size is 724  speedup is 0.85
+0-1.tar.gz
+
+sent 43 bytes  received 817 bytes  1.72K bytes/sec
+total size is 730  speedup is 0.85
+0-0.tar.gz
+
+sent 43 bytes  received 817 bytes  1.72K bytes/sec
+total size is 730  speedup is 0.85
+2024-11-13 09:46:30,918      admin INFO: Elapsed time: 4.5 sec
+2024-11-13 09:46:30,923 experiment INFO: RUN BENCHMARK with config ['benchmark', '/tmp/calvin.conf', '--user', 'omraz', '--image', 'omraz/seq_eval:latest', '--workload', 'tpcc', '--clients', '200', '--rate', '0', '--generators', '2', '--txns', '0', '--duration', '60', '--sample', '10', '--seed', '0', '--params', 'mh_zipf=1,sh_only=0', '--tag', 'calvin-clients200', '--no-pull']
+2024-11-13 09:46:30,923      admin INFO: Calling admin.py at time 1731487590.923645
+2024-11-13 09:46:30,933      admin INFO: Benchmark: Spawned remote processes: "4"
+2024-11-13 09:46:30,936      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2024-11-13 09:46:30,937      admin INFO: Launching Docker client of user omraz and address 131.180.125.41
+2024-11-13 09:46:30,938      admin INFO: Launching Docker client of user omraz and address 131.180.125.42
+2024-11-13 09:46:30,940      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2024-11-13 09:46:31,588      admin INFO: Connected to 131.180.125.57
+2024-11-13 09:46:31,741      admin INFO: Connected to 131.180.125.41
+2024-11-13 09:46:31,745      admin INFO: Connected to 131.180.125.42
+2024-11-13 09:46:31,804      admin INFO: Connected to 131.180.125.40
+2024-11-13 09:46:31,807      admin INFO: Skipped image pulling. Using the local version of "omraz/seq_eval:latest"
+2024-11-13 09:46:31,867      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2024-11-13 09:46:31,887      admin INFO: 131.180.125.42: Cleaned up container "benchmark"
+2024-11-13 09:46:31,890      admin INFO: No containers to clean!
+2024-11-13 09:46:31,896      admin INFO: 131.180.125.41: Cleaned up container "benchmark"
+2024-11-13 09:46:31,899      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2024-11-13 09:46:31,916      admin INFO: No containers to clean!
+2024-11-13 09:46:31,929      admin INFO: No containers to clean!
+2024-11-13 09:46:31,932      admin INFO: No containers to clean!
+2024-11-13 09:46:32,191      admin INFO: 131.180.125.57: Removed old data directory
+2024-11-13 09:46:32,393      admin INFO: 131.180.125.42: Removed old data directory
+2024-11-13 09:46:32,395      admin INFO: 131.180.125.40: Removed old data directory
+2024-11-13 09:46:32,489      admin INFO: 131.180.125.41: Removed old data directory
+2024-11-13 09:46:32,491      admin INFO: Delay per client: {'131.180.125.40': '0.47', '131.180.125.41': '0.56', '131.180.125.42': '0.48', '131.180.125.57': '0.30'}
+2024-11-13 09:46:32,494      admin INFO: 131.180.125.40: Delay for 0.091095 seconds before running the benchmark
+2024-11-13 09:46:32,495      admin INFO: 131.180.125.41: Delay for 0.000000 seconds before running the benchmark
+2024-11-13 09:46:32,495      admin INFO: 131.180.125.42: Delay for 0.080603 seconds before running the benchmark
+2024-11-13 09:46:32,498      admin INFO: 131.180.125.57: Delay for 0.257135 seconds before running the benchmark
+2024-11-13 09:46:32,800      admin INFO: 131.180.125.41: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients200 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 200 
+2024-11-13 09:46:32,838      admin INFO: 131.180.125.42: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients200 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 200 
+2024-11-13 09:46:32,881      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients200 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 200 
+2024-11-13 09:46:32,926      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /var/tmp/calvin.conf --region 0 --replica 0 --data-dir /var/tmp --out-dir /var/tmp/calvin-clients200 --duration 60 --wl tpcc --params "mh_zipf=1,sh_only=0" --txns 0 --generators 2 --sample 10 --seed 0 --txn_profiles=False --rate 0 --clients 200 
+2024-11-13 09:46:33,111      admin ERROR: 131.180.125.40: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:33,144      admin ERROR: 131.180.125.41: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:33,173      admin ERROR: 131.180.125.42: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:33,196      admin ERROR: 131.180.125.57: Finished with non-zero status (134). Check the logs of the container "benchmark" for more details
+2024-11-13 09:46:33,196      admin INFO: Tag: calvin-clients200
+2024-11-13 09:46:33,196      admin INFO: Elapsed time: 2.3 sec
+2024-11-13 09:46:33,196 experiment INFO: COLLECT DATA
+2024-11-13 09:46:33,203      admin INFO: Calling admin.py at time 1731487593.2036781
+2024-11-13 09:46:33,206      admin INFO: Calling admin.py at time 1731487593.2064722
+2024-11-13 09:46:33,214      admin INFO: Removed existing directory: ./tpcc/calvin-clients200/client
+2024-11-13 09:46:33,215      admin INFO: Created directory: ./tpcc/calvin-clients200/client
+2024-11-13 09:46:33,215      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "tar -czf /var/tmp/0-0.tar.gz -C /var/tmp/calvin-clients200 ." && rsync -vh --inplace omraz@131.180.125.40:/var/tmp/0-0.tar.gz ./tpcc/calvin-clients200/client && tar -xzf ./tpcc/calvin-clients200/client/0-0.tar.gz -C ./tpcc/calvin-clients200/client/0-0) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "tar -czf /var/tmp/0-1.tar.gz -C /var/tmp/calvin-clients200 ." && rsync -vh --inplace omraz@131.180.125.41:/var/tmp/0-1.tar.gz ./tpcc/calvin-clients200/client && tar -xzf ./tpcc/calvin-clients200/client/0-1.tar.gz -C ./tpcc/calvin-clients200/client/0-1) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "tar -czf /var/tmp/0-2.tar.gz -C /var/tmp/calvin-clients200 ." && rsync -vh --inplace omraz@131.180.125.42:/var/tmp/0-2.tar.gz ./tpcc/calvin-clients200/client && tar -xzf ./tpcc/calvin-clients200/client/0-2.tar.gz -C ./tpcc/calvin-clients200/client/0-2) & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "tar -czf /var/tmp/0-3.tar.gz -C /var/tmp/calvin-clients200 ." && rsync -vh --inplace omraz@131.180.125.57:/var/tmp/0-3.tar.gz ./tpcc/calvin-clients200/client && tar -xzf ./tpcc/calvin-clients200/client/0-3.tar.gz -C ./tpcc/calvin-clients200/client/0-3) & 
+2024-11-13 09:46:33,216      admin INFO: Executing commands:
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.40 "rm -rf /var/tmp/calvin-clients200 && mkdir -p /var/tmp/calvin-clients200 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients200") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.41 "rm -rf /var/tmp/calvin-clients200 && mkdir -p /var/tmp/calvin-clients200 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients200") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.42 "rm -rf /var/tmp/calvin-clients200 && mkdir -p /var/tmp/calvin-clients200 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients200") & 
+(ssh "-o StrictHostKeyChecking no" omraz@131.180.125.57 "rm -rf /var/tmp/calvin-clients200 && mkdir -p /var/tmp/calvin-clients200 && cp /var/tmp/calvin.conf /var/tmp/calvin-clients200") & 
+rm: cannot remove '/var/tmp/calvin-clients200/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/summary.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/transactions.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/txn_events.csv': Permission denied
+rm: cannot remove '/var/tmp/calvin-clients200/summary.csv': Permission denied
+2024-11-13 09:46:34,125      admin INFO: Cleaning container slog_client_0 (if necessary)
+2024-11-13 09:46:34,126      admin INFO: Cleaning container slog_client_1 (if necessary)
+2024-11-13 09:46:34,128      admin INFO: Cleaning container slog_client_2 (if necessary)
+2024-11-13 09:46:34,131      admin INFO: Cleaning container slog_client_3 (if necessary)
+2024-11-13 09:46:34,134      admin INFO: No containers to clean!
+2024-11-13 09:46:34,134      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients200 --host 131.180.125.42 --port 2021']
+2024-11-13 09:46:34,137      admin INFO: No containers to clean!
+2024-11-13 09:46:34,138      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients200 --host 131.180.125.57 --port 2021']
+2024-11-13 09:46:34,140      admin INFO: No containers to clean!
+2024-11-13 09:46:34,140      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients200 --host 131.180.125.41 --port 2021']
+2024-11-13 09:46:34,143      admin INFO: No containers to clean!
+2024-11-13 09:46:34,143      admin INFO: Running command ['/bin/sh', '-c', 'client metrics /var/tmp/calvin-clients200 --host 131.180.125.40 --port 2021']
+0-3.tar.gz
+
+sent 43 bytes  received 268 bytes  207.33 bytes/sec
+total size is 176  speedup is 0.57
+Bad packet length 2242319043.
+ssh_dispatch_run_fatal: Connection to 131.180.123.195 port 22: Connection corrupted
+Connection to st1.ewi.tudelft.nl closed by remote host.
+Connection to st1.ewi.tudelft.nl closed.
+non-admin@Otos-MacBook-Pro output % ls /var/tmp 
+SoftwareUpdateCore		cbrgbc_1.sqlite			cbrgbc_1.sqlite-wal		siriBC
+aud				cbrgbc_1.sqlite-shm		com.apple.wifianalyticsd
+non-admin@Otos-MacBook-Pro output % ssh st1    
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Wed 13 Nov 2024 10:48:59 AM CET
+
+  System load:                      0.03
+  Usage of /:                       28.9% of 97.87GB
+  Memory usage:                     13%
+  Swap usage:                       0%
+  Processes:                        2324
+  Users logged in:                  0
+  IPv4 address for br-637ab75ff7e0: 172.27.0.1
+  IPv4 address for br-8628ef18e5f7: 172.28.5.0
+  IPv4 address for br-a4119059ce41: 192.168.49.1
+  IPv4 address for br-ac6795a68298: 172.18.0.1
+  IPv4 address for br-b8a24e631289: 172.22.0.1
+  IPv4 address for br-cf49b7003347: 172.19.0.1
+  IPv4 address for br-f049a5f87f67: 172.21.0.1
+  IPv4 address for br-f1d51d61b762: 172.20.0.1
+  IPv4 address for br-f6f0af975d2e: 172.25.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for docker_gwbridge: 172.23.0.1
+  IPv4 address for eno33:           131.180.125.40
+  IPv4 address for weave:           10.36.0.0
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+62 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+7 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '22.04.5 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+*** System restart required ***
+Last login: Wed Nov 13 09:29:54 2024 from 131.180.123.195
+omraz@st1:~$ ls
+1.2.1.zip  Detock  SLOG  TPC_setup.test  deneva  jemalloc  nanomsg-1.2.1  oltpbench  org_Detock  requirements.txt  sequencer-eval  snap  test.txt
+omraz@st1:~$ cd Detock/
+omraz@st1:~/Detock$ docker container ls
+CONTAINER ID   IMAGE                   COMMAND                  CREATED             STATUS             PORTS     NAMES
+fd017f3ca457   omraz/seq_eval:latest   "/bin/sh -c 'echo 'p…"   About an hour ago   Up About an hour             slog
+4f1bc1ed8cc3   tpcc_benchmark_image    "/bin/sh -c 'bash -c…"   8 weeks ago         Up 8 weeks                   tpc_container
+omraz@st1:~/Detock$ 
