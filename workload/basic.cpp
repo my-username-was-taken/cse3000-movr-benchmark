@@ -232,6 +232,7 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
   }
 
   vector<KeyMetadata> keys;
+  // The actual data of the DB will be stored in 'code'
   vector<vector<string>> code;
 
   auto writes = params_.GetUInt32(WRITES);
@@ -252,6 +253,8 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
     auto partition = selected_partitions[i % selected_partitions.size()];
     // Evenly divide the records to the selected homes
     auto home = selected_homes[i / ((records + 1) / selected_homes.size())];
+    // This loop ensures your txn has something reasonable to do.
+    // You keep trying to generate someting reasonable untill you suceed.
     for (;;) {
       Key key;
       if (is_hot[i]) {
@@ -260,6 +263,7 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
         key = partition_to_key_lists_[partition][home].GetRandomColdKey(rg_);
       }
 
+      // ins == The rows to insert
       auto ins = pro.records.try_emplace(key, TransactionProfile::Record());
       if (ins.second) {
         auto& record = ins.first->second;

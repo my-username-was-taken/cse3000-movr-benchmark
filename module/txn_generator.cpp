@@ -272,6 +272,7 @@ void ConstantRateTxnGenerator::SendNextTxn() {
     return;
   }
 
+  // Generate 200k txns/s (must be limited somewhere later on)
   while (!rate_limiter_->RequestWithMutex()) {
     std::this_thread::sleep_for(5us);
   }

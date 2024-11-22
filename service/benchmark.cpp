@@ -32,9 +32,7 @@ DEFINE_string(params, "", "Parameters of the workload");
 DEFINE_bool(dry_run, false, "Generate the transactions without actually sending to the server");
 DEFINE_double(sample, 10, "Percent of sampled transactions to be written to result files");
 DEFINE_int32(min_sample, 25000, "Minimum number of samples");
-DEFINE_int32(
-    seed, -1,
-    "Seed for any randomization in the benchmark. If set to negative, seed will be picked from std::random_device()");
+DEFINE_int32(seed, -1, "Seed for any randomization in the benchmark. If set to negative, seed will be picked from std::random_device()");
 DEFINE_bool(txn_profiles, false, "Output transaction profiles");
 
 using namespace slog;

@@ -163,6 +163,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   int d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
   int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
   int o_id = id_generator_.NextOId(w_id, d_id);
+  // Partition ID on global scale
   int i_w_id = partition + static_cast<int>(local_region() * config_->num_partitions()) + 1;
   auto datetime = std::chrono::system_clock::now().time_since_epoch().count();
   std::array<tpcc::NewOrderTxn::OrderLine, tpcc::kLinePerOrder> ol;
@@ -187,6 +188,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   new_order_txn.Write();
   txn_adapter->Finialize();
 
+  // Serialize the new Order to a string
   auto procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("new_order");
   procedure->add_args(to_string(w_id));
@@ -227,6 +229,7 @@ void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, 
   tpcc::PaymentTxn payment_txn(txn_adapter, w_id, d_id, c_w_id, c_d_id, c_id, amount, datetime, h_id);
   payment_txn.Read();
   payment_txn.Write();
+  // Imitating a commit using Finalize()
   txn_adapter->Finialize();
 
   auto procedure = txn.mutable_code()->add_procedures();
