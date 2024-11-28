@@ -113,78 +113,37 @@ def cleanup(username: str, config_path: str, image: str):
     # fmt: on
 
 def start_server(username: str, config_path: str, image: str, binary="slog"):
-    start_server_cmd = [
-        "start",
-        config_path,
-        "--user", username,
-        "--image", image,
-        "--bin", binary,
-    ]
+    start_server_cmd = ["start", config_path, "--user", username, "--image", image, "--bin", binary]
     LOG.info("START SERVERS with command %s", start_server_cmd)
     admin.main(start_server_cmd)
 
-    wait_for_servers_up_cmd = [
-        "collect_server",
-        config_path,
-        "--user", username,
-        "--image", image,
-        "--flush-only",
-        "--no-pull",
-    ]
+    wait_for_servers_up_cmd = ["collect_server", config_path, "--user", username, "--image", image, "--flush-only", "--no-pull"]
     LOG.info("WAIT FOR ALL SERVERS TO BE ONLINE with command %s", wait_for_servers_up_cmd)
     admin.main(wait_for_servers_up_cmd)
 
 def collect_client_data(username: str, config_path: str, out_dir: str, tag: str):
-    admin.main(
-        ["collect_client", config_path, tag, "--user", username, "--out-dir", out_dir]
-    )
+    collect_client_cmd = ["collect_client", config_path, tag, "--user", username, "--out-dir", out_dir]
+    LOG.info("Collecting server data with command %s", collect_client_cmd)
+    admin.main(collect_client_cmd)
 
-def collect_server_data(
-    username: str, config_path: str, image: str, out_dir: str, tag: str
-):
+def collect_server_data(username: str, config_path: str, image: str, out_dir: str, tag: str):
     # fmt: off
-    admin.main(
-        [
-            "collect_server",
-            config_path,
-            "--tag", tag,
-            "--user", username,
-            "--image", image,
-            "--out-dir", out_dir,
-            # The image has already been pulled when starting the servers
-            "--no-pull",
-        ]
-    )
+    # The image has already been pulled when starting the servers, so use "--no-pull"
+    collect_server_cmd = ["collect_server", config_path, "--tag", tag, "--user", username, "--image", image,"--out-dir", out_dir, "--no-pull"]
+    LOG.info("Collecting server data with command %s", collect_server_cmd)
+    admin.main(collect_server_cmd)
     # fmt: on
 
-def collect_data(
-    username: str,
-    config_path: str,
-    image: str,
-    out_dir: str,
-    tag: str,
-    no_client_data: bool,
-    no_server_data: bool,
-):
+def collect_data(username: str, config_path: str, image: str, out_dir: str, tag: str, no_client_data: bool, no_server_data: bool):
     collectors = []
     if not no_client_data:
-        collectors.append(
-            Process(
-                target=collect_client_data, args=(username, config_path, out_dir, tag)
-            )
-        )
+        collectors.append(Process(target=collect_client_data, args=(username, config_path, out_dir, tag)))
     if not no_server_data:
-        collectors.append(
-            Process(
-                target=collect_server_data,
-                args=(username, config_path, image, out_dir, tag),
-            )
-        )
+        collectors.append(Process(target=collect_server_data, args=(username, config_path, image, out_dir, tag)))
     for p in collectors:
         p.start()
     for p in collectors:
         p.join()
-
 
 def combine_parameters(params, default_params, workload_settings):
     common_values = {}
@@ -197,10 +156,7 @@ def combine_parameters(params, default_params, workload_settings):
             else:
                 common_values[p] = value_list
   
-    combinations = [
-        dict(v) for v in
-        itertools.product(*ordered_value_lists)
-    ]
+    combinations = [dict(v) for v in itertools.product(*ordered_value_lists)]
 
     # Apply combinations inclusion
     if "include" in workload_settings:
@@ -215,9 +171,7 @@ def combine_parameters(params, default_params, workload_settings):
                 overlap_keys = p.keys() & c.keys()
                 if all([c[k] == p[k] for k in overlap_keys]):
                     is_new = False
-                    e.update(
-                        {k:p[k] for k in p if k not in overlap_keys}
-                    )
+                    e.update({k:p[k] for k in p if k not in overlap_keys})
             if is_new:
                 new.append(p)
 
@@ -228,10 +182,7 @@ def combine_parameters(params, default_params, workload_settings):
     # Apply combinations exclusion
     if "exclude" in workload_settings:
         patterns = workload_settings["exclude"]
-        combinations = [
-            c for c in combinations if
-            not any([c.items() >= p.items() for p in patterns])
-        ]
+        combinations = [c for c in combinations if not any([c.items() >= p.items() for p in patterns])]
 
     # Populate common values and check for missing/unknown params
     params_set = set(params)
@@ -348,26 +299,13 @@ class Experiment:
             cleanup_config_path = generate_config(settings, template_path, None, num_log_managers)
 
             for num_partitions, values in num_parts_to_values.items():
-                config_path = generate_config(
-                    settings,
-                    template_path,
-                    num_partitions,
-                    num_log_managers,
-                )
-
+                config_path = generate_config(settings, template_path, num_partitions, num_log_managers)
                 cls.post_config_gen_hook(settings, config_path, args.dry_run)
-
                 LOG.info('============ GENERATED CONFIG "%s" ============', config_path)
-
                 cleanup(settings["username"], cleanup_config_path, server["image"])
 
                 if not args.skip_starting_server:
-                    start_server(
-                        settings["username"],
-                        config_path,
-                        server["image"],
-                        server.get("binary", "slog")
-                    )
+                    start_server(settings["username"], config_path, server["image"], server.get("binary", "slog"))
 
                 LOG.info('Servers set up!')
 
@@ -375,14 +313,7 @@ class Experiment:
                 if num_partitions is not None:
                     config_name += f"-sz{num_partitions}"
 
-                cls._run_benchmark(
-                    args,
-                    server["image"],
-                    settings,
-                    config_path,
-                    config_name,
-                    values,
-                )
+                cls._run_benchmark(args, server["image"], settings, config_path, config_name, values)
 
     @classmethod
     def _run_benchmark(cls, args, image, settings, config_path, config_name, values):
@@ -438,15 +369,7 @@ class Experiment:
                 admin.main(benchmark_args)
 
                 LOG.info("COLLECT DATA")
-                collect_data(
-                    settings["username"],
-                    config_path,
-                    image,
-                    out_dir,
-                    tag,
-                    args.no_client_data,
-                    args.no_server_data,
-                )
+                collect_data(settings["username"], config_path, image, out_dir, tag, args.no_client_data, args.no_server_data)
 
         if args.dry_run:
             pprint([{ k:v for k, v in p.items() if k in tag_keys} for p in values])

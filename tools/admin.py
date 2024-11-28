@@ -8,9 +8,7 @@ import collections
 import ipaddress
 import itertools
 import logging
-import os
-import shutil
-import time
+import os, sys, time, shutil
 
 import docker
 import google.protobuf.text_format as text_format
@@ -38,11 +36,7 @@ SLOG_IMG = "ctring/slog"
 SLOG_CONTAINER_NAME = "slog"
 SLOG_BENCHMMARK_CONTAINER_NAME = "benchmark"
 SLOG_CLIENT_CONTAINER_NAME = "slog_client"
-SLOG_DATA_MOUNT = docker.types.Mount(
-    target=CONTAINER_DATA_DIR,
-    source=HOST_DATA_DIR,
-    type="bind",
-)
+SLOG_DATA_MOUNT = docker.types.Mount(target=CONTAINER_DATA_DIR, source=HOST_DATA_DIR, type="bind")
 BENCHMARK_CONTAINER_NAME = "benchmark"
 
 RemoteProcess = collections.namedtuple(
@@ -76,11 +70,7 @@ def cleanup_container(
     try:
         c = client.containers.get(name)
         c.remove(force=True)
-        LOG.info(
-            '%sCleaned up container "%s"',
-            f"{addr}: " if addr else "",
-            name,
-        )
+        LOG.info('%sCleaned up container "%s"', f"{addr}: " if addr else "", name)
     except:
         LOG.info("No containers to clean!")
 
@@ -106,13 +96,7 @@ def wait_for_containers(containers: List[Tuple[Container, str]]) -> None:
         if res["StatusCode"] == 0:
             LOG.info("%s: Done", addr)
         else:
-            LOG.error(
-                "%s: Finished with non-zero status (%d). "
-                'Check the logs of the container "%s" for more details',
-                addr,
-                res["StatusCode"],
-                c.name,
-            )
+            LOG.error("%s: Finished with non-zero status (%d). " 'Check the logs of the container "%s" for more details', addr, res["StatusCode"], c.name)
 
 def parse_envs(envs: List[str]) -> Dict[str, str]:
     """Parses a list of environment variables
@@ -159,6 +143,7 @@ def fetch_data(machines, user, tag, out_path):
         out_final_path = os.path.join(out_path, m["name"])
 
         os.makedirs(out_final_path, exist_ok=True)
+        # Use SSH to perform data/metrics logging from other machines
         cmd = (
             f'{SSH} {user}@{addr} "tar -czf {data_tar_path} -C {data_path} ." && '
             f"rsync -vh --inplace {user}@{addr}:{data_tar_path} {out_path} && "
@@ -227,9 +212,7 @@ class AdminCommand(Command):
                     pub_addr = pub_addresses[idx]
                     priv_addr = priv_addresses[idx]
                     # Use None as a placeholder for the first value
-                    self.remote_procs.append(
-                        RemoteProcess(None, pub_addr, priv_addr, reg, rep, p)
-                    )
+                    self.remote_procs.append(RemoteProcess(None, pub_addr, priv_addr, reg, rep, p))
         LOG.info('Spawned all "%s" remote processes', len(self.remote_procs))
         print(self.remote_procs)
 
@@ -257,9 +240,7 @@ class AdminCommand(Command):
         if len(self.remote_procs) == 0 or args.no_pull:
             LOG.info('Skipped image pulling. Using the local version of "%s"', args.image)
             return
-        LOG.info(
-            'Pulling image "%s" for each node. ' "This might take a while.", args.image
-        )
+        LOG.info('Pulling image "%s" for each node. ' "This might take a while.", args.image)
 
         clients = {client for client, *_ in self.remote_procs}
         with Pool(processes=len(clients)) as pool:
@@ -309,20 +290,11 @@ class StartCommand(AdminCommand):
 
         def start_container(remote_proc):
             client, pub_address, priv_address, *_ = remote_proc
-            shell_cmd = (
-                f"{args.bin} "
-                f"--config {config_path} "
-                f"--address {priv_address} "
-                f"--data-dir {CONTAINER_DATA_DIR} "
-            )
+            shell_cmd = (f"{args.bin} " f"--config {config_path} " f"--address {priv_address} " f"--data-dir {CONTAINER_DATA_DIR} ")
             client.containers.run(
                 args.image,
                 name=SLOG_CONTAINER_NAME,
-                command=[
-                    "/bin/sh",
-                    "-c",
-                    f"{sync_config_cmd} && {shell_cmd}",
-                ],
+                command=["/bin/sh", "-c", f"{sync_config_cmd} && {shell_cmd}"],
                 # Mount a directory on the host into the container
                 mounts=[SLOG_DATA_MOUNT],
                 # Expose all ports from container to host
@@ -393,8 +365,7 @@ class LogsCommand(AdminCommand):
         super().add_arguments(parser)
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument("-a", metavar="ADDRESS", help="Address of the machine to stream logs from")
-        group.add_argument("-rp", nargs=2, type=int, metavar=("REGION", "PARTITION"), help="Two numbers representing the region and"
-            "partition of the machine to stream log from.")
+        group.add_argument("-rp", nargs=2, type=int, metavar=("REGION", "PARTITION"), help="Two numbers representing the region and partition of the machine to stream log from.")
         parser.add_argument("-f", "--follow", action="store_true", help="Follow log output")
         parser.add_argument("-n", "--tail", type=int, help="Number of lines at the end of the log to output",)
         parser.add_argument("--container", help="Name of the Docker container to show logs from")
@@ -507,8 +478,7 @@ class LocalCommand(AdminCommand):
         group.add_argument("--stop", action="store_true", help="Stop the local cluster")
         group.add_argument("--remove", action="store_true", help="Remove all containers of the local cluster")
         group.add_argument("--status", action="store_true", help="Get status of the local cluster")
-        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
-            "use -e GLOG_v=1 to turn on verbose logging at level 1.")
+        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, use -e GLOG_v=1 to turn on verbose logging at level 1.")
 
     def load_config(self, args):
         super().load_config(args)
@@ -532,10 +502,7 @@ class LocalCommand(AdminCommand):
         Override this method because we only pull image for one client
         """
         if self.client is None or args.no_pull:
-            LOG.info(
-                'Skipped image pulling. Using the local version of "%s"',
-                args.image,
-            )
+            LOG.info('Skipped image pulling. Using the local version of "%s"', args.image)
             return
         LOG.info('Pulling latest docker image "%s"...', args.image)
         self.client.images.pull(args.image)
@@ -601,11 +568,7 @@ class LocalCommand(AdminCommand):
                 container = self.client.containers.create(
                     args.image,
                     name=container_name,
-                    command=[
-                        "/bin/sh",
-                        "-c",
-                        f"{sync_config_cmd} && {shell_cmd}",
-                    ],
+                    command=["/bin/sh", "-c", f"{sync_config_cmd} && {shell_cmd}"],
                     mounts=[SLOG_DATA_MOUNT],
                     environment=parse_envs(args.e),
                 )
@@ -617,11 +580,7 @@ class LocalCommand(AdminCommand):
                 # Actually start the container
                 container.start()
 
-                LOG.info(
-                    "%s: Synced config and ran command: %s",
-                    pub_addr,
-                    shell_cmd,
-                )
+                LOG.info("%s: Synced config and ran command: %s", pub_addr, shell_cmd)
 
     def __stop(self):
         for r, reg in enumerate(self.config.regions):
@@ -665,8 +624,7 @@ class BenchmarkCommand(AdminCommand):
         parser.add_argument("--generators", type=int, default=1, help="Number of threads for each benchmark machine",)
         parser.add_argument("--sample", type=int, default=10, help="Percent of sampled transactions to be written to result files",)
         parser.add_argument("--txn-profiles", action="store_true", help="Output the profile of the sampled txns",)
-        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
-            "use -e GLOG_v=1 to turn on verbose logging at level 1.",)
+        parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, use -e GLOG_v=1 to turn on verbose logging at level 1.",)
         parser.add_argument("--seed", type=int, default=-1, help="Seed for the randomization in the benchmark. Set to -1 for random seed",)
         parser.add_argument("--cleanup", action="store_true", help="Clean up all running benchmarks then exit")
 
@@ -744,13 +702,8 @@ class BenchmarkCommand(AdminCommand):
         with Pool(processes=len(self.remote_procs)) as pool:
             delays = pool.map(clean_up, self.remote_procs)
 
-        LOG.info(
-            "Delay per client: %s",
-            {
-                self.remote_procs[i].public_address: f"{delays[i]:.2f}"
-                for i in range(len(self.remote_procs))
-            },
-        )
+        LOG.info("Delay per client: %s",{self.remote_procs[i].public_address: f"{delays[i]:.2f}"
+                for i in range(len(self.remote_procs))})
 
         if args.cleanup:
             return
@@ -779,18 +732,12 @@ class BenchmarkCommand(AdminCommand):
                 f"--clients {args.clients} "
             )
             delay = max(delays) - delays[i]
-            LOG.info(
-                "%s: Delay for %f seconds before running the benchmark", addr, delay
-            )
+            LOG.info("%s: Delay for %f seconds before running the benchmark", addr, delay)
             time.sleep(delay)
             container = client.containers.run(
                 args.image,
                 name=f"{BENCHMARK_CONTAINER_NAME}",
-                command=[
-                    "/bin/sh",
-                    "-c",
-                    f"{sync_config_cmd} && {rmdir_cmd} && {mkdir_cmd} && {shell_cmd}",
-                ],
+                command=["/bin/sh", "-c", f"{sync_config_cmd} && {rmdir_cmd} && {mkdir_cmd} && {shell_cmd}"],
                 # Mount a directory on the host into the container
                 mounts=[SLOG_DATA_MOUNT],
                 # Expose all ports from container to host
@@ -880,18 +827,9 @@ class CollectServerCommand(AdminCommand):
                 container_name = f"{SLOG_CLIENT_CONTAINER_NAME}_{i}"
                 LOG.info("Cleaning container %s (if necessary)", container_name)
                 cleanup_container(docker_client, container_name)
-                run_cmd = [
-                        "/bin/sh",
-                        "-c",
-                        f"client metrics {out_dir} --host {address} --port {self.config.server_port}",
-                    ]
+                run_cmd = ["/bin/sh", "-c", f"client metrics {out_dir} --host {address} --port {self.config.server_port}"]
                 LOG.info("Running command %s", run_cmd)
-                docker_client.containers.run(
-                    args.image,
-                    name=f"{SLOG_CLIENT_CONTAINER_NAME}_{i}",
-                    command=run_cmd,
-                    remove=True,
-                )
+                docker_client.containers.run(args.image, name=f"{SLOG_CLIENT_CONTAINER_NAME}_{i}", command=run_cmd, remove=True)
                 LOG.info("%s: Triggered flushing metrics to disk", address)
 
             with Pool(processes=len(addresses)) as pool:
@@ -970,9 +908,7 @@ class GenNetEmCommand(AdminCommand):
 
             preview.append((i, script))
             for ip in r_from:
-                commands.append(
-                    f'({SSH} {args.user}@{ip} "echo \\"{script}\\" > {args.out} && chmod +x {args.out}") & '
-                )
+                commands.append(f'({SSH} {args.user}@{ip} "echo \\"{script}\\" > {args.out} && chmod +x {args.out}") & ')
 
         for r, script in preview:
             print("**************************")

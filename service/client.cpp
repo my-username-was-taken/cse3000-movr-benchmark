@@ -280,7 +280,7 @@ const unordered_map<string, StatsModule> STATS_MODULES = {{"server", {ModuleId::
 void ExecuteStats(const char* module, uint64_t level) {
   auto stats_module_it = STATS_MODULES.find(string(module));
   if (stats_module_it == STATS_MODULES.end()) {
-    LOG(ERROR) << "Invalid module: " << module;
+    LOG(ERROR) << "Invalid module: " << module << "modules are: server, forwarder, sequencer, scheduler";
     return;
   }
   auto& stats_module = stats_module_it->second;

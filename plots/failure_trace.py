@@ -17,7 +17,7 @@ y_labels = [
     'Aborts (#)',
     'Cost ($)'
 ]
-failure_points = [5, 31, 72] # To be randomly generated
+failure_points = [5, 31, 72] # TODO: Replace with a randomly generated set of points
 databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Atomic Multicast', 'Caerus']
 line_styles = ['-', '--', '-.', ':', '-', '--']
 colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown']
