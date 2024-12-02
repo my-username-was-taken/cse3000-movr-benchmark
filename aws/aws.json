@@ -1,0 +1,13 @@
+{
+    "aws_username": "omraz",
+    "regions": {
+        "eu-west-1": {
+            "ami_id": "ami-0d64bb532e0502c46",
+            "subnet_id": "subnet-0bb5f60f1f4bb0989"
+        },
+        "eu-west-2": "ami-0e8d228ad90af673b",
+        "us-west-1": "ami-0da424eb883458071",
+        "us-west-2": "ami-04dd23e62ed049936"
+    },
+    "vm_type": "m4.2xlarge"
+}

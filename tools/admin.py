@@ -59,11 +59,7 @@ def public_addresses(reg: Region):
 def private_addresses(reg: Region):
     return reg.addresses
 
-def cleanup_container(
-    client: docker.DockerClient,
-    name: str,
-    addr="",
-) -> None:
+def cleanup_container(client: docker.DockerClient, name: str, addr="") -> None:
     """
     Cleans up a container with a given name.
     """
@@ -721,7 +717,7 @@ class BenchmarkCommand(AdminCommand):
                 f"--data-dir {CONTAINER_DATA_DIR} "
                 f"--out-dir {out_dir} "
                 f"--duration {args.duration} "
-                f"--wl {args.workload} "
+                f"--wl {args.workload} " # Probably a bug here? Should be only 1 '-wl'
                 f'--params "{args.params}" '
                 f"--txns {args.txns} "
                 f"--generators {args.generators} "
@@ -760,8 +756,8 @@ class CollectClientCommand(AdminCommand):
     HELP = "Collect benchmark data from the clients"
 
     def add_arguments(self, parser):
-        parser.add_argument("config", metavar="config_file", help="Path to a config file")
-        parser.add_argument("tag", help="Tag of the benchmark data")
+        parser.add_argument("--config", metavar="config_file", help="Path to a config file")
+        parser.add_argument("--tag", help="Tag of the benchmark data")
         parser.add_argument("--out-dir", default="", help="Directory to put the collected data")
         parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
 
@@ -778,6 +774,7 @@ class CollectClientCommand(AdminCommand):
             for i, r in enumerate(self.config.regions)
             for j, c in enumerate(r.client_addresses)
         ]
+        LOG.info("%s: Fetching client data from machines", machines)
         fetch_data(machines, args.user, args.tag, client_out_dir)
 
 class CollectServerCommand(AdminCommand):
@@ -844,6 +841,7 @@ class CollectServerCommand(AdminCommand):
             for r, reg in enumerate(self.config.regions)
             for p, a in enumerate(public_addresses(reg))
         ]
+        LOG.info("%s: Fetching server data from machines", machines)
         fetch_data(machines, args.user, args.tag, server_out_dir)
 
 class GenNetEmCommand(AdminCommand):
@@ -853,7 +851,7 @@ class GenNetEmCommand(AdminCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("config", metavar="config_file", help="Path to a config file")
-        parser.add_argument("latency", help="Path to a csv file containing a matrix of one-way latency between regions")
+        parser.add_argument("--latency", help="Path to a csv file containing a matrix of one-way latency between regions")
         parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
         parser.add_argument("--out", "-o", default="netem.sh")
         parser.add_argument("--dev", default="ens5")

@@ -4,11 +4,12 @@ import pandas as pd
 import seaborn as sns
 
 # Read the data from the provided CSV file
-csv_path = 'plots/data/costs.csv'  # Adjust the path if needed
+csv_path = 'plots/data/costs.csv'
 data = pd.read_csv(csv_path, index_col=0)
+data.columns = [name[:4] for name in data.columns]
 
 # Plot the heatmap with adjustments
-plt.figure(figsize=(5, 3))  # Adjusted to make the table about 67% shorter
+plt.figure(figsize=(5, 3))
 
 # Create the heatmap
 sns.heatmap(data, annot=True, fmt=".2f", cmap="coolwarm", cbar=True, linewidths=0.5, 
@@ -20,8 +21,7 @@ plt.xticks(fontsize=10)
 plt.yticks(rotation=0, fontsize=10)  # Keep hardware labels readable
 
 # Set the labels for axes
-#plt.xlabel("Databases", fontsize=12)
-plt.ylabel("AWS Hardware", fontsize=12)
+plt.ylabel("AWS VM Type", fontsize=12)
 
 plt.tight_layout()
 
