@@ -69,3 +69,6 @@ output/
 data/
 logs/
 keys/
+
+# GitHub username & token
+aws/github_credentials.json

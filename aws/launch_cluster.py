@@ -1,9 +1,21 @@
 import boto3
 import os
+import sys
 import time
 import json
+import argparse
 import paramiko
 import subprocess
+
+# Global variables
+instances = []
+
+def load_config(config_file):
+    """
+    Load configuration from the JSON file.
+    """
+    with open(config_file, "r") as f:
+        return json.load(f)
 
 # Load configuration
 with open("aws/aws.json", "r") as f:
@@ -13,19 +25,25 @@ AWS_USERNAME = config["aws_username"]
 REGIONS = config["regions"]
 VM_TYPE = config["vm_type"]
 AMI_IDS = config["regions"]  # Contains AMI and Subnet for each region
+KEY_FOLDER = "keys"
+
 instances = []
 
 # Initialize AWS clients for each region
 ec2_clients = {region: boto3.client("ec2", region_name=region) for region in REGIONS.keys()}
 
+# Initialize ec2 Sessions
+ec2_sessions = {region: boto3.Session(profile_name='default', region_name=region).resource('ec2') for region in REGIONS.keys()}
 
-def ensure_key_pair(region):
+def ensure_key_pair(region, key_folder):
     """
     Ensures a key pair named 'my_aws_key_<region>' exists in the specified region.
-    If it doesn't exist, creates it and saves the private key locally.
+    If it doesn't exist, creates it and saves the private key in the keys folder.
     """
     key_name = f"my_aws_key_{region}"
-    client = ec2_clients[region]
+    client = boto3.client("ec2", region_name=region)
+    private_key_file = os.path.join(key_folder, f"{key_name}.pem")
+
     try:
         # Check if the key pair already exists
         client.describe_key_pairs(KeyNames=[key_name])
@@ -37,51 +55,45 @@ def ensure_key_pair(region):
             response = client.create_key_pair(KeyName=key_name)
             key_material = response["KeyMaterial"]
 
-            # Save the private key to a local file
-            private_key_file = f"keys/{key_name}.pem"
+            # Save the private key to the keys folder
+            os.makedirs(key_folder, exist_ok=True)
             with open(private_key_file, "w") as f:
                 f.write(key_material)
             os.chmod(private_key_file, 0o400)
             print(f"Key pair '{key_name}' created. Private key saved to '{private_key_file}'.")
         else:
             raise
+    return key_name
 
 
-def launch_instances():
+def launch_instances(config, key_folder):
     """
     Launches one EC2 instance in each region specified in the configuration.
     """
     for region, client in ec2_clients.items():
         region_config = REGIONS[region]
-        ensure_key_pair(region)  # Ensure the key pair exists
+        ensure_key_pair(region, key_folder)  # Ensure the key pair exists
         key_name = f"my_aws_key_{region}"
 
         print(f"Launching instance in {region}...")
-        ec2_client = ec2_clients[region]
-        response = ec2_client.run_instances(
+        #ec2_client = ec2_clients[region]
+        ec2_session = ec2_sessions[region]
+        instance = ec2_session.create_instances(
             ImageId=region_config["ami_id"],
             InstanceType=config["vm_type"],
             KeyName=key_name,
-            MinCount=1,
             MaxCount=1,
-            NetworkInterfaces=[
-                {
-                    "SubnetId": region_config["subnet_id"],
-                    "DeviceIndex": 0,
-                    "AssociatePublicIpAddress": True,  # This ensures a public IP is assigned
-                }
-            ],
+            MinCount=1,
+            SubnetId=region_config["subnet_id"],
+            SecurityGroupIds=[region_config["sg_id"]],
             TagSpecifications=[
                 {
-                    "ResourceType": "instance",
-                    "Tags": [
-                        {"Key": "Name", "Value": f"aws-experiment-{region}"}
-                    ],
+                    'ResourceType': 'instance',
+                    'Tags': [{'Key': 'Name', 'Value': 'MyFirstPublicInstance_'+region}],
                 }
             ],
         )
-        instance = response["Instances"][0]
-        instances.append({"InstanceId": instance["InstanceId"], "Region": region})
+        instances.append({"InstanceId": instance[0].id, "Region": region})
 
 
 def wait_for_instances():
@@ -89,6 +101,7 @@ def wait_for_instances():
     Waits until all instances are running and retrieves their public IPs.
     """
     public_ips = []
+    region_ips = {}
     for instance in instances:
         region = instance["Region"]
         client = ec2_clients[region]
@@ -104,8 +117,27 @@ def wait_for_instances():
         print(f"Instance {instance_id} in {region} is running with IP: {public_ip}")
         instance["PublicIp"] = public_ip
         public_ips.append(public_ip)
+        region_ips[region] = {"ip": public_ip, "instance_id": instance_id}
+    
+    with open('aws/ips.json', 'w') as fp:
+        json.dump(region_ips, fp)
 
     return public_ips
+
+
+def stop_cluster():
+    """
+    Terminates all instances launched during this session.
+    """
+    with open('aws/ips.json') as file:
+        region_ips = json.load(file)
+
+    for region in region_ips.keys():
+        instance_id = region_ips[region]["instance_id"]
+
+        print(f"Terminating instance {instance_id} in {region}...")
+        ec2_clients[region].terminate_instances(InstanceIds=[instance_id])
+        print(f"Instance {instance_id} in {region} terminated.")
 
 
 def test_connectivity(public_ips):
@@ -151,7 +183,7 @@ done > /var/log/resource_monitor.log &
     for ip in instances:
         try:
             print(f"Connecting to {ip}...")
-            ssh.connect(hostname=ip, username="ubuntu", key_filename=f"keys/my_aws_key_{instances["Region"]}.pem")
+            ssh.connect(hostname=ip, username="ubuntu", key_filename=f"keys/my_aws_key_eu-west-1.pem")
             stdin, stdout, stderr = ssh.exec_command(f"echo '{monitoring_script}' > /tmp/monitor.sh && chmod +x /tmp/monitor.sh && /tmp/monitor.sh")
             print(stdout.read().decode(), stderr.read().decode())
         except Exception as e:
@@ -159,25 +191,21 @@ done > /var/log/resource_monitor.log &
 
     ssh.close()
 
-
 if __name__ == "__main__":
-    # Step 1: Launch instances
-    launch_instances()
+    parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
+    parser.add_argument("action", choices=["start", "stop"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("-cfg", default="aws/aws.json", help="Path to the config file.")
+    args = parser.parse_args()
 
-    # Step 2: Wait for instances and get public IPs
-    public_ips = wait_for_instances()
+    config_file = args.cfg
+    config = load_config(config_file)
 
-    # Step 3: Test connectivity
-    rtt_table = test_connectivity(public_ips)
-
-    # Step 4: Deploy monitoring script
-    deploy_monitoring_script(public_ips)
-
-    # Step 5: Print results
-    print("\nInstance Information:")
-    for instance in instances:
-        print(f"Instance {instance['InstanceId']} in {instance['Region']} with IP {instance['PublicIp']}")
-
-    print("\nRTT Table:")
-    for row in rtt_table:
-        print("\t".join(row))
+    if args.action == "start":
+        launch_instances(config, KEY_FOLDER)
+        public_ips = wait_for_instances()
+        # Ignore this step for now (does not work anyway)
+        #test_connectivity(public_ips)
+        # We want to use alternative monitoring script
+        #deploy_monitoring_script(public_ips, KEY_FOLDER)
+    elif args.action == "stop":
+        stop_cluster()
