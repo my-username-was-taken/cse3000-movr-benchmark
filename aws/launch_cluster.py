@@ -1,4 +1,5 @@
 import boto3
+import os
 import time
 import json
 import paramiko
@@ -11,31 +12,82 @@ with open("aws/aws.json", "r") as f:
 AWS_USERNAME = config["aws_username"]
 REGIONS = config["regions"]
 VM_TYPE = config["vm_type"]
-AMI_IDS = config["regions"]
-KEY_NAME = "my_aws_key"  # Replace with your AWS key pair name
-
-# Initialize AWS clients
-ec2_clients = {region: boto3.client("ec2", region_name=region) for region in REGIONS}
+AMI_IDS = config["regions"]  # Contains AMI and Subnet for each region
 instances = []
 
-# Function to launch instances
+# Initialize AWS clients for each region
+ec2_clients = {region: boto3.client("ec2", region_name=region) for region in REGIONS.keys()}
+
+
+def ensure_key_pair(region):
+    """
+    Ensures a key pair named 'my_aws_key_<region>' exists in the specified region.
+    If it doesn't exist, creates it and saves the private key locally.
+    """
+    key_name = f"my_aws_key_{region}"
+    client = ec2_clients[region]
+    try:
+        # Check if the key pair already exists
+        client.describe_key_pairs(KeyNames=[key_name])
+        print(f"Key pair '{key_name}' already exists in {region}.")
+    except client.exceptions.ClientError as e:
+        if "InvalidKeyPair.NotFound" in str(e):
+            # Create the key pair
+            print(f"Key pair '{key_name}' not found in {region}. Creating...")
+            response = client.create_key_pair(KeyName=key_name)
+            key_material = response["KeyMaterial"]
+
+            # Save the private key to a local file
+            private_key_file = f"keys/{key_name}.pem"
+            with open(private_key_file, "w") as f:
+                f.write(key_material)
+            os.chmod(private_key_file, 0o400)
+            print(f"Key pair '{key_name}' created. Private key saved to '{private_key_file}'.")
+        else:
+            raise
+
+
 def launch_instances():
+    """
+    Launches one EC2 instance in each region specified in the configuration.
+    """
     for region, client in ec2_clients.items():
+        region_config = REGIONS[region]
+        ensure_key_pair(region)  # Ensure the key pair exists
+        key_name = f"my_aws_key_{region}"
+
         print(f"Launching instance in {region}...")
-        region_config = config["regions"][region]
-        response = client.run_instances(
+        ec2_client = ec2_clients[region]
+        response = ec2_client.run_instances(
             ImageId=region_config["ami_id"],
-            InstanceType=VM_TYPE,
-            KeyName=KEY_NAME,
+            InstanceType=config["vm_type"],
+            KeyName=key_name,
             MinCount=1,
             MaxCount=1,
-            SubnetId=region_config["subnet_id"]
+            NetworkInterfaces=[
+                {
+                    "SubnetId": region_config["subnet_id"],
+                    "DeviceIndex": 0,
+                    "AssociatePublicIpAddress": True,  # This ensures a public IP is assigned
+                }
+            ],
+            TagSpecifications=[
+                {
+                    "ResourceType": "instance",
+                    "Tags": [
+                        {"Key": "Name", "Value": f"aws-experiment-{region}"}
+                    ],
+                }
+            ],
         )
         instance = response["Instances"][0]
         instances.append({"InstanceId": instance["InstanceId"], "Region": region})
 
-# Function to wait until instances are running and fetch their IPs
+
 def wait_for_instances():
+    """
+    Waits until all instances are running and retrieves their public IPs.
+    """
     public_ips = []
     for instance in instances:
         region = instance["Region"]
@@ -55,8 +107,11 @@ def wait_for_instances():
 
     return public_ips
 
-# Function to check connectivity between VMs
+
 def test_connectivity(public_ips):
+    """
+    Tests connectivity between the instances by pinging each pair.
+    """
     print("Testing connectivity between VMs...")
     rtt_table = [["Origin", "Destination", "RTT (ms)"]]
     for src_ip in public_ips:
@@ -77,8 +132,11 @@ def test_connectivity(public_ips):
 
     return rtt_table
 
-# Function to deploy monitoring script on VMs
+
 def deploy_monitoring_script(public_ips):
+    """
+    Deploys a monitoring script to each instance to log resource utilization.
+    """
     print("Deploying monitoring script to VMs...")
     monitoring_script = """
 #!/bin/bash
@@ -90,10 +148,10 @@ done > /var/log/resource_monitor.log &
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    for ip in public_ips:
+    for ip in instances:
         try:
             print(f"Connecting to {ip}...")
-            ssh.connect(hostname=ip, username="ubuntu", key_filename="~/.ssh/my_aws_key.pem")
+            ssh.connect(hostname=ip, username="ubuntu", key_filename=f"keys/my_aws_key_{instances["Region"]}.pem")
             stdin, stdout, stderr = ssh.exec_command(f"echo '{monitoring_script}' > /tmp/monitor.sh && chmod +x /tmp/monitor.sh && /tmp/monitor.sh")
             print(stdout.read().decode(), stderr.read().decode())
         except Exception as e:
@@ -101,7 +159,7 @@ done > /var/log/resource_monitor.log &
 
     ssh.close()
 
-# Main function
+
 if __name__ == "__main__":
     # Step 1: Launch instances
     launch_instances()

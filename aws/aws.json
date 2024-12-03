@@ -3,9 +3,12 @@
     "regions": {
         "eu-west-1": {
             "ami_id": "ami-0d64bb532e0502c46",
-            "subnet_id": "subnet-0bb5f60f1f4bb0989"
+            "subnet_id": "subnet-04dab2eceb7b5f57e"
         },
-        "eu-west-2": "ami-0e8d228ad90af673b",
+        "eu-west-2": {
+            "ami_id": "ami-0e8d228ad90af673b",
+            "subnet_id": "subnet-0e14a14e8d2948184"
+        },
         "us-west-1": "ami-0da424eb883458071",
         "us-west-2": "ami-04dd23e62ed049936"
     },
