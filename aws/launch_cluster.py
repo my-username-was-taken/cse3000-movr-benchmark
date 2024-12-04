@@ -6,6 +6,7 @@ import json
 import argparse
 import paramiko
 import subprocess
+import csv
 
 # Global variables
 instances = []
@@ -17,6 +18,11 @@ def load_config(config_file):
     """
     with open(config_file, "r") as f:
         return json.load(f)
+
+def load_region_ips_from_file():
+    with open('aws/ips.json') as file:
+        region_ips = json.load(file)
+    return region_ips
 
 def execute_remote_command(ssh_client, command):
     """
@@ -129,9 +135,9 @@ def wait_for_instances():
         region_ips[region] = {"ip": public_ip, "instance_id": instance_id}
     
     with open('aws/ips.json', 'w') as fp:
-        json.dump(region_ips, fp)
+        json.dump(region_ips, fp, indent=4)
 
-    return public_ips
+    return public_ips, region_ips
 
 
 def setup_vm(public_ip, key_path, github_credentials):
@@ -171,23 +177,22 @@ def setup_vm(public_ip, key_path, github_credentials):
         ssh.close()
 
 
-def setup_vms(public_ips):
+def setup_vms(region_ips):
     # Load GitHub credentials
     with open("aws/github_credentials.json", "r") as f:
         github_credentials = json.load(f)
 
-    # Set up each VM
-    for ip in public_ips:
+    # Set up each VM (TODO: Paralellize this)
+    for region in region_ips.keys():
         key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
-        setup_vm(ip, key_path, github_credentials)
+        setup_vm(region_ips[region]["ip"], key_path, github_credentials)
 
 
 def stop_cluster():
     """
     Terminates all instances launched during this session.
     """
-    with open('aws/ips.json') as file:
-        region_ips = json.load(file)
+    region_ips = load_region_ips_from_file()
 
     for region in region_ips.keys():
         instance_id = region_ips[region]["instance_id"]
@@ -195,6 +200,66 @@ def stop_cluster():
         print(f"Terminating instance {instance_id} in {region}...")
         ec2_clients[region].terminate_instances(InstanceIds=[instance_id])
         print(f"Instance {instance_id} in {region} terminated.")
+
+
+def test_connectivity_between_regions(region_ips, username='ubuntu'):
+    """
+    Tests connectivity between instances in different regions by SSHing into them
+    and pinging other instances. Saves the round-trip time (RTT) as a matrix CSV.
+    
+    Args:
+        region_ips (dict): Dictionary of regions with instance public IPs and IDs.
+        key_file (str): Path to the private key file for SSH.
+        username (str): SSH username (e.g., "ubuntu").
+    """
+    print("Testing connectivity between VMs across regions...")
+
+    # Prepare a blank RTT matrix with region names as headers
+    regions = list(region_ips.keys())
+    rtt_matrix = [[""] + regions]  # First row header
+
+    for src_region in regions:
+        src_ip = region_ips[src_region]["ip"]
+        row = [src_region]  # First column header
+
+        # SSH into the source instance
+        try:
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=src_ip, username=username, key_filename=os.path.join(KEY_FOLDER, f"my_aws_key_{src_region}.pem"))
+            print(f"Connected to {src_region} ({src_ip})")
+
+            # Test connectivity to other instances
+            for dest_region in regions:
+                dest_ip = region_ips[dest_region]["ip"]
+                if src_region == dest_region:
+                    row.append("N/A")  # Skip self-connectivity
+                else:
+                    # Execute ping command on the remote VM
+                    stdin, stdout, stderr = ssh_client.exec_command(f"ping -c 1 {dest_ip}")
+                    ping_output = stdout.read().decode()
+                    rtt_time = "N/A"
+                    if "time=" in ping_output:
+                        for line in ping_output.splitlines():
+                            if "time=" in line:
+                                rtt_time = line.split("time=")[1].split(" ")[0]  # Extract RTT
+                                break
+                    row.append(rtt_time)
+                    print(f"RTT from {src_region} to {dest_region}: {rtt_time} ms")
+
+            ssh_client.close()
+        except Exception as e:
+            print(f"Error connecting to {src_region} ({src_ip}): {e}")
+            row += ["Error"] * len(regions)
+
+        rtt_matrix.append(row)
+
+    # Save RTT matrix as CSV
+    output_file = "aws/rtt_matrix_regions.csv"
+    with open(output_file, mode="w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerows(rtt_matrix)
+    print(f"RTT matrix saved to {output_file}")
 
 
 def test_connectivity(public_ips):
@@ -221,36 +286,9 @@ def test_connectivity(public_ips):
 
     return rtt_table
 
-
-def deploy_monitoring_script(public_ips):
-    """
-    Deploys a monitoring script to each instance to log resource utilization.
-    """
-    print("Deploying monitoring script to VMs...")
-    monitoring_script = """
-#!/bin/bash
-while true; do
-    echo "$(date) | CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print $2+$4}')% | Mem: $(free -m | awk 'NR==2{printf \"%s/%s MB\", $3,$2 }') | Disk: $(df -h / | awk 'NR==2{print $3\"/\"$2}') | Network: $(ifconfig eth0 | grep 'RX bytes' | awk '{print $2 $6}')"
-    sleep 1
-done > /var/log/resource_monitor.log &
-"""
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    for ip in instances:
-        try:
-            print(f"Connecting to {ip}...")
-            ssh.connect(hostname=ip, username="ubuntu", key_filename=f"keys/my_aws_key_eu-west-1.pem")
-            stdin, stdout, stderr = ssh.exec_command(f"echo '{monitoring_script}' > /tmp/monitor.sh && chmod +x /tmp/monitor.sh && /tmp/monitor.sh")
-            print(stdout.read().decode(), stderr.read().decode())
-        except Exception as e:
-            print(f"Failed to connect to {ip}: {e}")
-
-    ssh.close()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
-    parser.add_argument("action", choices=["start", "stop"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("action", choices=["start", "status", "stop"], help="Action to perform: start or stop the cluster.")
     parser.add_argument("-cfg", default="aws/aws.json", help="Path to the config file.")
     args = parser.parse_args()
 
@@ -259,13 +297,14 @@ if __name__ == "__main__":
 
     if args.action == "start":
         launch_instances(config, KEY_FOLDER)
-        public_ips = wait_for_instances()
+        public_ips, region_ips = wait_for_instances()
 
-        setup_vms(public_ips)
+        setup_vms(region_ips)
+        test_connectivity_between_regions(region_ips)
+    elif args.action == "status":
+        region_ips = load_region_ips_from_file()
+        public_ips = [region_ips[reg]["ip"] for reg in region_ips.keys()]
 
-        # Ignore this step for now (does not work anyway)
-        #test_connectivity(public_ips)
-        # We want to use alternative monitoring script
-        #deploy_monitoring_script(public_ips, KEY_FOLDER)
+        test_connectivity_between_regions(region_ips)
     elif args.action == "stop":
         stop_cluster()

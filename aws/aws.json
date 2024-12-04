@@ -24,5 +24,6 @@
             "sg_id": ""
         }
     },
-    "vm_type": "m4.2xlarge"
+    "vm_type": "t2.micro",
+    "final_vm_type": "m4.2xlarge"
 }

@@ -22,19 +22,21 @@ echo "alias python=python3.8" >> .bashrc
 source .bashrc
 
 # Create Python env
+cd ../..
 python3.8 -m venv build_detock
 source build_detock/bin/activate
+
+sudo apt install net-tools
+sudo apt install dstat -y
+sudo apt install cmake build-essential pkg-config -y
+
+# Setups specific for Detock
+cd Detock
 
 # Install libraries
 python3.8 -m pip install --upgrade pip
 pip install psutil
-
-sudo apt install net-tools
-sudo apt install dstat
-
-# Clone git repo
-#git clone https://github.com/delftdata/Detock
-#cd Detock
+pip install -r tools/requirements.txt
 
 # Start monitoring script
-#python aws/monitor_util.py &
+python aws/monitor_util.py &

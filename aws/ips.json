@@ -1,1 +1,10 @@
-{"eu-west-1": {"ip": "34.251.9.140", "instance_id": "i-087fc925b253b7bb1"}}
+{
+    "eu-west-1": {
+        "ip": "52.211.210.127",
+        "instance_id": "i-015c7a1107f826843"
+    },
+    "eu-west-2": {
+        "ip": "18.130.229.150",
+        "instance_id": "i-0dcaab4506381fdff"
+    }
+}
