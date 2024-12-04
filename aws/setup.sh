@@ -29,6 +29,12 @@ source build_detock/bin/activate
 python3.8 -m pip install --upgrade pip
 pip install psutil
 
-
 sudo apt install net-tools
 sudo apt install dstat
+
+# Clone git repo
+#git clone https://github.com/delftdata/Detock
+#cd Detock
+
+# Start monitoring script
+#python aws/monitor_util.py &

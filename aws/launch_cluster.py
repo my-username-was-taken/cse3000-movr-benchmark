@@ -10,12 +10,21 @@ import subprocess
 # Global variables
 instances = []
 
+# Helper functions
 def load_config(config_file):
     """
     Load configuration from the JSON file.
     """
     with open(config_file, "r") as f:
         return json.load(f)
+
+def execute_remote_command(ssh_client, command):
+    """
+    Execute a command on a remote server over SSH.
+    """
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    print(stdout.read().decode())
+    print(stderr.read().decode())
 
 # Load configuration
 with open("aws/aws.json", "r") as f:
@@ -125,6 +134,54 @@ def wait_for_instances():
     return public_ips
 
 
+def setup_vm(public_ip, key_path, github_credentials):
+    """
+    Clone the repository and execute the setup script on a remote VM.
+    """
+    print(f"Setting up VM at {public_ip}...")
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        ssh.connect(hostname=public_ip, username="ubuntu", key_filename=key_path)
+
+        # Transfer GitHub credentials
+        sftp = ssh.open_sftp()
+        sftp.put("aws/github_credentials.json", "/home/ubuntu/github_credentials.json")
+        sftp.close()
+        print("GitHub credentials transferred.")
+
+        # Clone the repository
+        clone_command = """
+        export GIT_ASKPASS=/bin/echo &&
+        echo {} > /tmp/token &&
+        git clone https://{}:{}@github.com/delftdata/Detock.git
+        """.format(github_credentials["token"], github_credentials["username"], github_credentials["token"])
+        execute_remote_command(ssh, clone_command)
+        print("Repository cloned.")
+
+        # Run the setup script
+        setup_command = "bash /home/ubuntu/Detock/aws/setup.sh"
+        execute_remote_command(ssh, setup_command)
+        print("Setup script executed.")
+
+    except Exception as e:
+        print(f"Error setting up VM {public_ip}: {e}")
+    finally:
+        ssh.close()
+
+
+def setup_vms(public_ips):
+    # Load GitHub credentials
+    with open("aws/github_credentials.json", "r") as f:
+        github_credentials = json.load(f)
+
+    # Set up each VM
+    for ip in public_ips:
+        key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
+        setup_vm(ip, key_path, github_credentials)
+
+
 def stop_cluster():
     """
     Terminates all instances launched during this session.
@@ -203,6 +260,9 @@ if __name__ == "__main__":
     if args.action == "start":
         launch_instances(config, KEY_FOLDER)
         public_ips = wait_for_instances()
+
+        setup_vms(public_ips)
+
         # Ignore this step for now (does not work anyway)
         #test_connectivity(public_ips)
         # We want to use alternative monitoring script
