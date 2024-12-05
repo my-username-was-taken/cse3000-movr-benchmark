@@ -1,5 +1,3 @@
-# Set up the python environment
-
 sudo apt update
 
 # Can't get Python3.8 directly, so compile it
@@ -20,6 +18,12 @@ sudo make install
 
 echo "alias python=python3.8" >> .bashrc
 source .bashrc
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh && 
+    sh get-docker.sh && 
+    sudo usermod -aG docker ubuntu
+sudo systemctl start docker
 
 # Create Python env
 cd ../..

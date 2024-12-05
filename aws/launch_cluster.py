@@ -32,23 +32,9 @@ def execute_remote_command(ssh_client, command):
     print(stdout.read().decode())
     print(stderr.read().decode())
 
-# Load configuration
-with open("aws/aws.json", "r") as f:
-    config = json.load(f)
-
-AWS_USERNAME = config["aws_username"]
-REGIONS = config["regions"]
-VM_TYPE = config["vm_type"]
-AMI_IDS = config["regions"]  # Contains AMI and Subnet for each region
 KEY_FOLDER = "keys"
 
 instances = []
-
-# Initialize AWS clients for each region
-ec2_clients = {region: boto3.client("ec2", region_name=region) for region in REGIONS.keys()}
-
-# Initialize ec2 Sessions
-ec2_sessions = {region: boto3.Session(profile_name='default', region_name=region).resource('ec2') for region in REGIONS.keys()}
 
 def ensure_key_pair(region, key_folder):
     """
@@ -104,7 +90,7 @@ def launch_instances(config, key_folder):
             TagSpecifications=[
                 {
                     'ResourceType': 'instance',
-                    'Tags': [{'Key': 'Name', 'Value': 'MyFirstPublicInstance_'+region}],
+                    'Tags': [{'Key': 'Name', 'Value': 'DetockVM_'+region}],
                 }
             ],
         )
@@ -294,11 +280,22 @@ if __name__ == "__main__":
 
     config_file = args.cfg
     config = load_config(config_file)
+    AWS_USERNAME = config["aws_username"]
+    REGIONS = config["regions"]
+    VM_TYPE = config["vm_type"]
+    AMI_IDS = config["regions"]  # Contains AMI and Subnet for each region
+
+    # Initialize AWS clients for each region
+    ec2_clients = {region: boto3.client("ec2", region_name=region) for region in REGIONS.keys()}
+
+    # Initialize ec2 Sessions
+    ec2_sessions = {region: boto3.Session(profile_name='default', region_name=region).resource('ec2') for region in REGIONS.keys()}
 
     if args.action == "start":
         launch_instances(config, KEY_FOLDER)
         public_ips, region_ips = wait_for_instances()
 
+        # Don't need setup to measure RTTs
         setup_vms(region_ips)
         test_connectivity_between_regions(region_ips)
     elif args.action == "status":

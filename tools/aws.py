@@ -290,16 +290,10 @@ class InstallDockerCommand(AWSCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument("--addresses", "-a", nargs="*", help="IP addresses")
-        parser.add_argument(
-            "--clients", type=int, default=1, help="Number of client machines"
-        )
+        parser.add_argument("--clients", type=int, default=1, help="Number of client machines")
         parser.add_argument("--type", nargs="*", help="Filter instances by type")
         parser.add_argument("--role", nargs="*", help="Filter instances by tagged role")
-        parser.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="List the instances to install Docker",
-        )
+        parser.add_argument("--dry-run", action="store_true", help="List the instances to install Docker")
 
     def initialize_and_do_command(self, args):
         if args.addresses is None and not args.regions:
@@ -327,12 +321,8 @@ class InstallDockerCommand(AWSCommand):
                     instance_public_ips[region] = []
                     instance_private_ips[region] = []
                     for r in running_instances["Reservations"]:
-                        instance_public_ips[region] += [
-                            i["PublicIpAddress"].strip() for i in r["Instances"]
-                        ]
-                        instance_private_ips[region] += [
-                            i["PrivateIpAddress"].strip() for i in r["Instances"]
-                        ]
+                        instance_public_ips[region] += [i["PublicIpAddress"].strip() for i in r["Instances"]]
+                        instance_private_ips[region] += [i["PrivateIpAddress"].strip() for i in r["Instances"]]
                 except Exception as e:
                     LOG.exception(region, e)
 
@@ -341,9 +331,7 @@ class InstallDockerCommand(AWSCommand):
 
         print_instance_ips(instance_public_ips, "PUBLIC IP ADDRESSES")
         print_instance_ips(instance_private_ips, "PRIVATE IP ADDRESSES")
-        print_slog_config_fragment(
-            instance_public_ips, instance_private_ips, args.clients
-        )
+        print_slog_config_fragment(instance_public_ips, instance_private_ips, args.clients)
 
 
 class ListInstancesCommand(AWSCommand):

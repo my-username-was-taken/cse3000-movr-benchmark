@@ -15,13 +15,13 @@
     "unused_regions": {
         "us-west-1": {
             "ami_id": "ami-0da424eb883458071",
-            "subnet_id": "",
-            "sg_id": ""
+            "subnet_id": "subnet-0ec58214554aae2a0",
+            "sg_id": "sg-022fc9d4e10ee30da"
         },
         "us-west-2": {
             "ami_id": "ami-04dd23e62ed049936",
-            "subnet_id": "",
-            "sg_id": ""
+            "subnet_id": "subnet-0d233aec597095edd",
+            "sg_id": "sg-07e32202b21b0d076"
         }
     },
     "vm_type": "t2.micro",

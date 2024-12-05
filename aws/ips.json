@@ -1,10 +1,34 @@
 {
     "eu-west-1": {
-        "ip": "52.211.210.127",
-        "instance_id": "i-015c7a1107f826843"
+        "ip": "63.33.42.161",
+        "instance_id": "i-0da37e55488ae6f1d"
     },
     "eu-west-2": {
-        "ip": "18.130.229.150",
-        "instance_id": "i-0dcaab4506381fdff"
+        "ip": "3.8.187.26",
+        "instance_id": "i-0d1912648226bdc8d"
+    },
+    "ap-northeast-2": {
+        "ip": "43.201.95.166",
+        "instance_id": "i-070942021dac6bb13"
+    },
+    "us-west-1": {
+        "ip": "18.144.75.177",
+        "instance_id": "i-086399bff2d50ba52"
+    },
+    "us-west-2": {
+        "ip": "35.95.24.88",
+        "instance_id": "i-030446c596a62a00c"
+    },
+    "us-east-1": {
+        "ip": "18.204.5.102",
+        "instance_id": "i-06b1a131d923a14bf"
+    },
+    "us-east-2": {
+        "ip": "3.23.127.28",
+        "instance_id": "i-0516fa3222916bf4b"
+    },
+    "ap-northeast-1": {
+        "ip": "18.183.8.154",
+        "instance_id": "i-0de4fa4d5ce6b4cac"
     }
 }
