@@ -7,6 +7,7 @@ import argparse
 import paramiko
 import subprocess
 import csv
+from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 instances = []
@@ -168,10 +169,18 @@ def setup_vms(region_ips):
     with open("aws/github_credentials.json", "r") as f:
         github_credentials = json.load(f)
 
-    # Set up each VM (TODO: Paralellize this)
-    for region in region_ips.keys():
+    def setup_task(region):
         key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
         setup_vm(region_ips[region]["ip"], key_path, github_credentials)
+
+    # Setup all VMs concurrently
+    with ThreadPoolExecutor() as executor:
+        executor.map(setup_task, region_ips.keys())
+
+    # Set up each VM (TODO: Paralellize this)
+    #for region in region_ips.keys():
+    #    key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
+    #    setup_vm(region_ips[region]["ip"], key_path, github_credentials)
 
 
 def stop_cluster():
@@ -295,7 +304,6 @@ if __name__ == "__main__":
         launch_instances(config, KEY_FOLDER)
         public_ips, region_ips = wait_for_instances()
 
-        # Don't need setup to measure RTTs
         setup_vms(region_ips)
         test_connectivity_between_regions(region_ips)
     elif args.action == "status":

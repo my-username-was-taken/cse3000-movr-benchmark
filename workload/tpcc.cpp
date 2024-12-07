@@ -31,8 +31,20 @@ constexpr char TXN_MIX[] = "mix";
 // Only send single-home transactions
 constexpr char SH_ONLY[] = "sh_only";
 
+// Should actually contain an equal amount of New Order & Payement. 1 Delivery, 1 Stock Level, 1 Order Status per 10 New Order txns.
+// "TPC-C specification requires that 10% of New Order transactions need to access two separate warehouses, which may
+// become multi-partition and/or multi-home transactions if those two warehouses are located in separate partitions (which is greater than
+// 75% probability in our 4-partition set-up) or have different home regions."
 const RawParamMap DEFAULT_PARAMS = {
-    {PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}};
+    {PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"}, {SH_ONLY, "0"}};
+//const RawParamMap DEFAULT_PARAMS = {
+//    {PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}};
+
+int new_order_count = 0;
+int payment_count = 0;
+int delivery_count = 0;
+int order_status_count = 0; 
+int stock_level_count = 0;
 
 template <typename G>
 int NURand(G& g, int A, int x, int y) {
@@ -133,18 +145,23 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
   switch (select_tpcc_txn(rg_)) {
     case 0:
       NewOrder(*txn, pro, w, partition);
+      new_order_count++;
       break;
     case 1:
       Payment(*txn, pro, w, partition);
+      payment_count++;
       break;
     case 2:
       OrderStatus(*txn, w);
+      order_status_count++;
       break;
     case 3:
       Deliver(*txn, w);
+      delivery_count++;
       break;
     case 4:
       StockLevel(*txn, w);
+      stock_level_count++;
       break;
     default:
       LOG(FATAL) << "Invalid txn choice";

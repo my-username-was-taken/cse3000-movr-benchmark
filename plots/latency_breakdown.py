@@ -16,7 +16,8 @@ categories = [
 ]
 
 components = ["Sequencer", "Scheduler", "Batcher", "Forwarder", "Idle", "Other"]
-hatch_patterns = ['/', '\\', '|', '-', '+', 'x']  # Hatching for components
+#hatch_patterns = ['/', '\\', '|', '-', '+', 'x']  # Hatching for components
+hatch_patterns = ['', '', '', '', '', '']  # No hatching
 
 # Create a plot with 4 subplots in 1 row
 fig, axes = plt.subplots(1, 4, figsize=(12, 3))  # Adjust the width as needed for paper formatting
@@ -51,8 +52,11 @@ for idx, ax in enumerate(axes):
     # Format the subplot
     ax.set_xticks(x)
     ax.set_xticklabels(data['Database'], fontsize=9)
-    ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    ax.set_yticklabels([f"{ytick:.1f}" for ytick in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]], fontsize=8)  # Decrease font size for y-ticks
+    if idx == 0:
+        ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.set_yticklabels([f"{ytick:.1f}" for ytick in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]], fontsize=8)  # Decrease font size for y-ticks
+    else:
+        ax.set_yticks([-1.0]) # Remove yticks for the 2nd, 3rd, 4th subplot
     ax.set_ylim(0, 1)
     ax.set_title(category["title"], fontsize=10)
     if idx == 0:
