@@ -89,12 +89,12 @@ def run_experiment(base_params, experiment_params, super_folder):
             # Copy utilization.csv to the new folder
             util_csv_path = "utilization.csv"
             if os.path.exists(util_csv_path):
-                new_util_csv_path = os.path.join(data_dir, "utilization.csv")
+                new_util_csv_path = os.path.join(new_folder_path, "utilization.csv")
                 os.rename(util_csv_path, new_util_csv_path)
 
-            # Generate and save the monitoring plot
-            plot_path = os.path.join(data_dir, "utilization_plot")
-            plot_monitoring_data(new_util_csv_path, plot_path)
+                # Generate and save the monitoring plot
+                plot_path = os.path.join(new_folder_path, "utilization_plot")
+                plot_monitoring_data(new_util_csv_path, plot_path)
 
         except Exception as e:
             print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.\n{e}")
