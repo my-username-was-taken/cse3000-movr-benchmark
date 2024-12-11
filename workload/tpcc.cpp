@@ -35,16 +35,16 @@ constexpr char SH_ONLY[] = "sh_only";
 // "TPC-C specification requires that 10% of New Order transactions need to access two separate warehouses, which may
 // become multi-partition and/or multi-home transactions if those two warehouses are located in separate partitions (which is greater than
 // 75% probability in our 4-partition set-up) or have different home regions."
-const RawParamMap DEFAULT_PARAMS = {
-    {PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"}, {SH_ONLY, "0"}};
-//const RawParamMap DEFAULT_PARAMS = {
-//    {PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}};
+const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"}, {SH_ONLY, "0"}};
+//const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}};
 
 int new_order_count = 0;
 int payment_count = 0;
 int delivery_count = 0;
 int order_status_count = 0; 
 int stock_level_count = 0;
+
+int total_txn_count = 0;
 
 template <typename G>
 int NURand(G& g, int A, int x, int y) {
@@ -124,6 +124,7 @@ TPCCWorkload::TPCCWorkload(const ConfigurationPtr& config, RegionId region, Repl
 }
 
 std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
+  LOG(INFO) << "Creating next TPCC transaction";
   TransactionProfile pro;
 
   pro.client_txn_id = client_txn_id_counter_;
@@ -166,6 +167,9 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
     default:
       LOG(FATAL) << "Invalid txn choice";
   }
+  total_txn_count++;
+  LOG(INFO) << "Current txn counts: NO: " << new_order_count << " P: "<< payment_count << " OS: "<< order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
+  LOG(INFO) << "Current txn percentages: NO: " << new_order_count/total_txn_count << " P: "<< payment_count/total_txn_count << " OS: "<< order_status_count/total_txn_count << " D: "<< delivery_count/total_txn_count << " SL: "<< stock_level_count/total_txn_count;
 
   txn->mutable_internal()->set_id(client_txn_id_counter_);
   client_txn_id_counter_++;

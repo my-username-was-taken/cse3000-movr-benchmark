@@ -614,6 +614,8 @@ class BenchmarkCommand(AdminCommand):
         parser.add_argument("--duration", type=int, default=0, help="How long the benchmark is run in seconds")
         parser.add_argument("--tag", help="Tag of this benchmark run. Auto-generated if not provided")
         parser.add_argument("--workload", "-wl", choices=["basic", "cockroach", "remastering", "tpcc"], default="basic", help="Name of the workload to run benchmark with")
+        parser.add_argument("-od", "--out_dir", default="", help="Output directory for final results")
+        parser.add_argument("-dd", "--data_dir", default="", help="Directory for initial data")
         parser.add_argument("--params", default="", help="Parameters of the workload")
         parser.add_argument("--rate", type=int, default=0, help="Maximum number of transactions sent per second")
         parser.add_argument("--clients", type=int, default=0, help="Number of clients sending synchronized txns")
@@ -675,7 +677,10 @@ class BenchmarkCommand(AdminCommand):
         else:
             tag = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-        out_dir = os.path.join(CONTAINER_DATA_DIR, tag)
+        if args.out_dir != "":
+            out_dir = args.out_dir
+        else:
+            out_dir = os.path.join(CONTAINER_DATA_DIR, tag)
 
         # Clean up everything
         def clean_up(remote_proc):
@@ -717,7 +722,7 @@ class BenchmarkCommand(AdminCommand):
                 f"--data-dir {CONTAINER_DATA_DIR} "
                 f"--out-dir {out_dir} "
                 f"--duration {args.duration} "
-                f"--wl {args.workload} " # Probably a bug here? Should be only 1 '-wl'
+                f"--wl {args.workload} "
                 f'--params "{args.params}" '
                 f"--txns {args.txns} "
                 f"--generators {args.generators} "

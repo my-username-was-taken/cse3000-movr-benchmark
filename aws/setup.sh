@@ -43,4 +43,4 @@ pip install psutil
 pip install -r tools/requirements.txt
 
 # Start monitoring script
-python aws/monitor_util.py &
+#python aws/monitor_util.py &

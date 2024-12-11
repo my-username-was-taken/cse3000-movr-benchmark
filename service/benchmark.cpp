@@ -63,16 +63,13 @@ vector<unique_ptr<ModuleRunner>> InitializeGenerators() {
     // Select the workload
     unique_ptr<Workload> workload;
     if (FLAGS_wl == "basic") {
-      workload =
-          make_unique<BasicWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_data_dir, FLAGS_params, seed + i);
+      workload = make_unique<BasicWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_data_dir, FLAGS_params, seed + i);
     } else if (FLAGS_wl == "cockroach") {
       workload = make_unique<CockroachWorkload>(config, FLAGS_region, FLAGS_params, seed + i);
     } else if (FLAGS_wl == "remastering") {
-      workload =
-          make_unique<RemasteringWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_data_dir, FLAGS_params, seed + i);
+      workload = make_unique<RemasteringWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_data_dir, FLAGS_params, seed + i);
     } else if (FLAGS_wl == "tpcc") {
-      workload = make_unique<TPCCWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params,
-                                           std::make_pair(i + 1, FLAGS_generators), seed + i);
+      workload = make_unique<TPCCWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), seed + i);
     } else {
       LOG(FATAL) << "Unknown workload: " << FLAGS_wl;
     }
@@ -148,7 +145,7 @@ void RunBenchmark(vector<unique_ptr<ModuleRunner>>& generators) {
     auto abort_tps = (num_aborted_txns - last_num_aborted_txns) * 1000 / t.count();
     auto restart_tps = (num_restarted_txns - last_num_restarted_txns) * 1000 / t.count();
 
-    // Effectively skip the first log since it is usually inaccurate.
+    // Effectively skip the first log since it is usually inaccurate. Then report: Send, Commit, Abort, Restart rates (in brackets total numbers)
     if (last_num_sent_txns > 0) {
       LOG(INFO) << "S: " << send_tps << " (" << num_sent_txns << ")"
                 << "; C: " << commit_tps << " (" << num_committed_txns << ")"

@@ -32,10 +32,8 @@ constexpr char MH_ZIPF[] = "mh_zipf";
 constexpr char MP_PCT[] = "mp";
 // Max number of partitions selected as parts of a multi-partition transaction
 constexpr char MP_PARTS[] = "mp_parts";
-// Number of hot keys per partition. The actual number of
-// hot keys won't match exactly the specified number but will be close.
-// Precisely, it will be:
-//        floor(hot / num_regions) * num_regions
+// Number of hot keys per partition. The actual number of hot keys won't match exactly the specified number but will be close.
+// Precisely, it will be: floor(hot / num_regions) * num_regions
 constexpr char HOT[] = "hot";
 // Number of records in a transaction
 constexpr char RECORDS[] = "records";
@@ -45,24 +43,17 @@ constexpr char HOT_RECORDS[] = "hot_records";
 constexpr char WRITES[] = "writes";
 // Size of a written value in bytes
 constexpr char VALUE_SIZE[] = "value_size";
-// If set to 1, a SH txn will always be sent to the nearest
-// region, a MH txn will always have a part that touches the nearest region
+// If set to 1, a SH txn will always be sent to the nearest region, a MH txn will always have a part that touches the nearest region
 constexpr char NEAREST[] = "nearest";
-// Partition that is used in a single-partition transaction.
-// Use a negative number to select a random partition for
-// each transaction
+// Partition that is used in a single-partition transaction. Use a negative number to select a random partition for each transaction
 constexpr char SP_PARTITION[] = "sp_partition";
-// Home that is used in a single-home transaction.
-// The NEAREST parameter is ignored if this is positive
+// Home that is used in a single-home transaction. The NEAREST parameter is ignored if this is positive
 constexpr char SH_HOME[] = "sh_home";
 
-const RawParamMap DEFAULT_PARAMS = {{MH_PCT, "0"},   {MH_HOMES, "2"},     {MH_ZIPF, "0"},  {MP_PCT, "0"},
-                                    {MP_PARTS, "2"}, {HOT, "0"},          {RECORDS, "10"}, {HOT_RECORDS, "0"},
-                                    {WRITES, "10"},  {VALUE_SIZE, "100"}, {NEAREST, "1"},  {SP_PARTITION, "-1"},
-                                    {SH_HOME, "-1"}};
+const RawParamMap DEFAULT_PARAMS = {{MH_PCT, "0"},      {MH_HOMES, "2"}, {MH_ZIPF, "0"},      {MP_PCT, "0"},  {MP_PARTS, "2"},      {HOT, "0"},      {RECORDS, "10"}, 
+                                    {HOT_RECORDS, "0"}, {WRITES, "10"},  {VALUE_SIZE, "100"}, {NEAREST, "1"}, {SP_PARTITION, "-1"}, {SH_HOME, "-1"}};
 
-// For the Calvin experiment, there is a single region, so replace the regions by the replicas so that
-// we generate the same workload as other experiments
+// For the Calvin experiment, there is a single region, so replace the regions by the replicas so that we generate the same workload as other experiments
 int GetNumRegions(const ConfigurationPtr& config) {
   return config->num_regions() == 1 ? config->num_replicas(config->local_region()) : config->num_regions();
 }
@@ -89,8 +80,7 @@ BasicWorkload::BasicWorkload(const ConfigurationPtr& config, RegionId region, Re
   for (int part = 0; part < num_partitions; part++) {
     for (int reg = 0; reg < num_regions; reg++) {
       // Initialize hot keys limit for each key list. When keys are added to a list,
-      // the first keys are considered hot keys until this limit is reached and any new
-      // keys from there are cold keys.
+      // the first keys are considered hot keys until this limit is reached and any new keys from there are cold keys.
       switch (proto_config.partitioning_case()) {
         case internal::Configuration::kSimplePartitioning: {
           partition_to_key_lists_[part].emplace_back(config, part, reg, hot_keys_per_list);
@@ -101,8 +91,7 @@ BasicWorkload::BasicWorkload(const ConfigurationPtr& config, RegionId region, Re
           break;
         }
         default:
-          LOG(FATAL) << "Invalid partioning mode: "
-                     << CASE_NAME(proto_config.partitioning_case(), internal::Configuration);
+          LOG(FATAL) << "Invalid partioning mode: " << CASE_NAME(proto_config.partitioning_case(), internal::Configuration);
       }
     }
   }
@@ -190,8 +179,7 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
       selected_partitions.push_back(dis(rg_));
     } else {
       // Use the given partition
-      CHECK_LT(static_cast<uint32_t>(sp_partition), num_partitions)
-          << "Selected single-partition partition does not exist";
+      CHECK_LT(static_cast<uint32_t>(sp_partition), num_partitions) << "Selected single-partition partition does not exist";
       selected_partitions.push_back(sp_partition);
     }
   }
@@ -288,7 +276,6 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
   // Construct a new transaction
   auto txn = MakeTransaction(keys, code);
   txn->mutable_internal()->set_id(client_txn_id_counter_);
-
   client_txn_id_counter_++;
 
   return {txn, pro};

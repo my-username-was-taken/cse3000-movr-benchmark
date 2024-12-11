@@ -5,7 +5,8 @@ from datetime import datetime
 
 start_time = time.time()
 start_timestamp = str(datetime.utcfromtimestamp(start_time)).replace(' ', '_').replace(':','_')[:19]
-output_file = f"utilization_{start_timestamp}.csv"
+output_file = f"utilization.csv"
+#output_file = f"utilization_{start_timestamp}.csv"
 
 # Create the CSV file with the header
 with open(output_file, mode="w", newline="") as file:
