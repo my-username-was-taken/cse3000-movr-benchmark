@@ -4,6 +4,9 @@ import subprocess
 from itertools import product
 from datetime import datetime
 from distutils.dir_util import copy_tree
+import signal
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # Function to parse the experiment config and generate a parameter grid
 def parse_config(config_file):
@@ -16,6 +19,47 @@ def parse_config(config_file):
     param_grid = [dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())]
 
     return base_params, param_grid
+
+# Function to plot monitoring data
+def plot_monitoring_data(csv_path, output_path):
+    data = pd.read_csv(csv_path)
+    plt.figure(figsize=(12, 8))
+
+    # Plot CPU usage
+    plt.subplot(2, 2, 1)
+    plt.plot(data['timestamp'], data['cpu'], label='CPU Usage (%)')
+    plt.xlabel('Time')
+    plt.ylabel('CPU (%)')
+    plt.title('CPU Usage')
+    plt.legend()
+
+    # Plot Memory usage
+    plt.subplot(2, 2, 2)
+    plt.plot(data['timestamp'], data['memory'], label='Memory Usage (%)')
+    plt.xlabel('Time')
+    plt.ylabel('Memory (%)')
+    plt.title('Memory Usage')
+    plt.legend()
+
+    # Plot Network usage
+    plt.subplot(2, 2, 3)
+    plt.plot(data['timestamp'], data['network'], label='Network Usage (KB/s)')
+    plt.xlabel('Time')
+    plt.ylabel('Network (KB/s)')
+    plt.title('Network Usage')
+    plt.legend()
+
+    # Plot Disk usage
+    plt.subplot(2, 2, 4)
+    plt.plot(data['timestamp'], data['disk'], label='Disk Usage (KB/s)')
+    plt.xlabel('Time')
+    plt.ylabel('Disk (KB/s)')
+    plt.title('Disk Usage')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
 
 # Function to run a single experiment
 def run_experiment(base_params, experiment_params, super_folder):
@@ -41,22 +85,19 @@ def run_experiment(base_params, experiment_params, super_folder):
         "--param", params
     ]
 
-    # Log the command being executed to a file
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_dir = f"../data/{timestamp}"
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "exp.log")
-    with open(log_file, "w") as log:
-        log.write(f"Running command: {' '.join(cmd)}\n")
+    # Print the command being run
+    print(f"Running command: {' '.join(cmd)}")
 
-    # Run the command and capture the output
+    # Launch monitor_util.py
+    monitor_proc = subprocess.Popen(["python3", "aws/monitor_util.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    # Run the admin.py command and capture the output
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     output = result.stdout + result.stderr
 
-    # Log the captured output for debugging
-    with open(log_file, "a") as log:
-        log.write("Captured output:\n")
-        log.write(output + "\n")
+    # Terminate the monitoring script
+    monitor_proc.send_signal(signal.SIGINT)
+    monitor_proc.wait()
 
     # Extract the timestamp from the output
     extracted_timestamp = None
@@ -66,23 +107,41 @@ def run_experiment(base_params, experiment_params, super_folder):
             break
 
     if not extracted_timestamp:
-        with open(log_file, "a") as log:
-            log.write(f"Error: Could not extract timestamp for config: {experiment_params}\n")
+        print(f"Error: Could not extract timestamp for config: {experiment_params}")
         return
 
-    # Copy and rename the output folder
+    # Create a log file inside the corresponding timestamped folder
     data_dir = f"../data/{extracted_timestamp}"
+    log_file = os.path.join(data_dir, "exp.log")
+    os.makedirs(data_dir, exist_ok=True)
+    with open(log_file, "w") as log:
+        log.write(output + "\n")
+
+    # Copy utilization.csv to the new folder
+    util_csv_path = "utilization.csv"
+    if os.path.exists(util_csv_path):
+        new_util_csv_path = os.path.join(data_dir, "utilization.csv")
+        os.rename(util_csv_path, new_util_csv_path)
+
+        # Generate and save the monitoring plot
+        plot_path = os.path.join(data_dir, "utilization_plot.png")
+        plot_monitoring_data(new_util_csv_path, plot_path)
+
+    # Copy and rename the output folder
     if os.path.exists(data_dir):
-        new_folder_name = f"{benchmark}_" + "_".join([f"{k}{v}" for k, v in experiment_params.items()])
+        new_folder_name = f"{benchmark}_" + "_".join([f"{k}{v}" for k, v in experiment_params.items()]).replace("=", "")
         new_folder_path = os.path.join(super_folder, new_folder_name)
         try:
             copy_tree(data_dir, new_folder_path)
-            with open(log_file, "a") as log:
-                log.write(f"Copied folder to: {new_folder_path}\n")
+            print(f"Copied folder to: {new_folder_path}")
         except Exception as e:
+            print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.
+{e}")
             with open(log_file, "a") as log:
-                log.write(f"Error: Could not copy folder {data_dir} to {new_folder_path}.\n{e}\n")
+                log.write(f"Error: Could not copy folder {data_dir} to {new_folder_path}.
+{e}\n")
     else:
+        print(f"Error: Data folder {data_dir} does not exist")
         with open(log_file, "a") as log:
             log.write(f"Error: Data folder {data_dir} does not exist\n")
 
