@@ -135,11 +135,9 @@ def run_experiment(base_params, experiment_params, super_folder):
             copy_tree(data_dir, new_folder_path)
             print(f"Copied folder to: {new_folder_path}")
         except Exception as e:
-            print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.
-{e}")
+            print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.{e}")
             with open(log_file, "a") as log:
-                log.write(f"Error: Could not copy folder {data_dir} to {new_folder_path}.
-{e}\n")
+                log.write(f"Error: Could not copy folder {data_dir} to {new_folder_path}.{e}\n")
     else:
         print(f"Error: Data folder {data_dir} does not exist")
         with open(log_file, "a") as log:
