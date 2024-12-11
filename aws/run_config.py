@@ -4,6 +4,9 @@ import subprocess
 from itertools import product
 from datetime import datetime
 from distutils.dir_util import copy_tree
+import signal
+
+from plot_resource_util import plot_monitoring_data
 
 # Function to parse the experiment config and generate a parameter grid
 def parse_config(config_file):
@@ -44,9 +47,16 @@ def run_experiment(base_params, experiment_params, super_folder):
     # Print the command being run
     print(f"Running command: {' '.join(cmd)}")
 
+    # Launch monitor_util.py
+    monitor_proc = subprocess.Popen(["python3", "aws/monitor_util.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
     # Run the command and capture the output
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     output = result.stdout + result.stderr
+
+    # Terminate the monitoring script
+    monitor_proc.send_signal(signal.SIGINT)
+    monitor_proc.wait()
 
     # Extract the timestamp from the output
     extracted_timestamp = None
@@ -70,10 +80,21 @@ def run_experiment(base_params, experiment_params, super_folder):
             copy_tree(data_dir, new_folder_path)
             print(f"Copied folder to: {new_folder_path}")
 
+            # Save experiment logs to the new folder
             log_file = os.path.join(new_folder_path, "exp.log")
             os.makedirs(new_folder_path, exist_ok=True)
             with open(log_file, "w") as log:
                 log.write(output + "\n")
+
+            # Copy utilization.csv to the new folder
+            util_csv_path = "utilization.csv"
+            if os.path.exists(util_csv_path):
+                new_util_csv_path = os.path.join(data_dir, "utilization.csv")
+                os.rename(util_csv_path, new_util_csv_path)
+
+            # Generate and save the monitoring plot
+            plot_path = os.path.join(data_dir, "utilization_plot")
+            plot_monitoring_data(new_util_csv_path, plot_path)
 
         except Exception as e:
             print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.\n{e}")
