@@ -4,9 +4,6 @@ import subprocess
 from itertools import product
 from datetime import datetime
 from distutils.dir_util import copy_tree
-import signal
-import pandas as pd
-import matplotlib.pyplot as plt
 
 # Function to parse the experiment config and generate a parameter grid
 def parse_config(config_file):
@@ -19,47 +16,6 @@ def parse_config(config_file):
     param_grid = [dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())]
 
     return base_params, param_grid
-
-# Function to plot monitoring data
-def plot_monitoring_data(csv_path, output_path):
-    data = pd.read_csv(csv_path)
-    plt.figure(figsize=(12, 8))
-
-    # Plot CPU usage
-    plt.subplot(2, 2, 1)
-    plt.plot(data['timestamp'], data['cpu'], label='CPU Usage (%)')
-    plt.xlabel('Time')
-    plt.ylabel('CPU (%)')
-    plt.title('CPU Usage')
-    plt.legend()
-
-    # Plot Memory usage
-    plt.subplot(2, 2, 2)
-    plt.plot(data['timestamp'], data['memory'], label='Memory Usage (%)')
-    plt.xlabel('Time')
-    plt.ylabel('Memory (%)')
-    plt.title('Memory Usage')
-    plt.legend()
-
-    # Plot Network usage
-    plt.subplot(2, 2, 3)
-    plt.plot(data['timestamp'], data['network'], label='Network Usage (KB/s)')
-    plt.xlabel('Time')
-    plt.ylabel('Network (KB/s)')
-    plt.title('Network Usage')
-    plt.legend()
-
-    # Plot Disk usage
-    plt.subplot(2, 2, 4)
-    plt.plot(data['timestamp'], data['disk'], label='Disk Usage (KB/s)')
-    plt.xlabel('Time')
-    plt.ylabel('Disk (KB/s)')
-    plt.title('Disk Usage')
-    plt.legend()
-
-    plt.tight_layout()
-    plt.savefig(output_path)
-    plt.close()
 
 # Function to run a single experiment
 def run_experiment(base_params, experiment_params, super_folder):
@@ -88,16 +44,9 @@ def run_experiment(base_params, experiment_params, super_folder):
     # Print the command being run
     print(f"Running command: {' '.join(cmd)}")
 
-    # Launch monitor_util.py
-    monitor_proc = subprocess.Popen(["python3", "aws/monitor_util.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-    # Run the admin.py command and capture the output
+    # Run the command and capture the output
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     output = result.stdout + result.stderr
-
-    # Terminate the monitoring script
-    monitor_proc.send_signal(signal.SIGINT)
-    monitor_proc.wait()
 
     # Extract the timestamp from the output
     extracted_timestamp = None
@@ -112,20 +61,6 @@ def run_experiment(base_params, experiment_params, super_folder):
 
     # Create a log file inside the corresponding timestamped folder
     data_dir = f"../data/{extracted_timestamp}"
-    log_file = os.path.join(data_dir, "exp.log")
-    os.makedirs(data_dir, exist_ok=True)
-    with open(log_file, "w") as log:
-        log.write(output + "\n")
-
-    # Copy utilization.csv to the new folder
-    util_csv_path = "utilization.csv"
-    if os.path.exists(util_csv_path):
-        new_util_csv_path = os.path.join(data_dir, "utilization.csv")
-        os.rename(util_csv_path, new_util_csv_path)
-
-        # Generate and save the monitoring plot
-        plot_path = os.path.join(data_dir, "utilization_plot.png")
-        plot_monitoring_data(new_util_csv_path, plot_path)
 
     # Copy and rename the output folder
     if os.path.exists(data_dir):
@@ -134,20 +69,21 @@ def run_experiment(base_params, experiment_params, super_folder):
         try:
             copy_tree(data_dir, new_folder_path)
             print(f"Copied folder to: {new_folder_path}")
+
+            log_file = os.path.join(new_folder_path, "exp.log")
+            os.makedirs(new_folder_path, exist_ok=True)
+            with open(log_file, "w") as log:
+                log.write(output + "\n")
+
         except Exception as e:
-            print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.{e}")
-            with open(log_file, "a") as log:
-                log.write(f"Error: Could not copy folder {data_dir} to {new_folder_path}.{e}\n")
+            print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.\n{e}")
     else:
         print(f"Error: Data folder {data_dir} does not exist")
-        with open(log_file, "a") as log:
-            log.write(f"Error: Data folder {data_dir} does not exist\n")
 
-# Main function
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run TPC-C benchmark experiments based on a config file.")
+    parser = argparse.ArgumentParser(description="Run benchmark experiments based on a config file.")
     parser.add_argument("-cfg", "--config", required=True, help="Path to the experiment configuration JSON file.")
     args = parser.parse_args()
 
