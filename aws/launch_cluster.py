@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 instances = []
+INSTANCES_PER_REGION = 1
 
 # Helper functions
 def load_config(config_file):
@@ -84,8 +85,8 @@ def launch_instances(config, key_folder):
             ImageId=region_config["ami_id"],
             InstanceType=config["vm_type"],
             KeyName=key_name,
-            MaxCount=1,
-            MinCount=1,
+            MaxCount=INSTANCES_PER_REGION,
+            MinCount=INSTANCES_PER_REGION,
             SubnetId=region_config["subnet_id"],
             SecurityGroupIds=[region_config["sg_id"]],
             TagSpecifications=[

@@ -1,6 +1,9 @@
 import json
 import os
+import re
+import time
 import subprocess
+import csv
 from itertools import product
 from datetime import datetime
 from distutils.dir_util import copy_tree
@@ -19,6 +22,11 @@ def parse_config(config_file):
     param_grid = [dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())]
 
     return base_params, param_grid
+
+def collect_metrics(new_folder_path):
+    print("Collecting metrics from server and clients")
+
+    
 
 # Function to run a single experiment
 def run_experiment(base_params, experiment_params, super_folder):
@@ -53,6 +61,8 @@ def run_experiment(base_params, experiment_params, super_folder):
     # Run the command and capture the output
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     output = result.stdout + result.stderr
+
+    time.sleep(1)
 
     # Terminate the monitoring script
     monitor_proc.send_signal(signal.SIGINT)
@@ -95,17 +105,40 @@ def run_experiment(base_params, experiment_params, super_folder):
                 # Generate and save the monitoring plot
                 plot_path = os.path.join(new_folder_path, "utilization_plot")
                 plot_monitoring_data(new_util_csv_path, plot_path)
+            
+            # Copy benchmark container logs
+            new_bench_container_logs_path = os.path.join(new_folder_path, "bench_container_logs.log")
+            bench_container_logs_cmd = 'docker container logs benchmark'
+            bench_container_logs = subprocess.run(bench_container_logs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            bench_container_output = bench_container_logs.stdout + bench_container_logs.stderr
+            with open(new_bench_container_logs_path, "w") as log:
+                log.write(bench_container_output + "\n")
+            
+            # Collect data out of log
+            container_lines = bench_container_output.split('\n')
+            throughput = None
+            for line in container_lines:
+                if 'Avg. TPS: ' in line:
+                    throughput = re.findall(r'\d+', line)
+
+            # Collect stats from server & client
+            metrics = collect_metrics(new_folder_path)
+
+            return throughput, metrics
 
         except Exception as e:
             print(f"Error: Could not copy folder {data_dir} to {new_folder_path}.\n{e}")
+            return None
     else:
         print(f"Error: Data folder {data_dir} does not exist")
+        return None
+    
 
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Run benchmark experiments based on a config file.")
-    parser.add_argument("-cfg", "--config", required=True, help="Path to the experiment configuration JSON file.")
+    parser.add_argument("-cfg", "--config", default='aws/exp_configs.json', help="Path to the experiment configuration JSON file.")
     args = parser.parse_args()
 
     # Load the configuration file
@@ -118,7 +151,17 @@ def main():
 
     # Run experiments for each configuration
     for experiment_params in param_grid:
-        run_experiment(base_params, experiment_params, super_folder)
+        result, metrics = run_experiment(base_params, experiment_params, super_folder)
+        experiment_params['thp'] = result
+
+    results_file = os.path.join(super_folder, 'results.csv')
+    results_keys = param_grid[0].keys()
+    with open(results_file, 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, results_keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(param_grid)
+    print('Results for each config:')
+    print(param_grid)
 
 if __name__ == "__main__":
     main()
