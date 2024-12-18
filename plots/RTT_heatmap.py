@@ -12,10 +12,15 @@ data.replace('N/A', np.nan, inplace=True)
 
 # Convert numeric columns to float
 data = data.apply(pd.to_numeric, errors='coerce')
+np_data = data.to_numpy()
 
 # Round numeric values and replace NaN with placeholders for display
 rounded_data = data.round().to_numpy()  # Convert to numpy for easier handling
-annot = np.where(np.isnan(rounded_data), 'N/A', rounded_data.astype(int))  # Annotation matrix
+annot = np.where(np.isnan(rounded_data), 'N/A', rounded_data.astype(int)).astype(str)  # Annotation matrix
+
+# For equal source and destination, make an exception: The annotation will include 2 decimal places
+for i in range(len(np_data)):
+    annot[i,i] = str(np_data[i,i].round(2))
 
 # Map long region names to abbreviations
 short_region_map = {
@@ -34,14 +39,16 @@ data.index = [short_region_map[name] for name in data.index]
 # Plot the heatmap
 plt.figure(figsize=(5, 3))
 sns.heatmap(
-    data=rounded_data,  # Plot the rounded numpy data
+    data=data,  # Plot the rounded numpy data
     annot=annot,        # Custom annotation matrix
     fmt='',             # Allow custom formatting
     cmap="coolwarm", 
     cbar=True, 
     linewidths=0.5,
     cbar_kws={"shrink": 0.7}, 
-    mask=np.isnan(rounded_data)  # Mask NaN values
+    mask=np.isnan(rounded_data),  # Mask NaN values
+    vmin=0,
+    vmax=250
 )
 
 # Move the x-axis to the top
