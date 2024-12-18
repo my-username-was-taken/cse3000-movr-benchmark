@@ -5,6 +5,8 @@ import csv
 import itertools
 import json
 import os
+import time
+import datetime
 import logging
 import shlex
 import random
@@ -145,6 +147,7 @@ def collect_data(username: str, config_path: str, image: str, out_dir: str, tag:
     for p in collectors:
         p.join()
 
+# Basically figure out which combinations of parameters we want to really test in our experiment
 def combine_parameters(params, default_params, workload_settings):
     common_values = {}
     ordered_value_lists = []
@@ -279,6 +282,9 @@ class Experiment:
         settings_dir = os.path.dirname(args.settings)
         with open(args.settings, "r") as f:
             settings = json.load(f)
+        LOG.info("================================================")
+        LOG.info(f"Running experiment at time {datetime.datetime.now()} with config from file {args.settings}")
+        LOG.info(settings)
 
         cls.pre_run_hook(settings, args.dry_run)
 
@@ -289,6 +295,9 @@ class Experiment:
         num_parts_to_values = defaultdict(list)
         for v in all_values:
             num_parts_to_values[v["num_partitions"]].append(v)
+
+        LOG.info("The tested combinations will be:")
+        LOG.info(all_values)
 
         num_log_managers = workload_settings.get("num_log_managers", None)
 
@@ -344,6 +353,7 @@ class Experiment:
                     tag += f"-{t}"
 
                 params = ",".join(f"{k}={val[k]}" for k in cls.WORKLOAD_PARAMS)
+                LOG.info("Params string: %s", params)
 
                 # fmt: off
                 benchmark_args = [
@@ -627,7 +637,7 @@ if __name__ == "__main__":
     parser.add_argument("-sk", "--skip-starting-server", action="store_true", help="Skip starting server step")
     parser.add_argument("-nc", "--no-client-data", action="store_true", help="Don't collect client data")
     parser.add_argument("-ns", "--no-server-data", action="store_true", help="Don't collect server data")
-    parser.add_argument("-se", "--seed", default=0, help="Seed for the random engine")
+    parser.add_argument("-se", "--seed", default=1, help="Seed for the random engine")
     args = parser.parse_args()
 
     if args.dry_run:

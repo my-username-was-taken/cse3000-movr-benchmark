@@ -147,9 +147,9 @@ void RunBenchmark(vector<unique_ptr<ModuleRunner>>& generators) {
 
     // Effectively skip the first log since it is usually inaccurate. Then report: Send, Commit, Abort, Restart rates (in brackets total numbers)
     if (last_num_sent_txns > 0) {
-      LOG(INFO) << "S: " << send_tps << " (" << num_sent_txns << ")"
-                << "; C: " << commit_tps << " (" << num_committed_txns << ")"
-                << "; A: " << abort_tps << " (" << num_aborted_txns << ")"
+      LOG(INFO) <<   "S: " << send_tps    << " (" << num_sent_txns      << ")"
+                << "; C: " << commit_tps  << " (" << num_committed_txns << ")"
+                << "; A: " << abort_tps   << " (" << num_aborted_txns   << ")"
                 << "; R: " << restart_tps << " (" << num_restarted_txns << ")";
     }
 

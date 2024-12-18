@@ -72,3 +72,6 @@ keys/
 
 # GitHub username & token
 aws/github_credentials.json
+
+# Utilization logging file
+utilization.csv

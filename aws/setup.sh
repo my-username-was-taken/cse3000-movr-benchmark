@@ -12,6 +12,9 @@ wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
 tar -xf Python-3.8.16.tgz
 cd Python-3.8.16
 
+# Install iftop (for network monitoring)
+sudo apt-get install iftop
+
 ./configure --enable-optimizations
 make -j$(nproc)
 sudo make install
