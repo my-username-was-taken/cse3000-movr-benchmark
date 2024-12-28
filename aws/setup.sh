@@ -46,4 +46,4 @@ pip install psutil
 pip install -r tools/requirements.txt
 
 # Start monitoring script
-#python aws/monitor_util.py &
+nohup python3 aws/monitor_util.py &
