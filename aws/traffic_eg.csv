@@ -1,8 +1,0 @@
-Timestamp,Connection_id,Src_IP,Src_direction,Src_last2,Src_last10,Src_last40,Src_cumulative,Dest_IP,Dest_direction,Dest_last2,Dest_last10,Dest_last40,Dest_cumulative
-2024-12-19 13:09:21,1,ip-10-0-40-85.eu-west-1.compute.interna,=>,17.5Kb,17.5Kb,17.5Kb,4.38KB,145.94.165.197,<=,26.9Kb,26.9Kb,26.9Kb,6.71KB
-2024-12-19 13:09:25,1,ip-10-0-40-85.eu-west-1.compute.interna,=>,0b,0b,0b,0B,145.94.165.197,<=,208b,208b,208b,52B
-2024-12-19 13:09:29,1,ip-10-0-40-85.eu-west-1.compute.interna,=>,304b,304b,304b,76B,169.254.169.123,<=,304b,304b,304b,76B
-2024-12-19 13:09:29,2,ip-10-0-40-85.eu-west-1.compute.interna,=>,0b,0b,0b,0B,145.94.165.197,<=,208b,208b,208b,52B
-
-
-Timestamp,Dest_IP,Src_cumulative,Dest_cumulative

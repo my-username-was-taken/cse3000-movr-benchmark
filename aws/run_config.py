@@ -9,7 +9,7 @@ from datetime import datetime
 from distutils.dir_util import copy_tree
 import signal
 
-from plot_resource_util import plot_monitoring_data
+from aws.plot_res_util import plot_monitoring_data
 
 # Function to parse the experiment config and generate a parameter grid
 def parse_config(config_file):

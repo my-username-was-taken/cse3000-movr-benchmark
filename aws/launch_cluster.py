@@ -145,14 +145,23 @@ def setup_vm(public_ip, key_path, github_credentials):
         sftp.close()
         print("GitHub credentials transferred.")
 
-        # Clone the repository
+        # Clone Detock repository
         clone_command = """
         export GIT_ASKPASS=/bin/echo &&
         echo {} > /tmp/token &&
         git clone https://{}:{}@github.com/delftdata/Detock.git
         """.format(github_credentials["token"], github_credentials["username"], github_credentials["token"])
         execute_remote_command(ssh, clone_command)
-        print("Repository cloned.")
+        print("Detock Repository cloned.")
+
+        # Clone iftop repo
+        clone_command = """
+        export GIT_ASKPASS=/bin/echo &&
+        echo {} > /tmp/token &&
+        git clone https://{}:{}@github.com/delftdata/iftop.git
+        """.format(github_credentials["token"], github_credentials["username"], github_credentials["token"])
+        execute_remote_command(ssh, clone_command)
+        print("Iftop Repository cloned.")
 
         # Run the setup script
         setup_command = "bash /home/ubuntu/Detock/aws/setup.sh"

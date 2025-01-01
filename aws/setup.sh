@@ -4,6 +4,7 @@ sudo apt update
 sudo apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
                         libreadline-dev libsqlite3-dev wget curl llvm \
                         libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+                        libpcap-dev libncurses-dev autoconf automake autoremove libtool pkg-config \
                         libffi-dev liblzma-dev python3-openssl git
 
 mkdir ~/python38
@@ -37,12 +38,19 @@ sudo apt install net-tools
 sudo apt install dstat -y
 sudo apt install cmake build-essential pkg-config -y
 
+# Compile custom iftop
+cd iftop
+./bootstrap
+./configure
+make
+sudo make install
+cd ..
+
 # Setups specific for Detock
 cd Detock
 
 # Install libraries
 python3.8 -m pip install --upgrade pip
-pip install psutil
 pip install -r tools/requirements.txt
 
 # Start monitoring script
