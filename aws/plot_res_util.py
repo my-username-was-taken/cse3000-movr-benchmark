@@ -50,8 +50,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Plot monitoring data.")
-    parser.add_argument("-i", "--input_file", default='aws/res_util_eg.csv', required=True, help="Path to the csv with resource monitoring data.")
-    parser.add_argument("-o", "--output_file", default='aws/res_util_eg', required=True, help="Path for the output plot of monitoring data.")
+    parser.add_argument("-i", "--input_file", default='aws/res_util_eg.csv', required=True, help="Path to the csv with resource util data.")
+    parser.add_argument("-o", "--output_file", default='aws/res_util_eg', required=True, help="Path for the output plot of resource util data.")
     args = parser.parse_args()    
 
     plot_res_monitoring_data(args.input_file, args.output_file)
