@@ -36,13 +36,27 @@ constexpr char SH_ONLY[] = "sh_only";
 // become multi-partition and/or multi-home transactions if those two warehouses are located in separate partitions (which is greater than
 // 75% probability in our 4-partition set-up) or have different home regions."
 const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"}, {SH_ONLY, "0"}};
-//const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}};
+//const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}}; // Not sure why they had 45% and 43%?
 
 int new_order_count = 0;
+int fsh_no = 0;
+int mh_no = 0;
+
 int payment_count = 0;
+int fsh_pay = 0;
+int mh_pay = 0;
+
 int delivery_count = 0;
-int order_status_count = 0; 
+int fsh_del = 0;
+int mh_del = 0;
+
+int order_status_count = 0;
+int fsh_os = 0;
+int mh_os = 0;
+
 int stock_level_count = 0;
+int fsh_sl = 0;
+int mh_sl = 0;
 
 int total_txn_count = 0;
 
@@ -130,6 +144,7 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
   pro.client_txn_id = client_txn_id_counter_;
   pro.is_multi_partition = false;
   pro.is_multi_home = false;
+  pro.is_foreign_single_home = false;
 
   auto num_partitions = config_->num_partitions();
   auto partition = params_.GetInt32(PARTITION);
@@ -168,9 +183,13 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
       LOG(FATAL) << "Invalid txn choice";
   }
   total_txn_count++;
-  if (total_txn_count % 10000 == 0) {
-    LOG(INFO) << "Current txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: "<< order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
-    LOG(INFO) << "Current txn percentages: NO: " << new_order_count/(double)total_txn_count << " P: "<< payment_count/(double)total_txn_count << " OS: "<< order_status_count/(double)total_txn_count << " D: "<< delivery_count/(double)total_txn_count << " SL: "<< stock_level_count/(double)total_txn_count;
+  if (total_txn_count % 100000 == 0) {
+    LOG(INFO) << "Current SH txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: " << order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
+    LOG(INFO) << "Current FSH txn counts: Total: " << total_txn_count << " NO: " << fsh_no << " P: " << fsh_pay << " OS: " << fsh_os << " D: " << fsh_del << " SL: "<< fsh_sl;
+    LOG(INFO) << "Current MH txn counts: Total: " << total_txn_count << " NO: " << mh_no << " P: " << mh_pay << " OS: " << mh_os << " D: " << mh_del << " SL: "<< mh_sl;
+    LOG(INFO) << "Current SH txn percentages: NO: " << new_order_count/(double)total_txn_count << " P: " << payment_count/(double)total_txn_count << " OS: " << order_status_count/(double)total_txn_count << " D: " << delivery_count/(double)total_txn_count << " SL: " << stock_level_count/(double)total_txn_count;
+    LOG(INFO) << "Current FSH txn percentages: NO: " << fsh_no/(double)total_txn_count << " P: " << fsh_pay/(double)total_txn_count << " OS: " << fsh_os/(double)total_txn_count << " D: " << fsh_del/(double)total_txn_count << " SL: " << fsh_sl/(double)total_txn_count;
+    LOG(INFO) << "Current MH txn percentages: NO: " << mh_no/(double)total_txn_count << " P: " << mh_pay/(double)total_txn_count << " OS: " << mh_os/(double)total_txn_count << " D: " << mh_del/(double)total_txn_count << " SL: " << mh_sl/(double)total_txn_count;
   }
 
   txn->mutable_internal()->set_id(client_txn_id_counter_);
@@ -204,6 +223,9 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
         .item_id = NURand(rg_, 8191, 1, tpcc::kMaxItems),
         .quantity = quantity_rnd(rg_),
     });
+  }
+  if (pro.is_multi_home) {
+    mh_no++;
   }
 
   tpcc::NewOrderTxn new_order_txn(txn_adapter, w_id, d_id, c_id, o_id, datetime, i_w_id, ol);
@@ -248,6 +270,7 @@ void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, 
     c_w_id = SampleOnce(rg_, remote_warehouses);
     c_d_id = d_id_rnd(rg_);
     pro.is_multi_home = true;
+    mh_pay++;
   }
   tpcc::PaymentTxn payment_txn(txn_adapter, w_id, d_id, c_w_id, c_d_id, c_id, amount, datetime, h_id);
   payment_txn.Read();
