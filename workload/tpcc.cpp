@@ -44,7 +44,7 @@ int delivery_count = 0;
 int order_status_count = 0; 
 int stock_level_count = 0;
 
-int total_txn_count = 0;
+double total_txn_count = 0.0;
 
 template <typename G>
 int NURand(G& g, int A, int x, int y) {
@@ -124,7 +124,7 @@ TPCCWorkload::TPCCWorkload(const ConfigurationPtr& config, RegionId region, Repl
 }
 
 std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
-  LOG(INFO) << "Creating next TPCC transaction";
+  //LOG(INFO) << "Creating next TPCC transaction";
   TransactionProfile pro;
 
   pro.client_txn_id = client_txn_id_counter_;
@@ -168,7 +168,7 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
       LOG(FATAL) << "Invalid txn choice";
   }
   total_txn_count++;
-  if (total_txn_count / 10000 == 0) {
+  if (total_txn_count % 10000 == 0) {
     LOG(INFO) << "Current txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: "<< order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
     LOG(INFO) << "Current txn percentages: NO: " << new_order_count/total_txn_count << " P: "<< payment_count/total_txn_count << " OS: "<< order_status_count/total_txn_count << " D: "<< delivery_count/total_txn_count << " SL: "<< stock_level_count/total_txn_count;
   }
