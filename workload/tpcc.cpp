@@ -44,7 +44,7 @@ int delivery_count = 0;
 int order_status_count = 0; 
 int stock_level_count = 0;
 
-double total_txn_count = 0.0;
+int total_txn_count = 0;
 
 template <typename G>
 int NURand(G& g, int A, int x, int y) {
@@ -170,7 +170,7 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
   total_txn_count++;
   if (total_txn_count % 10000 == 0) {
     LOG(INFO) << "Current txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: "<< order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
-    LOG(INFO) << "Current txn percentages: NO: " << new_order_count/total_txn_count << " P: "<< payment_count/total_txn_count << " OS: "<< order_status_count/total_txn_count << " D: "<< delivery_count/total_txn_count << " SL: "<< stock_level_count/total_txn_count;
+    LOG(INFO) << "Current txn percentages: NO: " << new_order_count/(double)total_txn_count << " P: "<< payment_count/(double)total_txn_count << " OS: "<< order_status_count/(double)total_txn_count << " D: "<< delivery_count/(double)total_txn_count << " SL: "<< stock_level_count/(double)total_txn_count;
   }
 
   txn->mutable_internal()->set_id(client_txn_id_counter_);
