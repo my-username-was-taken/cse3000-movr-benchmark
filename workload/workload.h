@@ -136,6 +136,7 @@ struct TransactionProfile {
   TxnId client_txn_id;
   bool is_multi_home;
   bool is_multi_partition;
+  bool is_foreign_single_home;
 
   struct Record {
     uint32_t partition;

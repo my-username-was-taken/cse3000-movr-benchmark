@@ -3,6 +3,7 @@
 #include <glog/logging.h>
 
 #include <random>
+#include <set>
 
 #include "common/proto_utils.h"
 #include "execution/tpcc/constants.h"
@@ -211,6 +212,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   std::array<tpcc::NewOrderTxn::OrderLine, tpcc::kLinePerOrder> ol;
   std::bernoulli_distribution is_remote(0.01);
   std::uniform_int_distribution<> quantity_rnd(1, 10);
+  int supply_w_ids[tpcc::kLinePerOrder];
   for (size_t i = 0; i < tpcc::kLinePerOrder; i++) {
     auto supply_w_id = w_id;
     if (is_remote(rg_) && !remote_warehouses.empty()) {
@@ -223,9 +225,17 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
         .item_id = NURand(rg_, 8191, 1, tpcc::kMaxItems),
         .quantity = quantity_rnd(rg_),
     });
+    supply_w_ids[i] = supply_w_id;
   }
   if (pro.is_multi_home) {
     mh_no++;
+  }
+  // Count number of unique '.supply_w_id's in all Order Lines to get whether we have a FSH or a MH txn
+  // Note FSH txns will now be counted both as FSH and MH txns
+  std::set<int> unique_supply_w_ids(std::begin(supply_w_ids), std::end(supply_w_ids));
+  if (unique_supply_w_ids.size() == 1) {
+    pro.is_foreign_single_home = true;
+    fsh_no++;
   }
 
   tpcc::NewOrderTxn new_order_txn(txn_adapter, w_id, d_id, c_id, o_id, datetime, i_w_id, ol);
@@ -269,8 +279,11 @@ void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, 
   if (is_remote(rg_) && !remote_warehouses.empty()) {
     c_w_id = SampleOnce(rg_, remote_warehouses);
     c_d_id = d_id_rnd(rg_);
+    // Note: all Payment txns that are FSH, are also counted as MH
+    pro.is_foreign_single_home = true;
     pro.is_multi_home = true;
     mh_pay++;
+    fsh_pay++;
   }
   tpcc::PaymentTxn payment_txn(txn_adapter, w_id, d_id, c_w_id, c_d_id, c_id, amount, datetime, h_id);
   payment_txn.Read();
