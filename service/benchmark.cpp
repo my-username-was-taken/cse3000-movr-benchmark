@@ -175,7 +175,7 @@ struct ResultWriters {
                                       "restarts", "global_log_pos", "sent_at", "received_at"};
   const vector<string> kEventsColumns = {"txn_id", "event", "time", "machine", "home"};
   const vector<string> kSummaryColumns = {"committed",   "aborted",     "not_started",      "restarted",
-                                          "single_home", "multi_home",  "single_partition", "multi_partition",
+                                          "single_home", "foreign_single_home", "multi_home",  "single_partition", "multi_partition",
                                           "remaster",    "elapsed_time"};
 
   ResultWriters()
@@ -195,6 +195,7 @@ struct GeneratorSummary {
   int not_started = 0;
   int restarted = 0;
   int single_home = 0;
+  int foreign_single_home = 0;
   int multi_home = 0;
   int single_partition = 0;
   int multi_partition = 0;
@@ -206,6 +207,7 @@ struct GeneratorSummary {
     not_started += other.not_started;
     restarted += other.restarted;
     single_home += other.single_home;
+    foreign_single_home += other.foreign_single_home;
     multi_home += other.multi_home;
     single_partition += other.single_partition;
     multi_partition += other.multi_partition;
@@ -233,8 +235,7 @@ struct GeneratorSummary {
 };
 
 CSVWriter& operator<<(CSVWriter& csv, const GeneratorSummary& s) {
-  csv << s.committed << s.aborted << s.not_started << s.restarted << s.single_home << s.multi_home << s.single_partition
-      << s.multi_partition << s.remaster;
+  csv << s.committed << s.aborted << s.not_started << s.restarted << s.single_home << s.foreign_single_home << s.multi_home << s.single_partition << s.multi_partition << s.remaster;
   return csv;
 }
 
@@ -382,7 +383,8 @@ int main(int argc, char* argv[]) {
             << "Avg. TPS: " << std::floor(avg_tps) << "\nAborted: " << summary.aborted
             << "\nCommitted: " << summary.committed << "\nNot started: " << summary.not_started
             << "\nRestarted: " << summary.restarted << "\nSingle-home: " << summary.single_home
-            << "\nMulti-home: " << summary.multi_home << "\nSingle-partition: " << summary.single_partition
+            << "\nMulti-home: " << summary.multi_home << "FSH (also counted as MH): " summary.multi_home
+            << "\nSingle-partition: " << summary.single_partition
             << "\nMulti-partition: " << summary.multi_partition << "\nRemaster: " << summary.remaster;
 
   google::protobuf::ShutdownProtobufLibrary();
