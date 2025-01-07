@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
             << "Avg. TPS: " << std::floor(avg_tps) << "\nAborted: " << summary.aborted
             << "\nCommitted: " << summary.committed << "\nNot started: " << summary.not_started
             << "\nRestarted: " << summary.restarted << "\nSingle-home: " << summary.single_home
-            << "\nMulti-home: " << summary.multi_home << "FSH (also counted as MH): " summary.multi_home
+            << "\nMulti-home: " << summary.multi_home << "FSH (also counted as MH): " << summary.multi_home
             << "\nSingle-partition: " << summary.single_partition
             << "\nMulti-partition: " << summary.multi_partition << "\nRemaster: " << summary.remaster;
 
