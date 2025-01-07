@@ -188,9 +188,9 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
     LOG(INFO) << "Current SH txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: " << order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
     LOG(INFO) << "Current FSH txn counts: Total: " << total_txn_count << " NO: " << fsh_no << " P: " << fsh_pay << " OS: " << fsh_os << " D: " << fsh_del << " SL: "<< fsh_sl;
     LOG(INFO) << "Current MH txn counts: Total: " << total_txn_count << " NO: " << mh_no << " P: " << mh_pay << " OS: " << mh_os << " D: " << mh_del << " SL: "<< mh_sl;
-    LOG(INFO) << "Current SH txn percentages: NO: " << new_order_count/(double)total_txn_count << " P: " << payment_count/(double)total_txn_count << " OS: " << order_status_count/(double)total_txn_count << " D: " << delivery_count/(double)total_txn_count << " SL: " << stock_level_count/(double)total_txn_count;
-    LOG(INFO) << "Current FSH txn percentages: NO: " << fsh_no/(double)total_txn_count << " P: " << fsh_pay/(double)total_txn_count << " OS: " << fsh_os/(double)total_txn_count << " D: " << fsh_del/(double)total_txn_count << " SL: " << fsh_sl/(double)total_txn_count;
-    LOG(INFO) << "Current MH txn percentages: NO: " << mh_no/(double)total_txn_count << " P: " << mh_pay/(double)total_txn_count << " OS: " << mh_os/(double)total_txn_count << " D: " << mh_del/(double)total_txn_count << " SL: " << mh_sl/(double)total_txn_count;
+    LOG(INFO) << "Current SH txn percentages: NO: " << 100*new_order_count/(double)total_txn_count << " P: " << 100*payment_count/(double)total_txn_count << " OS: " 100*<< order_status_count/(double)total_txn_count << " D: " << 100*delivery_count/(double)total_txn_count << " SL: " << 100*stock_level_count/(double)total_txn_count;
+    LOG(INFO) << "Current FSH txn percentages: NO: " << 100*fsh_no/(double)total_txn_count << " P: " << 100*fsh_pay/(double)total_txn_count << " OS: " << 100*fsh_os/(double)total_txn_count << " D: " << 100*fsh_del/(double)total_txn_count << " SL: " << 100*fsh_sl/(double)total_txn_count;
+    LOG(INFO) << "Current MH txn percentages: NO: " << 100*mh_no/(double)total_txn_count << " P: " << 100*mh_pay/(double)total_txn_count << " OS: " << 100*mh_os/(double)total_txn_count << " D: " << 100*mh_del/(double)total_txn_count << " SL: " << 100*mh_sl/(double)total_txn_count;
   }
 
   txn->mutable_internal()->set_id(client_txn_id_counter_);
@@ -233,7 +233,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   // Count number of unique '.supply_w_id's in all Order Lines to get whether we have a FSH or a MH txn
   // Note FSH txns will now be counted both as FSH and MH txns
   std::set<int> unique_supply_w_ids(std::begin(supply_w_ids), std::end(supply_w_ids));
-  if (unique_supply_w_ids.size() == 1) {
+  if (unique_supply_w_ids.size() == 1 && pro.is_multi_home) {
     pro.is_foreign_single_home = true;
     fsh_no++;
   }
