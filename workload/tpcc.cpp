@@ -200,8 +200,8 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
 }
 
 void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {
+  LOG(INFO) << "Making new NewOrder txn";
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-
   auto remote_warehouses = SelectRemoteWarehouses(partition);
   int d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
   int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
@@ -228,6 +228,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
     });
     supply_w_ids[i] = supply_w_id;
     int supply_region = GetRegionFromWarehouse(supply_w_id);
+    LOG(INFO) << "Current Region: " << supply_region;
     unique_regions.insert(supply_region);
   }
   if (pro.is_multi_home) {
