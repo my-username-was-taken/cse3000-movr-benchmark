@@ -29,12 +29,14 @@ class TPCCWorkload : public Workload {
   void StockLevel(Transaction& txn, int w_id);
 
   std::vector<int> SelectRemoteWarehouses(int partition);
+  int GetRegionFromWarehouse(int warehouse_id);
 
   ConfigurationPtr config_;
   RegionId local_region_;
   ReplicaId local_replica_;
   std::vector<int> distance_ranking_;
   int zipf_coef_;
+  // _warehouse vector has dimensions: partition (currently 2), home/home (2?, i.e., number of 'regions' blocks in the .conf file), and then a list of warehouses that are based there
   vector<vector<vector<int>>> warehouse_index_;
   std::mt19937 rg_;
   TxnId client_txn_id_counter_;

@@ -213,6 +213,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   std::bernoulli_distribution is_remote(0.01);
   std::uniform_int_distribution<> quantity_rnd(1, 10);
   int supply_w_ids[tpcc::kLinePerOrder];
+  std::set<int> unique_regions;
   for (size_t i = 0; i < tpcc::kLinePerOrder; i++) {
     auto supply_w_id = w_id;
     if (is_remote(rg_) && !remote_warehouses.empty()) {
@@ -226,14 +227,18 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
         .quantity = quantity_rnd(rg_),
     });
     supply_w_ids[i] = supply_w_id;
+    int supply_region = GetRegionFromWarehouse(supply_w_id);
+    unique_regions.insert(supply_region);
   }
   if (pro.is_multi_home) {
     mh_no++;
   }
   // Count number of unique '.supply_w_id's in all Order Lines to get whether we have a FSH or a MH txn
   // Note FSH txns will now be counted both as FSH and MH txns
-  std::set<int> unique_supply_w_ids(std::begin(supply_w_ids), std::end(supply_w_ids));
-  if (unique_supply_w_ids.size() == 1 && pro.is_multi_home) {
+  //for (int i = 0; i < tpcc::kLinePerOrder; i++) {
+  //  LOG(INFO) << "Current SH txn counts: Total: "
+  //}
+  if (unique_regions.size() == 1 && pro.is_multi_home) {
     pro.is_foreign_single_home = true;
     fsh_no++;
   }
@@ -389,6 +394,16 @@ std::vector<int> TPCCWorkload::SelectRemoteWarehouses(int partition) {
   }
 
   return remote_warehouses;
+}
+
+int TPCCWorkload::GetRegionFromWarehouse(int warehouse_id) {
+  auto num_partitions = config_->num_partitions();
+  auto num_regions = config_->num_regions();
+
+  int partition = (warehouse_id - 1) % num_partitions; // Warehouses are 1-indexed
+  int region = ((warehouse_id - 1) / num_partitions) % num_regions;
+
+  return region;
 }
 
 }  // namespace slog
