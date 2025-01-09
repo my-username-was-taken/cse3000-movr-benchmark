@@ -54,4 +54,5 @@ python3.8 -m pip install --upgrade pip
 pip install -r tools/requirements.txt
 
 # Start monitoring script
+# TODO: Check that this also really launches iftop (otherwise add iftop at the end here)
 nohup python3 aws/monitor_util.py &
