@@ -10,8 +10,10 @@ import csv
 from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
-instances = []
-INSTANCES_PER_REGION = 1
+INSTANCES_PER_REGION = 2
+server_instances = []
+client_instances = []
+all_instances = []
 
 # Helper functions
 def load_config(config_file):
@@ -79,33 +81,47 @@ def launch_instances(config, key_folder):
         key_name = f"my_aws_key_{region}"
 
         print(f"Launching instance in {region}...")
-        #ec2_client = ec2_clients[region]
         ec2_session = ec2_sessions[region]
-        instance = ec2_session.create_instances(
+        instances = ec2_session.create_instances(
             ImageId=region_config["ami_id"],
             InstanceType=config["vm_type"],
             KeyName=key_name,
-            MaxCount=INSTANCES_PER_REGION,
-            MinCount=INSTANCES_PER_REGION,
+            MaxCount=INSTANCES_PER_REGION+1, # Last instance is the client
+            MinCount=INSTANCES_PER_REGION+1,
             SubnetId=region_config["subnet_id"],
             SecurityGroupIds=[region_config["sg_id"]],
             TagSpecifications=[
                 {
                     'ResourceType': 'instance',
-                    'Tags': [{'Key': 'Name', 'Value': 'DetockVM_'+region}],
+                    'Tags': [{'Key': 'Name', 'Value': f'DetockVM_{region}'}],
                 }
             ],
         )
-        instances.append({"InstanceId": instance[0].id, "Region": region})
+        # Rename instances in same region with index to distinuish between them
+        for index, instance in enumerate(instances[:-1], start=1):
+            unique_name = f'DetockVM_{region}_{index}'
+            instance.create_tags(
+                Tags=[{'Key': 'Name', 'Value': unique_name}]
+            )
+            server_instances.append({"InstanceId": instance.id, "Region": region, "Name": unique_name})
+        
+        # Special name for the client VMs
+        client_name = f'ClinetVM_{region}'
+        instances[-1].create_tags(
+            Tags=[{'Key': 'Name', 'Value': client_name}]
+        )
+        client_instances.append({"InstanceId": instances[-1].id, "Region": region, "Name": client_name})
 
 
-def wait_for_instances():
+def wait_for_instances(all_instances):
     """
     Waits until all instances are running and retrieves their public IPs.
     """
     public_ips = []
     region_ips = {}
-    for instance in instances:
+    for region in REGIONS:
+        region_ips[region] = []
+    for instance in all_instances:
         region = instance["Region"]
         client = ec2_clients[region]
         instance_id = instance["InstanceId"]
@@ -120,7 +136,7 @@ def wait_for_instances():
         print(f"Instance {instance_id} in {region} is running with IP: {public_ip}")
         instance["PublicIp"] = public_ip
         public_ips.append(public_ip)
-        region_ips[region] = {"ip": public_ip, "instance_id": instance_id}
+        region_ips[region].append({"ip": public_ip, "instance_id": instance_id, "server": 'DetockVM_' in instance["Name"]})
     
     with open('aws/ips.json', 'w') as fp:
         json.dump(region_ips, fp, indent=4)
@@ -174,23 +190,18 @@ def setup_vm(public_ip, key_path, github_credentials):
         ssh.close()
 
 
-def setup_vms(region_ips):
+def setup_vms(all_instances):
     # Load GitHub credentials
     with open("aws/github_credentials.json", "r") as f:
         github_credentials = json.load(f)
 
-    def setup_task(region):
-        key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
-        setup_vm(region_ips[region]["ip"], key_path, github_credentials)
+    def setup_task(instance):
+        key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{instance['Region']}.pem")
+        setup_vm(instance["PublicIp"], key_path, github_credentials)
 
     # Setup all VMs concurrently
     with ThreadPoolExecutor() as executor:
-        executor.map(setup_task, region_ips.keys())
-
-    # Set up each VM (TODO: Paralellize this)
-    #for region in region_ips.keys():
-    #    key_path = os.path.join(KEY_FOLDER, f"my_aws_key_{region}.pem")
-    #    setup_vm(region_ips[region]["ip"], key_path, github_credentials)
+        executor.map(setup_task, all_instances)
 
 
 def stop_cluster():
@@ -200,11 +211,12 @@ def stop_cluster():
     region_ips = load_region_ips_from_file()
 
     for region in region_ips.keys():
-        instance_id = region_ips[region]["instance_id"]
+        for instance in region_ips[region]:
+            instance_id = instance["instance_id"]
 
-        print(f"Terminating instance {instance_id} in {region}...")
-        ec2_clients[region].terminate_instances(InstanceIds=[instance_id])
-        print(f"Instance {instance_id} in {region} terminated.")
+            print(f"Terminating instance {instance_id} in {region}...")
+            ec2_clients[region].terminate_instances(InstanceIds=[instance_id])
+            print(f"Instance {instance_id} in {region} terminated.")
 
 
 def test_connectivity_between_regions(region_ips, username='ubuntu'):
@@ -224,7 +236,8 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
     rtt_matrix = [[""] + regions]  # First row header
 
     for src_region in regions:
-        src_ip = region_ips[src_region]["ip"]
+        # Just use the 1st VM in each region to test ping latencies
+        src_ip = region_ips[src_region][0]["ip"]
         row = [src_region]  # First column header
 
         # SSH into the source instance
@@ -312,13 +325,18 @@ if __name__ == "__main__":
 
     if args.action == "start":
         launch_instances(config, KEY_FOLDER)
-        public_ips, region_ips = wait_for_instances()
+        all_instances += server_instances
+        all_instances += client_instances
+        public_ips, region_ips = wait_for_instances(all_instances)
 
-        setup_vms(region_ips)
+        setup_vms(all_instances)
         test_connectivity_between_regions(region_ips)
     elif args.action == "status":
         region_ips = load_region_ips_from_file()
-        public_ips = [region_ips[reg]["ip"] for reg in region_ips.keys()]
+        public_ips = []
+        for reg in region_ips.keys():
+            for instance in region_ips[reg]:
+                public_ips.append(instance["ip"])
 
         test_connectivity_between_regions(region_ips)
     elif args.action == "stop":

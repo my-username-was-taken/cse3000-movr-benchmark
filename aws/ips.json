@@ -1,6 +1,30 @@
 {
-    "eu-west-1": {
-        "ip": "34.240.12.97",
-        "instance_id": "i-018e9263a448ab9ed"
-    }
+    "us-west-1": [
+        {
+            "ip": "3.101.73.155",
+            "instance_id": "i-08c8d218714ff2264"
+        },
+        {
+            "ip": "54.193.225.183",
+            "instance_id": "i-0f68b91ac85f16f04"
+        },
+        {
+            "ip": "54.193.56.97",
+            "instance_id": "i-0fcf574d39e35e7fc"
+        }
+    ],
+    "us-west-2": [
+        {
+            "ip": "35.95.23.72",
+            "instance_id": "i-0c21f326106b714b1"
+        },
+        {
+            "ip": "34.220.162.176",
+            "instance_id": "i-06ade632b65a2f9af"
+        },
+        {
+            "ip": "34.217.215.41",
+            "instance_id": "i-0f4a4113a6592ded2"
+        }
+    ]
 }

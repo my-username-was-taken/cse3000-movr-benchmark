@@ -1,27 +1,37 @@
 sudo apt update
 
 # Can't get Python3.8 directly, so compile it
+# TODO: Check if autoremove is still needed or not
 sudo apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
                         libreadline-dev libsqlite3-dev wget curl llvm \
                         libncurses5-dev libncursesw5-dev xz-utils tk-dev \
-                        libpcap-dev libncurses-dev autoconf automake autoremove libtool pkg-config \
+                        libpcap-dev libncurses-dev autoconf automake libtool pkg-config \
                         libffi-dev liblzma-dev python3-openssl git
 
-mkdir ~/python38
-cd ~/python38
-wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
-tar -xf Python-3.8.16.tgz
-cd Python-3.8.16
-
-# Install iftop (for network monitoring)
-sudo apt-get install iftop
-
-./configure --enable-optimizations
-make -j$(nproc)
-sudo make install
-
+#Get Python3.8 directly
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.8 python3.8-venv -y
 echo "alias python=python3.8" >> .bashrc
 source .bashrc
+
+# Compiling Python from source. Still buggy!!!
+#mkdir ~/python38
+#cd ~/python38
+#wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
+#tar -xf Python-3.8.16.tgz
+#cd Python-3.8.16
+
+#./configure --enable-optimizations
+#make -j$(nproc)
+#sudo make install
+
+#cd ../..
+#echo "alias python=python3.8" >> .bashrc
+#source .bashrc
+
+# Install iftop (for network monitoring)
+#sudo apt-get install iftop
 
 # Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh && 
@@ -30,7 +40,6 @@ curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo systemctl start docker
 
 # Create Python env
-cd ../..
 python3.8 -m venv build_detock
 source build_detock/bin/activate
 

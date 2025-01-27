@@ -1,6 +1,6 @@
 {
     "aws_username": "omraz",
-    "regions": {
+    "unused_regions": {
         "eu-west-1": {
             "ami_id": "ami-0d64bb532e0502c46",
             "subnet_id": "subnet-0dfabf5b6c47eb240",
@@ -12,7 +12,7 @@
             "sg_id": "sg-04638beba3be30caf"
         }
     },
-    "unused_regions": {
+    "regions": {
         "us-west-1": {
             "ami_id": "ami-0da424eb883458071",
             "subnet_id": "subnet-0ec58214554aae2a0",
