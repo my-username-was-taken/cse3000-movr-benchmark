@@ -364,9 +364,12 @@ def update_conf_file_ips():
 
 
 def spawn_db_service(workload='YCSBT'):
-    print("Spawning DB service")
     if workload == 'YCSBT':
-        
+        print("Spawning YCSB-T DB service")
+    elif workload == 'TPCC':
+        print("Spawning YCSB-T DB service")
+    else:
+        print("Invalid workload selected")
 
 
 if __name__ == "__main__":
