@@ -10,6 +10,10 @@ import csv
 from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
+IPS_FILE = 'aws/ips.json'
+YCSBT_CONF_FILE = 'examples/aws_cluster_ycsbt.conf'
+TPCC_CONF_FILE = 'examples/aws_cluster_tpcc.conf'
+
 INSTANCES_PER_REGION = 2
 server_instances = []
 client_instances = []
@@ -24,7 +28,7 @@ def load_config(config_file):
         return json.load(f)
 
 def load_region_ips_from_file():
-    with open('aws/ips.json') as file:
+    with open(IPS_FILE) as file:
         region_ips = json.load(file)
     return region_ips
 
@@ -138,7 +142,7 @@ def wait_for_instances(all_instances):
         public_ips.append(public_ip)
         region_ips[region].append({"ip": public_ip, "instance_id": instance_id, "server": 'DetockVM_' in instance["Name"]})
     
-    with open('aws/ips.json', 'w') as fp:
+    with open(IPS_FILE, 'w') as fp:
         json.dump(region_ips, fp, indent=4)
 
     return public_ips, region_ips
@@ -210,13 +214,14 @@ def stop_cluster():
     """
     region_ips = load_region_ips_from_file()
 
-    for region in region_ips.keys():
-        for instance in region_ips[region]:
-            instance_id = instance["instance_id"]
+    for region in list(region_ips.keys()):
+        region_instance_ids = []
+        for region_instance in region_ips[region]:
+            region_instance_ids.append(region_instance["instance_id"])
 
-            print(f"Terminating instance {instance_id} in {region}...")
-            ec2_clients[region].terminate_instances(InstanceIds=[instance_id])
-            print(f"Instance {instance_id} in {region} terminated.")
+        print(f"Terminating instances {str(region_instance_ids)} in {region}...")
+        ec2_clients[region].terminate_instances(InstanceIds=region_instance_ids)
+        print(f"Instances {str(region_instance_ids)} in {region} terminated.")
 
 
 def test_connectivity_between_regions(region_ips, username='ubuntu'):
@@ -304,6 +309,66 @@ def test_connectivity(public_ips):
 
     return rtt_table
 
+
+def update_conf_file_ips():
+    print(f"Updating IPs in .conf files")
+
+    # 1. Collect IPs from JSON
+    with open(IPS_FILE, "r") as f:
+        ips_data = json.load(f)
+
+    regions = list(ips_data)
+    regions_ip_lines = []
+    for region in regions:
+        cur_ips = ips_data[region]
+
+        client_address = ''
+        server_addresses = []
+        current_region_ip_lines = ['regions: {']
+        for ip in cur_ips:
+            if ip['server']:
+                cur_ip = ip['ip']
+                server_addresses.append(cur_ip)
+                current_region_ip_lines.append(f'    addresses: "{cur_ip}",')
+            else:
+                client_address = ip['ip']
+        # Here append the lines for the client and replicas (hard-coded at the moment)
+        current_region_ip_lines.append(f'    client_addresses: "{client_address}",')
+        current_region_ip_lines.append('    num_replicas: 1,')
+        current_region_ip_lines.append('}')
+        regions_ip_lines.extend(current_region_ip_lines)
+
+    # 2. Populate .conf with IPs
+    with open(YCSBT_CONF_FILE) as file:
+        conf_lines = [line.rstrip() for line in file]
+
+    new_conf_file_lines = []
+    addresses_section = False
+    addresses_section_reached = False
+    for line in conf_lines:
+        if 'regions: {' in line:
+            addresses_section = True
+            if not addresses_section_reached:
+                new_conf_file_lines = new_conf_file_lines + regions_ip_lines
+            addresses_section_reached = True
+        else:
+            if not addresses_section:
+                new_conf_file_lines.append(line)
+            if addresses_section and '}' in line:
+                addresses_section = False
+
+    # 3. Write new IPs back to file
+    with open(YCSBT_CONF_FILE, 'w') as f:
+        for line in new_conf_file_lines:
+            f.write(f"{line}\n")
+
+
+def spawn_db_service(workload='YCSBT'):
+    print("Spawning DB service")
+    if workload == 'YCSBT':
+        
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
     parser.add_argument("action", choices=["start", "status", "stop"], help="Action to perform: start or stop the cluster.")
@@ -339,5 +404,8 @@ if __name__ == "__main__":
                 public_ips.append(instance["ip"])
 
         test_connectivity_between_regions(region_ips)
+    elif args.action == "experiment":
+        update_conf_file_ips()
+        spawn_db_service(workload='YCSBT')
     elif args.action == "stop":
         stop_cluster()

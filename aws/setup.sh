@@ -49,7 +49,9 @@ sudo apt install cmake build-essential pkg-config -y
 
 # Compile custom iftop
 cd iftop
+chmod +x bootstrap 
 ./bootstrap
+chmod +x configure 
 ./configure
 make
 sudo make install
@@ -64,4 +66,4 @@ pip install -r tools/requirements.txt
 
 # Start monitoring script
 # TODO: Check that this also really launches iftop (otherwise add iftop at the end here)
-nohup python3 aws/monitor_util.py &
+#nohup python3 aws/monitor_util.py &

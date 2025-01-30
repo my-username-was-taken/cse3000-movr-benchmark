@@ -1,30 +1,36 @@
 {
     "us-west-1": [
         {
-            "ip": "3.101.73.155",
-            "instance_id": "i-08c8d218714ff2264"
+            "ip": "54.177.6.248",
+            "instance_id": "i-0b424faddb5a1939a",
+            "server": true
         },
         {
-            "ip": "54.193.225.183",
-            "instance_id": "i-0f68b91ac85f16f04"
+            "ip": "13.56.231.29",
+            "instance_id": "i-09e2f12b70883bca0",
+            "server": true
         },
         {
-            "ip": "54.193.56.97",
-            "instance_id": "i-0fcf574d39e35e7fc"
+            "ip": "54.219.254.214",
+            "instance_id": "i-0a2075e98471ec9f1",
+            "server": false
         }
     ],
     "us-west-2": [
         {
-            "ip": "35.95.23.72",
-            "instance_id": "i-0c21f326106b714b1"
+            "ip": "50.112.230.127",
+            "instance_id": "i-01a449a55829180e5",
+            "server": true
         },
         {
-            "ip": "34.220.162.176",
-            "instance_id": "i-06ade632b65a2f9af"
+            "ip": "54.149.63.133",
+            "instance_id": "i-0cff5dc4ce63cadf3",
+            "server": true
         },
         {
-            "ip": "34.217.215.41",
-            "instance_id": "i-0f4a4113a6592ded2"
+            "ip": "35.94.178.222",
+            "instance_id": "i-058705d29929f0c2a",
+            "server": false
         }
     ]
 }
