@@ -14,7 +14,9 @@ IPS_FILE = 'aws/ips.json'
 YCSBT_CONF_FILE = 'examples/aws_cluster_ycsbt.conf'
 TPCC_CONF_FILE = 'examples/aws_cluster_tpcc.conf'
 
-INSTANCES_PER_REGION = 2
+LOGGING_FILE = 'aws/VM_launch_logging.log'
+
+INSTANCES_PER_REGION = 4
 server_instances = []
 client_instances = []
 all_instances = []
@@ -206,6 +208,9 @@ def setup_vms(all_instances):
     # Setup all VMs concurrently
     with ThreadPoolExecutor() as executor:
         executor.map(setup_task, all_instances)
+    
+    # Prepare logging file
+
 
 
 def stop_cluster():
@@ -254,7 +259,7 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
 
             # Test connectivity to other instances
             for dest_region in regions:
-                dest_ip = region_ips[dest_region]["ip"]
+                dest_ip = region_ips[dest_region][0]["ip"]
                 if src_region == dest_region:
                     row.append("N/A")  # Skip self-connectivity
                 else:
@@ -338,29 +343,30 @@ def update_conf_file_ips():
         current_region_ip_lines.append('}')
         regions_ip_lines.extend(current_region_ip_lines)
 
-    # 2. Populate .conf with IPs
-    with open(YCSBT_CONF_FILE) as file:
-        conf_lines = [line.rstrip() for line in file]
+    for conf in [YCSBT_CONF_FILE, TPCC_CONF_FILE]:
+        # 2. Populate .conf with IPs
+        with open(conf) as file:
+            conf_lines = [line.rstrip() for line in file]
 
-    new_conf_file_lines = []
-    addresses_section = False
-    addresses_section_reached = False
-    for line in conf_lines:
-        if 'regions: {' in line:
-            addresses_section = True
-            if not addresses_section_reached:
-                new_conf_file_lines = new_conf_file_lines + regions_ip_lines
-            addresses_section_reached = True
-        else:
-            if not addresses_section:
-                new_conf_file_lines.append(line)
-            if addresses_section and '}' in line:
-                addresses_section = False
+        new_conf_file_lines = []
+        addresses_section = False
+        addresses_section_reached = False
+        for line in conf_lines:
+            if 'regions: {' in line:
+                addresses_section = True
+                if not addresses_section_reached:
+                    new_conf_file_lines = new_conf_file_lines + regions_ip_lines
+                addresses_section_reached = True
+            else:
+                if not addresses_section:
+                    new_conf_file_lines.append(line)
+                if addresses_section and '}' in line:
+                    addresses_section = False
 
-    # 3. Write new IPs back to file
-    with open(YCSBT_CONF_FILE, 'w') as f:
-        for line in new_conf_file_lines:
-            f.write(f"{line}\n")
+        # 3. Write new IPs back to file
+        with open(conf, 'w') as f:
+            for line in new_conf_file_lines:
+                f.write(f"{line}\n")
 
 
 def spawn_db_service(workload='YCSBT'):

@@ -50,9 +50,7 @@ def gen_netem_script(netems, dev, filters):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate netem script")
     parser.add_argument("netem", help="Netem commands")
-    parser.add_argument(
-        "-d", "--dev", default="eth0", help="Network interface to apply on"
-    )
+    parser.add_argument("-d", "--dev", default="eth0", help="Network interface to apply on")
     parser.add_argument("-f", "--filter", nargs="*", help="IP addresses to apply on")
 
     args = parser.parse_args()
