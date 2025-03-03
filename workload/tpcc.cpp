@@ -35,12 +35,15 @@ constexpr char SH_ONLY[] = "sh_only";
 constexpr char REM_ITEM_PROB[] = "rem_item_prob";
 // Modify the probability of any payment txn going to a remote warehouse. Default is 0.01.
 constexpr char REM_PAYMENT_PROB[] = "rem_payment_prob";
+// Skewness of the workload. A theta value between 0.0 and 1.0. Use -1 for defaul skewing
+constexpr char SKEW[] = "skew";
 
 // Should actually contain an equal amount of New Order & Payement. 1 Delivery, 1 Stock Level, 1 Order Status per 10 New Order txns.
 // "TPC-C specification requires that 10% of New Order transactions need to access two separate warehouses, which may
 // become multi-partition and/or multi-home transactions if those two warehouses are located in separate partitions (which is greater than
 // 75% probability in our 4-partition set-up) or have different home regions."
-const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"}, {SH_ONLY, "0"}, {REM_ITEM_PROB, "0.01"}, {REM_PAYMENT_PROB, "0.01"};
+const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"},
+                                    {SH_ONLY, "0"}, {REM_ITEM_PROB, "0.01"}, {REM_PAYMENT_PROB, "0.01"}, {SKEW, "-1.0"};
 //const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}}; // Not sure why they had 45% and 43%?
 
 int new_order_count = 0;
@@ -65,6 +68,23 @@ int mh_sl = 0;
 
 int total_txn_count = 0;
 
+// TODO: Add default params from TPC-C skewness spec
+int default_item_skewness = 8191; // maxItems at 100k
+int default_cust_skewness = 1023; // maxCust per district at 3k
+
+double org_item_skew = (double) default_item_skewness / tpcc::kMaxItems; // 0.08191
+double org_cust_skew = (double) default_cust_skewness / tpcc::kCustPerDist; // 0.341
+
+int final_item_skew, final_cust_skew;
+if (SKEW == -1.0) {
+  final_item_skew = org_item_skew;
+  final_cust_skew = org_cust_skew;
+} else {
+  final_item_skew = SKEW * tpcc::kMaxItems;
+  final_cust_skew = SKEW * tpcc::kCustPerDist;
+}
+
+// Random number generator to 
 template <typename G>
 int NURand(G& g, int A, int x, int y) {
   std::uniform_int_distribution<> rand1(0, A);
@@ -208,7 +228,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
   auto remote_warehouses = SelectRemoteWarehouses(partition);
   int d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
+  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   int o_id = id_generator_.NextOId(w_id, d_id);
   // Partition ID on global scale
   int i_w_id = partition + static_cast<int>(local_region() * config_->num_partitions()) + 1;
@@ -227,7 +247,7 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
     ol[i] = tpcc::NewOrderTxn::OrderLine({
         .id = static_cast<int>(i),
         .supply_w_id = supply_w_id,
-        .item_id = NURand(rg_, 8191, 1, tpcc::kMaxItems),
+        .item_id = NURand(rg_, final_item_skew, 1, tpcc::kMaxItems),
         .quantity = quantity_rnd(rg_),
     });
     supply_w_ids[i] = supply_w_id;
@@ -276,7 +296,7 @@ void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, 
 
   auto remote_warehouses = SelectRemoteWarehouses(partition);
   std::uniform_int_distribution<> d_id_rnd(1, tpcc::kDistPerWare);
-  int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
+  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   auto datetime = std::chrono::system_clock::now().time_since_epoch().count();
   std::uniform_int_distribution<> quantity_rnd(1, 10);
   std::bernoulli_distribution is_remote(REM_PAYMENT_PROB);
@@ -317,7 +337,7 @@ void TPCCWorkload::OrderStatus(Transaction& txn, int w_id) {
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
 
   auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
+  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   auto max_o_id = id_generator_.max_o_id();
   auto o_id = std::uniform_int_distribution<>(max_o_id - 5, max_o_id)(rg_);
 
@@ -335,7 +355,7 @@ void TPCCWorkload::OrderStatus(Transaction& txn, int w_id) {
 
 void TPCCWorkload::Deliver(Transaction& txn, int w_id) {
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-  int c_id = NURand(rg_, 1023, 1, tpcc::kCustPerDist);
+  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
   auto no_o_id = id_generator_.NextNOOId(w_id, d_id);
   auto datetime = std::chrono::system_clock::now().time_since_epoch().count();

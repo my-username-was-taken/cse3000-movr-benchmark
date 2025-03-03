@@ -49,9 +49,11 @@ constexpr char NEAREST[] = "nearest";
 constexpr char SP_PARTITION[] = "sp_partition";
 // Home that is used in a single-home transaction. The NEAREST parameter is ignored if this is positive
 constexpr char SH_HOME[] = "sh_home";
+// Controls the skewness of the hot key selection (from 0.0 to 1.0)
+constexpr char HOT_ZIPF[] = "hot_zipf";
 
 const RawParamMap DEFAULT_PARAMS = {{MH_PCT, "0"},      {MH_HOMES, "2"}, {MH_ZIPF, "0"},      {MP_PCT, "0"},  {MP_PARTS, "2"},      {HOT, "0"},      {RECORDS, "10"}, 
-                                    {HOT_RECORDS, "0"}, {WRITES, "10"},  {VALUE_SIZE, "100"}, {NEAREST, "1"}, {SP_PARTITION, "-1"}, {SH_HOME, "-1"}};
+                                    {HOT_RECORDS, "0"}, {WRITES, "10"},  {VALUE_SIZE, "100"}, {NEAREST, "1"}, {SP_PARTITION, "-1"}, {SH_HOME, "-1"}, {HOT_ZIPF, "0.0"}};
 
 // For the Calvin experiment, there is a single region, so replace the regions by the replicas so that we generate the same workload as other experiments
 int GetNumRegions(const ConfigurationPtr& config) {
@@ -246,9 +248,10 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
     for (;;) {
       Key key;
       if (is_hot[i]) {
-        key = partition_to_key_lists_[partition][home].GetRandomHotKey(rg_);
+        key = partition_to_key_lists_[partition][home].GetRandomHotKey(rg_, HOT_ZIPF);
       } else {
-        key = partition_to_key_lists_[partition][home].GetRandomColdKey(rg_);
+        // For cold keys, we typically keep an even distribution (i.e. the Zipfian coefficient of 0.0)
+        key = partition_to_key_lists_[partition][home].GetRandomColdKey(rg_, 0.0);
       }
 
       // ins == The rows to insert

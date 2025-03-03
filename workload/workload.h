@@ -6,6 +6,8 @@
 #include <set>
 #include <sstream>
 #include <unordered_map>
+#include <cmath>
+#include <vector>
 
 #include "common/configuration.h"
 #include "common/string_utils.h"
@@ -219,10 +221,23 @@ class KeyList {
     cold_keys_.push_back(key);
   }
 
-  Key GetRandomHotKey(std::mt19937& rg) {
+  Key GetRandomHotKey(std::mt19937& rg, double hot_zipf) {
     if (num_hot_keys_ == 0) {
       throw std::runtime_error("There is no hot key to pick from. Please check your params.");
     }
+    if (is_simple_) {
+      if (hot_zipf > 0.0) {
+        // Use the existing Zipf distribution function
+        std::discrete_distribution<uint64_t> zipf_dis = zipf_distribution(hot_zipf, num_hot_keys_);
+        uint64_t key = num_partitions_ * (zipf_dis(rg) * num_regions_ + master_) + partition_;
+        return std::to_string(key);
+    } else {
+        // Use uniform distribution
+        std::uniform_int_distribution<uint64_t> dis(0, std::min(num_hot_keys_, num_keys_) - 1);
+        uint64_t key = num_partitions_ * (dis(rg) * num_regions_ + master_) + partition_;
+        return std::to_string(key);
+    }
+}
     if (is_simple_) {
       std::uniform_int_distribution<uint64_t> dis(0, std::min(num_hot_keys_, num_keys_) - 1);
       uint64_t key = num_partitions_ * (dis(rg) * num_regions_ + master_) + partition_;
@@ -232,7 +247,7 @@ class KeyList {
     return hot_keys_[dis(rg)];
   }
 
-  Key GetRandomColdKey(std::mt19937& rg) {
+  Key GetRandomColdKey(std::mt19937& rg, double hot_zipf) {
     if (is_simple_) {
       if (num_hot_keys_ >= num_keys_) {
         throw std::runtime_error("There is no cold key to pick from. Please check your params.");
