@@ -75,3 +75,6 @@ aws/github_credentials.json
 
 # Utilization logging file
 utilization.csv
+
+# Exclude ignoring '.csv' files with final data
+!plots/*
