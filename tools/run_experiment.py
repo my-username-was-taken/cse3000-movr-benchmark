@@ -5,7 +5,6 @@ import csv
 import itertools
 import json
 import os
-import time
 import datetime
 import logging
 import shlex
@@ -17,7 +16,6 @@ from multiprocessing import Process
 from pprint import pprint
 
 import google.protobuf.text_format as text_format
-from numpy import isin
 
 import admin
 from proto.configuration_pb2 import Configuration, Region
