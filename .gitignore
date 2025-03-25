@@ -78,3 +78,4 @@ utilization.csv
 
 # Exclude ignoring '.csv' files with final data
 !plots/*
+!latex_generators/*

@@ -5,8 +5,8 @@ import matplotlib.cm as cm
 from matplotlib import colors
 import re
 
-csv_input_file = 'plots/data/vm_specs.csv'
-tex_output_file = 'plots/output/vm_specs_table.tex'
+csv_input_file = 'latex_generators/data/vm_specs.csv'
+tex_output_file = 'latex_generators/output/vm_specs_table.tex'
 
 def rescale(values):
     """Rescale values to range [0,1] for colormap scaling."""
