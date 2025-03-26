@@ -63,7 +63,7 @@ DEFAULT_PARAMS = {**DEFAULT_PARAMS, **{
 }}
 
 settings_file_name = 'settings'
-settings_path = f'experiments/{settings_file_name}.json'
+settings_path = f'../experiments/{settings_file_name}.json'
 skip_starting_server = False
 
 # Basically figure out which combinations of parameters we want to really test in our experiment
@@ -179,6 +179,66 @@ def start_server(username: str, config_path: str, image: str, binary="slog"):
     LOG.info("WAIT FOR ALL SERVERS TO BE ONLINE with command %s", wait_for_servers_up_cmd)
     admin.main(wait_for_servers_up_cmd)
 
+def collect_client_data(username: str, config_path: str, out_dir: str, tag: str):
+    collect_client_cmd = ["collect_client", config_path, tag, "--user", username, "--out-dir", out_dir]
+    LOG.info("Collecting server data with command %s", collect_client_cmd)
+    admin.main(collect_client_cmd)
+
+def collect_server_data(username: str, config_path: str, image: str, out_dir: str, tag: str):
+    # fmt: off
+    # The image has already been pulled when starting the servers, so use "--no-pull"
+    collect_server_cmd = ["collect_server", config_path, "--tag", tag, "--user", username, "--image", image,"--out-dir", out_dir, "--no-pull"]
+    LOG.info("Collecting server data with command %s", collect_server_cmd)
+    admin.main(collect_server_cmd)
+    # fmt: on
+
+def collect_data(username: str, config_path: str, image: str, out_dir: str, tag: str, no_client_data: bool, no_server_data: bool):
+    collectors = []
+    if not no_client_data:
+        collectors.append(Process(target=collect_client_data, args=(username, config_path, out_dir, tag)))
+    if not no_server_data:
+        collectors.append(Process(target=collect_server_data, args=(username, config_path, image, out_dir, tag)))
+    for p in collectors:
+        p.start()
+    for p in collectors:
+        p.join()
+
+def run_benchmark(args, image, settings, config_path, config_name, values):
+    out_dir = os.path.join(args.out_dir, NAME)
+    sample = settings.get("sample", 10)
+    trials = settings.get("trials", 1)
+    LOG.info(f'Running benchmark {NAME} with {trials} trials and sampling {sample}%')
+    # For now we don't add tags
+    for val in values:
+        for t in range(trials):
+            params = ",".join(f"{k}={val[k]}" for k in WORKLOAD_PARAMS)
+            LOG.info("Params string: %s", params)
+            # fmt: off
+            tag = 'test'
+            benchmark_args = [
+                "benchmark",
+                config_path,
+                "--user", settings["username"],
+                "--image", image,
+                "--workload", workload_settings["workload"],
+                "--clients", f"{val['clients']}",
+                "--rate", f"{val['rate_limit']}",
+                "--generators", f"{val['generators']}",
+                "--txns", f"{val['txns']}",
+                "--duration", f"{val['duration']}",
+                "--sample", f"{sample}",
+                "--seed", f"{args.seed}",
+                "--params", params,
+                "--tag", tag, # For now we ignore setting custom tags
+                # The image has already been pulled in the cleanup step
+                "--no-pull",
+            ]
+            LOG.info("Running benchmark command with config %s", benchmark_args)
+            # fmt: on
+            admin.main(benchmark_args)
+            LOG.info("Collecting data")
+            collect_data(settings["username"], config_path, image, out_dir, tag, False, False) # Always collect ALL data
+
 with open(settings_path, "r") as f:
     settings = json.load(f)
 LOG.info("================================================")
@@ -200,13 +260,10 @@ LOG.info(all_values)
 
 num_log_managers = workload_settings.get("num_log_managers", None)
 
-def run_benchmark(args, image, settings, config_path, config_name, values):
-    pass
-
 # The DB systems that will the tried (e.g., Detock, SLOG, etc.). Iterate through the desiged systems and run the experiment on them
 LOG.info('Will run the following DB configs: %s', workload_settings["servers"])
 for server in workload_settings["servers"]:
-    template_path = f'experiments/{server["config"]}'
+    template_path = f'../experiments/{server["config"]}'
     # Special config that contains all server ip addresses
     cleanup_config_path = generate_config(settings, template_path, None, num_log_managers)
     for num_partitions, values in num_parts_to_values.items():
@@ -222,10 +279,5 @@ for server in workload_settings["servers"]:
         if num_partitions is not None:
             config_name += f"-sz{num_partitions}"
         run_benchmark([], server["image"], settings, config_path, config_name, values)
-
-
-
-
-
 
 print("Done")

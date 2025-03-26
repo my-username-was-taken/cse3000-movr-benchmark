@@ -18,7 +18,7 @@ namespace slog {
 
 using RawParamMap = std::unordered_map<std::string, std::string>;
 
-inline std::discrete_distribution<> zipf_distribution(double a, size_t n) {
+inline std::discrete_distribution<uint64_t> zipf_distribution(double a, size_t n) {
   std::vector<double> weights(n);
   double s = 0;
   for (size_t i = 1; i <= n; i++) {
@@ -27,7 +27,7 @@ inline std::discrete_distribution<> zipf_distribution(double a, size_t n) {
   for (size_t i = 0; i < n; i++) {
     weights[i] = 1 / (std::pow(i + 1, a) * s);
   }
-  return std::discrete_distribution<>(weights.begin(), weights.end());
+  return std::discrete_distribution<uint64_t>(weights.begin(), weights.end());
 }
 
 template <typename T, typename G>
@@ -221,7 +221,7 @@ class KeyList {
     cold_keys_.push_back(key);
   }
 
-  Key GetRandomHotKey(std::mt19937& rg, double hot_zipf) {
+  Key GetRandomHotKey(std::mt19937& rg, double hot_zipf=0.0) {
     if (num_hot_keys_ == 0) {
       throw std::runtime_error("There is no hot key to pick from. Please check your params.");
     }
@@ -247,7 +247,7 @@ class KeyList {
     return hot_keys_[dis(rg)];
   }
 
-  Key GetRandomColdKey(std::mt19937& rg, double hot_zipf) {
+  Key GetRandomColdKey(std::mt19937& rg, double hot_zipf=0.0) {
     if (is_simple_) {
       if (num_hot_keys_ >= num_keys_) {
         throw std::runtime_error("There is no cold key to pick from. Please check your params.");
