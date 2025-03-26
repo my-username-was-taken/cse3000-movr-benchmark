@@ -216,6 +216,15 @@ std::pair<Transaction*, TransactionProfile> TPCCWorkload::NextTransaction() {
 
 void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {
   //LOG(INFO) << "Making new NewOrder txn";
+  double skew = params_.GetDouble(SKEW);
+  int final_item_skew, final_cust_skew;
+  if (skew == -1.0) {
+    final_item_skew = org_item_skew;
+    final_cust_skew = org_cust_skew;
+  } else {
+    final_item_skew = skew * tpcc::kMaxItems;
+    final_cust_skew = skew * tpcc::kCustPerDist;
+  }
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
   auto remote_warehouses = SelectRemoteWarehouses(partition);
   int d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
@@ -229,15 +238,6 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
   std::uniform_int_distribution<> quantity_rnd(1, 10);
   int supply_w_ids[tpcc::kLinePerOrder];
   std::set<int> unique_regions;
-  double skew = params_.GetDouble(SKEW);
-  int final_item_skew, final_cust_skew;
-  if (skew == -1.0) {
-    final_item_skew = org_item_skew;
-    final_cust_skew = org_cust_skew;
-  } else {
-    final_item_skew = skew * tpcc::kMaxItems;
-    final_cust_skew = skew * tpcc::kCustPerDist;
-  }
   for (size_t i = 0; i < tpcc::kLinePerOrder; i++) {
     auto supply_w_id = w_id;
     if (is_remote(rg_) && !remote_warehouses.empty()) {
@@ -292,6 +292,13 @@ void TPCCWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id,
 }
 
 void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {
+  double skew = params_.GetDouble(SKEW);
+  int final_cust_skew;
+  if (skew == -1.0) {
+    final_cust_skew = org_cust_skew;
+  } else {
+    final_cust_skew = skew * tpcc::kCustPerDist;
+  }
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
 
   auto remote_warehouses = SelectRemoteWarehouses(partition);
