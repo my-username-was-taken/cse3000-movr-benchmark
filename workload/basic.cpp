@@ -229,6 +229,7 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
   auto hot_records = params_.GetUInt32(HOT_RECORDS);
   auto records = params_.GetUInt32(RECORDS);
   auto value_size = params_.GetUInt32(VALUE_SIZE);
+  auto hot_zipf = params_.GetDouble(HOT_ZIPF);
 
   CHECK_LE(writes, records) << "Number of writes cannot exceed number of records in a transaction!";
   CHECK_LE(hot_records, records) << "Number of hot records cannot exceed number of records in a transaction!";
@@ -248,7 +249,7 @@ std::pair<Transaction*, TransactionProfile> BasicWorkload::NextTransaction() {
     for (;;) {
       Key key;
       if (is_hot[i]) {
-        key = partition_to_key_lists_[partition][home].GetRandomHotKey(rg_, HOT_ZIPF);
+        key = partition_to_key_lists_[partition][home].GetRandomHotKey(rg_, hot_zipf);
       } else {
         // For cold keys, we typically keep an even distribution (i.e. the Zipfian coefficient of 0.0)
         key = partition_to_key_lists_[partition][home].GetRandomColdKey(rg_, 0.0);

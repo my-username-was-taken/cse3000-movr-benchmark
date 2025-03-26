@@ -29,6 +29,20 @@ $ cmake .. -DCMAKE_BUILD_TYPE=release
 $ make -j$(nproc)
 ```
 
+### Build locally
+
+These building instructions have been tested on the TU Delft st5
+
+```
+sudo apt update
+sudo apt install cmake build-essential pkg-config -y
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=release
+make -j$(nproc)
+```
+
+
 ## How to Run
 <details>
 
