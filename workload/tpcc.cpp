@@ -343,6 +343,13 @@ void TPCCWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, 
 void TPCCWorkload::OrderStatus(Transaction& txn, int w_id) {
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
 
+  double skew = params_.GetDouble(SKEW);
+  int final_cust_skew;
+  if (skew == -1.0) {
+    final_cust_skew = org_cust_skew;
+  } else {
+    final_cust_skew = skew * tpcc::kCustPerDist;
+  }
   auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
   int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   auto max_o_id = id_generator_.max_o_id();
@@ -362,6 +369,13 @@ void TPCCWorkload::OrderStatus(Transaction& txn, int w_id) {
 
 void TPCCWorkload::Deliver(Transaction& txn, int w_id) {
   auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
+  double skew = params_.GetDouble(SKEW);
+  int final_cust_skew;
+  if (skew == -1.0) {
+    final_cust_skew = org_cust_skew;
+  } else {
+    final_cust_skew = skew * tpcc::kCustPerDist;
+  }
   int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
   auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
   auto no_o_id = id_generator_.NextNOOId(w_id, d_id);
