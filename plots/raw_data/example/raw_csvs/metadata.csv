@@ -1,0 +1,2 @@
+duration,txns,clients,rate,sample,wl:name,wl:mh,wl:records,wl:mp,wl:hot_records,wl:mh_zipf,wl:mp_parts,wl:hot,wl:value_size,wl:mh_homes,wl:writes,wl:nearest,wl:sp_partition,wl:sh_home
+10,10,1,0,10,basic,50,10,50,0,0,2,0,100,2,10,1,-1,-1

@@ -112,12 +112,11 @@ def parse_envs(envs: List[str]) -> Dict[str, str]:
 def fetch_data(machines, user, tag, out_path):
     """Fetch data from remote machines
 
-    @param machines  list of machine info dicts. Each dict has the following format:
-                     {
+    @param machines list of machine info dicts. Each dict has the following format:
+                    {
                         'address': address of the machine,
-                        'name': name of directory containing the
-                                fetched data for this machine
-                      }
+                        'name': name of directory containing the fetched data for this machine
+                    }
     @param user      username used to ssh to the machines
     @param tag       tag of the data to fetch
     @param output    directory containing the fetched data
@@ -126,8 +125,11 @@ def fetch_data(machines, user, tag, out_path):
         shutil.rmtree(out_path, ignore_errors=True)
         LOG.info("Removed existing directory: %s", out_path)
 
+    home_dir = os.getcwd()
+    #os.makedirs(os.path.join(home_dir, out_path))
     os.makedirs(out_path)
-    LOG.info(f"Created directory: {out_path}")
+    LOG.info(f"Created directory: {out_path} withing directory {home_dir}")
+    #LOG.info(f"Currently it contains: {os.listdir(out_path)}")
 
     commands = []
     for m in machines:

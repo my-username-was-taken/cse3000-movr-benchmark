@@ -29,19 +29,25 @@ $ cmake .. -DCMAKE_BUILD_TYPE=release
 $ make -j$(nproc)
 ```
 
-### Build locally
+### Build on TU Delft machines
 
-These building instructions have been tested on the TU Delft st5
+These building instructions have been tested on the TU Delft st5. Whole process takes ~2 mins when building for the 1st time
 
 ```
 sudo apt update
 sudo apt install cmake build-essential pkg-config -y
+rm -rf build
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=release
 make -j$(nproc)
 ```
 
+To create a docker image, use the `build_detock.sh` script:
+
+```
+bash build_detock.sh
+```
 
 ## How to Run
 <details>
