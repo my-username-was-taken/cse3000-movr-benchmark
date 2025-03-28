@@ -4,25 +4,26 @@ import numpy as np
 import os
 import argparse
 
-
-
 def make_plot():
 
-    if args.plot == 'mh_proportions':
+    # For the resource demads and cost, we use a different script
+    if args.plot == 'baseline':
         x_lab = 'Multi-Home Txns (%)'
-    elif args.plot == 'network':
-        x_lab = 'Max bandwidth (Gbps)'
     elif args.plot == 'skew':
         x_lab = 'Skew factor (Theta)'
     elif args.plot == 'scalability':
-        x_lab = 'Machines per region'
+        x_lab = 'Clients'
+    elif args.plot == 'network':
+        x_lab = 'Extra delay (ms)'
+    elif args.plot == 'packet_loss':
+        x_lab = 'Packets lost (%)'
 
     # Read data from CSV
-    csv_path = f'plots/data/{args.plot}.csv'  # Adjust this path
+    csv_path = f'plots/data/examples/{args.plot}.csv'  # Adjust this path
     data = pd.read_csv(csv_path)
 
     # Extract data
-    percent_multi_home = data['PercentMultiHome']
+    xaxis_points = data[data.columns[0]]
     metrics = ['Latency', 'Throughput', 'BytesTransferred', 'Aborts', 'Cost']
     y_labels = [
         'Latency (ms)',
@@ -53,7 +54,7 @@ def make_plot():
             column_name = f'{metric}_{db}'
             if column_name in data.columns:  # Plot only if the column exists in the CSV
                 ax.plot(
-                    percent_multi_home,
+                    xaxis_points,
                     data[column_name],
                     label=db,
                     color=color,
@@ -63,16 +64,18 @@ def make_plot():
         ax.set_ylabel(y_label)
         ax.set_xlabel(x_lab)
         ax.grid(True)
-        if args.plot == 'mh_proportions':
+        if args.plot == 'baseline':
             ax.set_xticks(np.linspace(0, 100, 6))  # 0%, 20%, ..., 100%
             ax.set_xlim(0, 100)
-        elif args.plot == 'network':
-            ax.set_xlim(left=0)
         elif args.plot == 'skew':
             ax.set_xticks(np.linspace(0.0, 1.0, 6))  # 0.0, 0.2, ..., 1.0
             ax.set_xlim(0, 1)
         elif args.plot == 'scalability':
             ax.set_xlim(left=1)
+        elif args.plot == 'network':
+            ax.set_xlim(left=0)
+        elif args.plot == 'packet_loss':
+            ax.set_xlim(0, 10)
         ax.set_ylim(bottom=0)  # Remove extra whitespace below y=0
 
     # Add legend and adjust layout
@@ -90,7 +93,7 @@ def make_plot():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
-    parser.add_argument("plot", default="mh_proportions", choices=["mh_proportions", "network", "skew", "scalability"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("plot", default="mh_proportions", choices=["baseline", "skew", "scalability", "network", "packet_loss"], help="The name of the experiment we want to plot.")
     args = parser.parse_args()
 
     make_plot()

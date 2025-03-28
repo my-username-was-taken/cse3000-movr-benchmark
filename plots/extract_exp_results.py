@@ -65,10 +65,38 @@ bytes_transfered = -1
 # Must collect over all clients
 cost = -1
 
+# Get the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
+#              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
+vm_cost = 4 * (0.444+0.464+0.468+0.400+0.400+0.400+0.516+0.492)
+# The cost of transferring 1GB of data out from the source region (the row). Price as of 28.3.25
+data_transfer_cost_matrix = [
+    [0,0.02,0.02,0.02,0.02,0.02,0.02,0.02], # euw1
+    [0.02,0,0.02,0.02,0.02,0.02,0.02,0.02], # euw2
+    [0.02,0.02,0,0.02,0.02,0.02,0.02,0.02], # usw1
+    [0.02,0.02,0.02,0,0.02,0.02,0.02,0.02], # usw2
+    [0.02,0.02,0.02,0.02,0,0.01,0.02,0.02], # use1
+    [0.02,0.02,0.02,0.02,0.01,0,0.02,0.02], # use2
+    [0.09,0.09,0.09,0.09,0.09,0.09,0,0.09], # apne1
+    [0.08,0.08,0.08,0.08,0.08,0.08,0.08,0]  # apne2
+]
+# Here we will need to consider the duration of the experiemnt
+# TODO: FIgure out how to make an extrapolation that is an objective estimate (because of start & end anomalies)
+bytes_transfered_matrix = [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+]
+total_data_transfer_cost = 0
+for i in range(len(data_transfer_cost_matrix)):
+    for j in range(len(data_transfer_cost_matrix[0])):
+        total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_matrix[i][j]
 
-
-
-
+total_hourly
 
 # Write the obtained values to file
 
