@@ -1,5 +1,5 @@
 import os
-import numpy
+import numpy as np
 import csv
 import pandas as pd
 
@@ -49,13 +49,27 @@ for line in log_files['benchmark_container_log']:
     if 'Avg. TPS: ' in line:
         throughput = int(line.split('Avg. TPS: ')[1])
 
+# TODO: Check whether the 'sent_at' and 'received_at' from 'transactions.csv' is really correct!!!!!
 # Get the latency (p50, p90, p95, p99)
 # Must collect over all clients
-latencies = []
 
-# Get the aborts
+csv_files['transactions']["duration"] = csv_files['transactions']["received_at"] - csv_files['transactions']["sent_at"]
+# Compute latency percentiles (and convert to ms)
+percentiles = [50, 90, 95, 99]
+latency_percentiles = {f"p{p}": np.percentile(csv_files['transactions']["duration"] / 1000000, p) for p in percentiles}
+
+# Get the abort rate
 # Must collect over all clients
-aborts = -1
+abort_rate = -1
+
+total_txns = 0
+aborted_txns = 0
+
+total_txns += csv_files['summary']['single_partition']
+total_txns += csv_files['summary']['multi_partition']
+aborted_txns += csv_files['summary']['aborted']
+
+abort_rate = 100 * aborted_txns / total_txns
 
 # Get the total bytes transfered
 # Must collect over all clients
@@ -96,7 +110,7 @@ for i in range(len(data_transfer_cost_matrix)):
     for j in range(len(data_transfer_cost_matrix[0])):
         total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_matrix[i][j]
 
-total_hourly
+total_hourly_cost = vm_cost + total_data_transfer_cost
 
 # Write the obtained values to file
 

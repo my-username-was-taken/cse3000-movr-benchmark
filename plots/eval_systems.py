@@ -29,7 +29,7 @@ def make_plot():
         'Latency (ms)',
         'Throughput (txn/s)',
         'Bytes Transferred (MB)',
-        'Aborts (#)',
+        'Aborts (%)',
         'Cost ($)'
     ]
     databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Atomic Multicast', 'Caerus']
