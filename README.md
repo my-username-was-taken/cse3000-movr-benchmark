@@ -324,17 +324,16 @@ and set the following fields in the config:
 broker_rcvbuf: 10485760
 long_sender_sndbuf: 10485760
 ```
-## Experiments
-        
-Experiment data and code to generate the figures in the paper can be found in https://github.com/umd-dslam/DetockAnalysis
 
 ## Acknowledgements
 
-This work is supported by the National Science Foundation under grant IIS-1910613
+This work is part of project number 19708 of the Vidi research program, which is partly financed by the Dutch Research Council (NWO).
 
 ## Directory Structure
 
 ```
+|- aws/
+|--- Scripts and config files for spawning an AWS cluster to run the final experiments.
 |- build/
 |--- Makefiles, dependencies, compilier settings. Should mostly work as is.
 |- common/
@@ -353,10 +352,14 @@ This work is supported by the National Science Foundation under grant IIS-191061
 | |--- Configs for TPC-C experiments (Fig. 10, 11, 12?)
 | |- ycsb
 | |--- Configs for YCSB-T experiment (Fig. 6 - 9)
+|- latex_generators/
+|--- Python scripts that create some of the latex code for certain tables in the paper Overleaf.
 |- module/
 |--- Actuall logic of the system (i.e. the sequencer, scheduler, orderer, forwarder, etc.)
 |- paxos/
 |--- Paxos logic implementation. Used for (asyncronous) replication?
+|- plots/
+|--- Scripts for extracting results from experiments scripts and for generating the plots.
 |- proto/
 |--- Protobuf message specifications for txn, config, internal, etc. objects
 |- service/
@@ -366,7 +369,7 @@ This work is supported by the National Science Foundation under grant IIS-191061
 |- test/
 |--- Test for various parts of the system. Also isolates sequencer/scheduler pretty well.
 |- tools/
-|--- Helper scripts to run expeiments. 'tools/run_experiment.py' is possibly the entry point to all experiments?
+|--- Helper scripts to run expeiments. 'tools/run_experiment.py' is the entry point to running all experiments.
 |- workload/
 |--- Other setup for TPC-C, cockroachDB, remastering experiments. What's the relation to the 'storage' dir?
 |- 
