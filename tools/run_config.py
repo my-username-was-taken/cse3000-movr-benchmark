@@ -63,7 +63,7 @@ DEFAULT_PARAMS = {**DEFAULT_PARAMS, **{
 }}
 
 settings_file_name = 'settings'
-settings_path = f'../experiments/{settings_file_name}.json'
+settings_path = f'experiments/{settings_file_name}.json'
 skip_starting_server = False
 
 # Basically figure out which combinations of parameters we want to really test in our experiment
@@ -263,8 +263,8 @@ num_log_managers = workload_settings.get("num_log_managers", None)
 # The DB systems that will the tried (e.g., Detock, SLOG, etc.). Iterate through the desiged systems and run the experiment on them
 LOG.info('Will run the following DB configs: %s', workload_settings["servers"])
 for server in workload_settings["servers"]:
-    template_path = f'../experiments/{server["config"]}'
-    # Special config that contains all server ip addresses
+    template_path = f'experiments/{server["config"]}'
+    # Special config that contains all server IP addresses
     cleanup_config_path = generate_config(settings, template_path, None, num_log_managers)
     for num_partitions, values in num_parts_to_values.items():
         config_path = generate_config(settings, template_path, num_partitions, num_log_managers)
