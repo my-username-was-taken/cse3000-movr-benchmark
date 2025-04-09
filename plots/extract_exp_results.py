@@ -15,8 +15,15 @@ BASE_DIR_PATH = os.path.join("plots/raw_data", exp_raw_data_dir)
 CSV_DIR = os.path.join(BASE_DIR_PATH, "raw_csvs")
 LOG_DIR = os.path.join(BASE_DIR_PATH, "raw_logs")
 
-out_csv = 'baseline.csv'
-OUT_CSV_PATH = os.path.join("plots/data", out_csv)
+# Give these as arguments. They will determine which cell in the table the generated data points belong to.
+scenario_name = 'example'
+sys_name = 'Detock'
+x_var_val = 10
+
+out_csv = f'{scenario_name}.csv'
+OUT_CSV_PATH = os.path.join("plots/data/final", out_csv)
+SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Caerus', 'Mencius']
+METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'cost']
 
 # Load log files into strings
 log_files = {}
@@ -65,19 +72,15 @@ abort_rate = -1
 total_txns = 0
 aborted_txns = 0
 
-total_txns += csv_files['summary']['single_partition']
-total_txns += csv_files['summary']['multi_partition']
-aborted_txns += csv_files['summary']['aborted']
+total_txns += csv_files['summary']['single_partition'].iloc[0]
+total_txns += csv_files['summary']['multi_partition'].iloc[0]
+aborted_txns += csv_files['summary']['aborted'].iloc[0]
 
 abort_rate = 100 * aborted_txns / total_txns
 
 # Get the total bytes transfered
 # Must collect over all clients
-bytes_transfered = -1
-
-# Get the hourly cost of deployment
-# Must collect over all clients
-cost = -1
+bytes_transfered = 0
 
 # Get the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
 #              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
@@ -94,28 +97,67 @@ data_transfer_cost_matrix = [
     [0.08,0.08,0.08,0.08,0.08,0.08,0.08,0]  # apne2
 ]
 # Here we will need to consider the duration of the experiemnt
-# TODO: FIgure out how to make an extrapolation that is an objective estimate (because of start & end anomalies)
+# TODO: Figure out how to make an extrapolation that is an objective estimate (because of start & end anomalies)
 bytes_transfered_matrix = [
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    []
+    [111,112,113,114,115,116,117,118], # euw1
+    [211,212,213,214,215,216,217,218], # euw2
+    [311,312,313,314,315,316,317,318], # usw1
+    [411,412,413,414,415,416,417,418], # usw2
+    [511,512,513,514,515,516,517,518], # use1
+    [611,612,613,614,615,616,617,618], # use2
+    [711,712,713,714,715,716,717,718], # apne1
+    [811,812,813,814,815,816,817,818]  # apne2
 ]
 total_data_transfer_cost = 0
 for i in range(len(data_transfer_cost_matrix)):
     for j in range(len(data_transfer_cost_matrix[0])):
+        bytes_transfered += bytes_transfered_matrix[i][j]
         total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_matrix[i][j]
 
 total_hourly_cost = vm_cost + total_data_transfer_cost
 
-# Write the obtained values to file
+# Write the obtained values to file ('x_var' is the x-axis value for the row). We need to store the following variable (populated above)
+# 'x_var_val' (is it does not exist yet), 'throughput', 'latency_percentiles['p50']', 'latency_percentiles['p90']', 'latency_percentiles['p95']', 'latency_percentiles['p99']',
+# 'abort_rate', 'bytes_transfered', 'total_hourly_cost'
 
+# For mow we will give 4 latencies (p50, p90, p95, p99) and later pick which one we actually want to plot
 
+colnames = ['x_var']
+for system in SYSTEMS_LIST:
+    for metric in METRICS_LIST:
+        colnames.append(f'{system}_{metric}')
+if os.path.isfile(OUT_CSV_PATH):
+    df = pd.read_csv(OUT_CSV_PATH)
+else: # We have to create a new file
+    df = pd.DataFrame(data=[], columns=colnames)
 
+# Check if the value already exists in 'x_var'
+if (df['x_var'] == x_var_val).any():
+    # Update the matching row
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_throughput'] = throughput
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_p50'] = latency_percentiles['p50']
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_p90'] = latency_percentiles['p90']
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_p95'] = latency_percentiles['p95']
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_p99'] = latency_percentiles['p99']
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_aborts'] = abort_rate
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_bytes'] = bytes_transfered
+    df.loc[df['x_var'] == x_var_val, f'{sys_name}_cost'] = total_hourly_cost
+else:
+    # Create a new row with NaNs, except for 'x_var' and the new column
+    new_row = {col: np.nan for col in df.columns}
+    new_row['x_var'] = x_var_val
+    new_row[f'{sys_name}_throughput'] = throughput
+    new_row[f'{sys_name}_p50'] = latency_percentiles['p50']
+    new_row[f'{sys_name}_p90'] = latency_percentiles['p90']
+    new_row[f'{sys_name}_p95'] = latency_percentiles['p95']
+    new_row[f'{sys_name}_p99'] = latency_percentiles['p99']
+    new_row[f'{sys_name}_aborts'] = abort_rate
+    new_row[f'{sys_name}_bytes'] = bytes_transfered
+    new_row[f'{sys_name}_cost'] = total_hourly_cost
+    # Append the row
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
+# Save the result
+df.to_csv(OUT_CSV_PATH, index=False)
 
 print("Done")

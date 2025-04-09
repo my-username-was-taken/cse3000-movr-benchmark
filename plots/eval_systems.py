@@ -4,6 +4,9 @@ import numpy as np
 import os
 import argparse
 
+# Extracted data will contain p50, p90, p95, p99
+LATENCY_PERCENTILE = 'p95'
+
 def make_plot():
 
     # For the resource demads and cost, we use a different script
@@ -17,24 +20,26 @@ def make_plot():
         x_lab = 'Extra delay (ms)'
     elif args.plot == 'packet_loss':
         x_lab = 'Packets lost (%)'
+    elif args.plot == 'example':
+        x_lab = 'Example x-axis'
 
     # Read data from CSV
-    csv_path = f'plots/data/examples/{args.plot}.csv'  # Adjust this path
+    csv_path = f'plots/data/final/{args.plot}.csv'  # Adjust this path
     data = pd.read_csv(csv_path)
 
     # Extract data
-    xaxis_points = data[data.columns[0]]
-    metrics = ['Latency', 'Throughput', 'BytesTransferred', 'Aborts', 'Cost']
+    xaxis_points = data['x_var']
+    metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
     y_labels = [
-        'Latency (ms)',
+        f'{LATENCY_PERCENTILE} Latency (ms)',
         'Throughput (txn/s)',
         'Bytes Transferred (MB)',
         'Aborts (%)',
         'Cost ($)'
     ]
-    databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Atomic Multicast', 'Caerus']
-    line_styles = ['-', '--', '-.', ':', '-', '--']
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown']
+    databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Caerus'] #, 'Atomic Multicast']
+    line_styles = ['-', '--', '-.', ':', '-'] #, '--']
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple'] #, 'tab:brown']
 
     # Configure Matplotlib global font size
     plt.rcParams.update({
@@ -51,7 +56,7 @@ def make_plot():
 
     for ax, metric, y_label in zip(axes, metrics, y_labels):
         for db, color, style in zip(databases, colors, line_styles):
-            column_name = f'{metric}_{db}'
+            column_name = f'{db}_{metric}'
             if column_name in data.columns:  # Plot only if the column exists in the CSV
                 ax.plot(
                     xaxis_points,
@@ -93,7 +98,7 @@ def make_plot():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
-    parser.add_argument("plot", default="mh_proportions", choices=["baseline", "skew", "scalability", "network", "packet_loss"], help="The name of the experiment we want to plot.")
+    parser.add_argument("plot", default="mh_proportions", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
     args = parser.parse_args()
 
     make_plot()
