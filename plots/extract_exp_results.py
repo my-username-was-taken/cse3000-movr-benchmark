@@ -10,9 +10,9 @@ The script will populate the CSVs in 'plots/data'.
 '''
 
 # Define paths
-exp_raw_data_dir = 'example'
+exp_raw_data_dir = 'example' #2025-04-09-14-20-49' #example'
 BASE_DIR_PATH = os.path.join("plots/raw_data", exp_raw_data_dir)
-CSV_DIR = os.path.join(BASE_DIR_PATH, "raw_csvs")
+CLIENT_DATA_DIR = os.path.join(BASE_DIR_PATH, "client")
 LOG_DIR = os.path.join(BASE_DIR_PATH, "raw_logs")
 
 # Give these as arguments. They will determine which cell in the table the generated data points belong to.
@@ -28,7 +28,7 @@ METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'co
 # Load log files into strings
 log_files = {}
 for file in os.listdir(LOG_DIR):
-    if file.endswith(".txt"):
+    if file.endswith(".log"):
         file_path = os.path.join(LOG_DIR, file)
         with open(file_path, "r", encoding="utf-8") as f:
             file_name = file.split('.')[0]
@@ -36,45 +36,49 @@ for file in os.listdir(LOG_DIR):
         print(f"Loaded log: {file} (Size: {len(log_files[file_name])} characters)")
 
 # Load CSV files into pandas DataFrames
+clients = [obj for obj in os.listdir(CLIENT_DATA_DIR) if os.path.isdir(os.path.join(CLIENT_DATA_DIR, obj))]
 csv_files = {}
-for file in os.listdir(CSV_DIR):
-    if file.endswith(".csv"):
-        file_path = os.path.join(CSV_DIR, file)
-        file_name = file.split('.')[0]
-        csv_files[file_name] = pd.read_csv(file_path)
-        print(f"Loaded CSV: {file} (Shape: {csv_files[file_name].shape})")
+for client in clients:
+    csv_files[client] = {}
+    for file in os.listdir(os.path.join(CLIENT_DATA_DIR, client)):
+        if file.endswith(".csv"):
+            file_path = os.path.join(CLIENT_DATA_DIR, client, file)
+            file_name = file.split('.')[0]
+            csv_files[client][file_name] = pd.read_csv(file_path)
+            print(f"Loaded CSV: {file} (Shape: {csv_files[client][file_name].shape})")
 
 # Get tag from benchmark cmd log
 tag = None
-for line in log_files['benchmark_cmd_log']:
+for line in log_files['benchmark_cmd']:
     if 'admin INFO: Tag: ' in line:
         tag = line.split('admin INFO: Tag: ')[1]
 
 # Get throughput from benchmark container log
 throughput = -1
-for line in log_files['benchmark_container_log']:
+for line in log_files['benchmark_container']:
     if 'Avg. TPS: ' in line:
         throughput = int(line.split('Avg. TPS: ')[1])
 
-# TODO: Check whether the 'sent_at' and 'received_at' from 'transactions.csv' is really correct!!!!!
 # Get the latency (p50, p90, p95, p99)
-# Must collect over all clients
+all_latencies = []
+for client in csv_files.keys():
+    csv_files[client]['transactions']["duration"] = csv_files[client]['transactions']["received_at"] - csv_files[client]['transactions']["sent_at"]
+    all_latencies.extend(list(csv_files[client]['transactions']["duration"]))
 
-csv_files['transactions']["duration"] = csv_files['transactions']["received_at"] - csv_files['transactions']["sent_at"]
 # Compute latency percentiles (and convert to ms)
 percentiles = [50, 90, 95, 99]
-latency_percentiles = {f"p{p}": np.percentile(csv_files['transactions']["duration"] / 1000000, p) for p in percentiles}
+latency_percentiles = {f"p{p}": np.percentile(np.array(all_latencies) / 1000000, p) for p in percentiles}
 
 # Get the abort rate
-# Must collect over all clients
 abort_rate = -1
 
 total_txns = 0
 aborted_txns = 0
 
-total_txns += csv_files['summary']['single_partition'].iloc[0]
-total_txns += csv_files['summary']['multi_partition'].iloc[0]
-aborted_txns += csv_files['summary']['aborted'].iloc[0]
+for client in csv_files.keys():
+    total_txns += csv_files[client]['summary']['single_partition'].iloc[0]
+    total_txns += csv_files[client]['summary']['multi_partition'].iloc[0]
+    aborted_txns += csv_files[client]['summary']['aborted'].iloc[0]
 
 abort_rate = 100 * aborted_txns / total_txns
 

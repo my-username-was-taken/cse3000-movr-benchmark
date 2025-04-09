@@ -1,0 +1,22 @@
+2025-03-27 09:16:47,851      admin INFO: Calling admin.py at time 1743063407.8517506
+2025-03-27 09:16:47,857      admin INFO: Benchmark: Spawned remote processes: "2"
+2025-03-27 09:16:47,860      admin INFO: Launching Docker client of user omraz and address 131.180.125.57
+2025-03-27 09:16:47,860      admin INFO: Launching Docker client of user omraz and address 131.180.125.40
+2025-03-27 09:16:48,768      admin INFO: Connected to 131.180.125.57
+2025-03-27 09:16:49,172      admin INFO: Connected to 131.180.125.40
+2025-03-27 09:16:49,173      admin INFO: Pulling image "omraz/seq_eval:latest" for each node. This might take a while.
+2025-03-27 09:16:51,332      admin INFO: 131.180.125.57: Cleaned up container "benchmark"
+2025-03-27 09:16:51,360      admin INFO: No containers to clean!
+2025-03-27 09:16:51,361      admin INFO: 131.180.125.40: Cleaned up container "benchmark"
+2025-03-27 09:16:51,394      admin INFO: No containers to clean!
+2025-03-27 09:16:51,637      admin INFO: 131.180.125.57: Removed old data directory
+2025-03-27 09:16:51,791      admin INFO: 131.180.125.40: Removed old data directory
+2025-03-27 09:16:51,791      admin INFO: Delay per client: {'131.180.125.57': '0.28', '131.180.125.40': '0.40'}
+2025-03-27 09:16:51,793      admin INFO: 131.180.125.57: Delay for 0.119102 seconds before running the benchmark
+2025-03-27 09:16:51,793      admin INFO: 131.180.125.40: Delay for 0.000000 seconds before running the benchmark
+2025-03-27 09:16:52,129      admin INFO: 131.180.125.40: Synced config and ran command: benchmark --config /home/omraz/data/tu_cluster.conf --region 1 --replica 0 --data-dir /home/omraz/data --out-dir /home/omraz/data/2025-03-27-09-16-51 --duration 5 --wl basic --params "" --txns 10 --generators 1 --sample 10 --seed -1 --txn_profiles=False --rate 0 --clients 1 
+2025-03-27 09:16:52,217      admin INFO: 131.180.125.57: Synced config and ran command: benchmark --config /home/omraz/data/tu_cluster.conf --region 0 --replica 0 --data-dir /home/omraz/data --out-dir /home/omraz/data/2025-03-27-09-16-51 --duration 5 --wl basic --params "" --txns 10 --generators 1 --sample 10 --seed -1 --txn_profiles=False --rate 0 --clients 1 
+2025-03-27 09:16:58,274      admin INFO: 131.180.125.57: Done
+2025-03-27 09:16:58,316      admin INFO: 131.180.125.40: Done
+2025-03-27 09:16:58,317      admin INFO: Tag: 2025-03-27-09-16-51
+2025-03-27 09:16:58,317      admin INFO: Elapsed time: 10.5 sec

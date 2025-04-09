@@ -5,6 +5,7 @@ import os
 import argparse
 
 # Extracted data will contain p50, p90, p95, p99
+# TODO: Change to use p50, p95, and p99 latencies
 LATENCY_PERCENTILE = 'p95'
 
 def make_plot():
@@ -31,12 +32,13 @@ def make_plot():
     xaxis_points = data['x_var']
     metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
     y_labels = [
-        f'{LATENCY_PERCENTILE} Latency (ms)',
         'Throughput (txn/s)',
-        'Bytes Transferred (MB)',
+        f'{LATENCY_PERCENTILE} Latency (ms)',
         'Aborts (%)',
+        'Bytes Transferred (MB)',
         'Cost ($)'
     ]
+    subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
     databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Caerus'] #, 'Atomic Multicast']
     line_styles = ['-', '--', '-.', ':', '-'] #, '--']
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple'] #, 'tab:brown']
@@ -54,7 +56,7 @@ def make_plot():
     # Create figure and subplots
     fig, axes = plt.subplots(1, 5, figsize=(15, 3), sharex=True)
 
-    for ax, metric, y_label in zip(axes, metrics, y_labels):
+    for ax, metric, y_label, subplot_title in zip(axes, metrics, y_labels, subplot_titles):
         for db, color, style in zip(databases, colors, line_styles):
             column_name = f'{db}_{metric}'
             if column_name in data.columns:  # Plot only if the column exists in the CSV
@@ -65,7 +67,7 @@ def make_plot():
                     color=color,
                     linestyle=style
                 )
-        ax.set_title(metric)
+        ax.set_title(subplot_title)
         ax.set_ylabel(y_label)
         ax.set_xlabel(x_lab)
         ax.grid(True)
