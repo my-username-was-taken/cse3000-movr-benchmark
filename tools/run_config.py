@@ -280,4 +280,13 @@ for server in workload_settings["servers"]:
             config_name += f"-sz{num_partitions}"
         run_benchmark([], server["image"], settings, config_path, config_name, values)
 
+
+
+
+
+# Suggestion rather than using all this crap, just create a new script that does what we have in the Google Doc instructions (very last version)
+
+# After we run all the experiments, collect results over scp
+
+
 print("Done")
