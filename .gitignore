@@ -81,4 +81,8 @@ utilization.csv
 !latex_generators/*
 
 # Don't incude all raw data, but do keep example
-plots/raw_data/2*
+plots/raw_data/**
+!plots/raw_data/example
+!plots/raw_data/*/
+!plots/raw_data/*/.gitkeep
+

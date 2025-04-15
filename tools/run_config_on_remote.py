@@ -32,7 +32,7 @@ def run_subprocess(cmd, dry_run=False):
     else:
         return sp.run(cmd, shell=True, capture_output=True, text=True)
 
-os.mkdir(f'data/{FINAL_FOLDER}')
+os.makedirs(f'data/{FINAL_FOLDER}', exist_ok=True)
 
 # For now, we hard code this for the baseline exp (varying MH from 0 to 100) and just for Detock
 x_vals = [0, 20, 40, 60, 80, 100]
@@ -99,4 +99,4 @@ for system in systems_to_test:
 
 print("#####################")
 print(f"\n All {FINAL_FOLDER} experiments done. You can now copy logs with:")
-print(f"scp -r {MACHINE}:{detock_dir}/data/{FINAL_FOLDER} ~/Documents/GitHub/Detock/plots/raw_data")
+print(f"scp -r {MACHINE}:{detock_dir}/data/{FINAL_FOLDER}/* ~/Documents/GitHub/Detock/plots/raw_data/{FINAL_FOLDER}")
