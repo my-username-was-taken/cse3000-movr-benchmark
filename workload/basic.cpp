@@ -52,7 +52,7 @@ constexpr char SH_HOME[] = "sh_home";
 // Controls the skewness of the hot key selection (from 0.0 to 1.0)
 constexpr char HOT_ZIPF[] = "hot_zipf";
 
-const RawParamMap DEFAULT_PARAMS = {{MH_PCT, "0"},      {MH_HOMES, "2"}, {MH_ZIPF, "0"},      {MP_PCT, "0"},  {MP_PARTS, "2"},      {HOT, "0"},      {RECORDS, "10"}, 
+const RawParamMap DEFAULT_PARAMS = {{MH_PCT, "0"},      {MH_HOMES, "2"}, {MH_ZIPF, "0"},      {MP_PCT, "50"},  {MP_PARTS, "2"},      {HOT, "0"},      {RECORDS, "10"}, 
                                     {HOT_RECORDS, "0"}, {WRITES, "10"},  {VALUE_SIZE, "100"}, {NEAREST, "1"}, {SP_PARTITION, "-1"}, {SH_HOME, "-1"}, {HOT_ZIPF, "0.0"}};
 
 // For the Calvin experiment, there is a single region, so replace the regions by the replicas so that we generate the same workload as other experiments

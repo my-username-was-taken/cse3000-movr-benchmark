@@ -23,10 +23,10 @@ sudo apt install cmake build-essential pkg-config
 Run the following commands to build the system. The dependencies will be downloaded and built automatically.
 
 ```
-$ mkdir build
-$ cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=release
-$ make -j$(nproc)
+rm -rf build && mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=release
+make -j$(nproc)
 ```
 
 ### Build on TU Delft machines
@@ -36,8 +36,7 @@ These building instructions have been tested on the TU Delft st5. Whole process 
 ```
 sudo apt update
 sudo apt install cmake build-essential pkg-config -y
-rm -rf build
-mkdir build
+rm -rf build && mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=release
 make -j$(nproc)

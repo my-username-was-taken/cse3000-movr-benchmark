@@ -1,6 +1,5 @@
 import os
 import subprocess as sp
-import time
 import shutil
 
 # --- Config ---
@@ -21,8 +20,33 @@ short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
 
-benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
-single_benchmark_cmd = f"python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients 3000 --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
+if FINAL_FOLDER == 'baseline':
+    benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
+    clients = 3000
+    x_vals = [0, 20, 40, 60, 80, 100]
+elif FINAL_FOLDER == 'skew':
+    benchmark_params = "\"mh=50,mp=50,hot={}\""
+    clients = 3000
+    x_vals = [0, 1, 10, 100, 1000, 10000]
+elif FINAL_FOLDER == 'scalability':
+    benchmark_params = "\"mh=50,mp=50\""
+    clients = None
+    x_vals = [1, 10, 100, 1000, 10000, 1000000]
+elif FINAL_FOLDER == 'network':
+    benchmark_params = "\"mh=50,mp=50\""
+    clients = 3000
+    x_vals = [0, 10, 50, 100, 250, 500, 1000]
+elif FINAL_FOLDER == 'packet_loss':
+    benchmark_params = "\"mh=50,mp=50\""
+    clients = 3000
+    x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+
+single_ycsbt_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
+single_tpcc_benchmark_cmd = f""
+if WORKLOAD == 'ycsbt':
+    single_benchmark_cmd = single_ycsbt_benchmark_cmd
+elif WORKLOAD == 'tpcc':
+    single_benchmark_cmd = single_tpcc_benchmark_cmd
 collect_client_cmd = "python3 tools/admin.py collect_client --config {conf} --out-dir data --tag {tag}"
 
 def run_subprocess(cmd, dry_run=False):
@@ -33,20 +57,20 @@ def run_subprocess(cmd, dry_run=False):
         return sp.run(cmd, shell=True, capture_output=True, text=True)
 
 os.makedirs(f'data/{FINAL_FOLDER}', exist_ok=True)
-
 # For now, we hard code this for the baseline exp (varying MH from 0 to 100) and just for Detock
-x_vals = [0, 20, 40, 60, 80, 100]
 tags = []
 for system in systems_to_test:
     print("#####################")
     print(f"Testing system: {system}")
-    os.mkdir(f'data/{FINAL_FOLDER}/{system}')
+    os.makedirs(f'data/{FINAL_FOLDER}/{system}', exist_ok=True)
     # Run the benchmark for all x_vals and collect all results
     for x_val in x_vals:
         print("---------------------")
         print(f"Running experiment with x_val: {x_val}")
         tag = None
-        cur_benchmark_cmd = single_benchmark_cmd.format(x_val)
+        cur_benchmark_params = benchmark_params.format(x_val) # Works for both baseline AND skew
+        cur_clients = clients if clients is not None else x_val
+        cur_benchmark_cmd = single_benchmark_cmd.format(image=image, conf=conf, user=user, clients=cur_clients, duration=duration, benchmark_params=cur_benchmark_params, short_benchmark_log=short_benchmark_log)
         print(f"\n>>> Running: {cur_benchmark_cmd}")
         result = run_subprocess(cur_benchmark_cmd, DRY_RUN) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
         benchmark_cmd_log = ['']
