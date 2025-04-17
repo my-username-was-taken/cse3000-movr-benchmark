@@ -14,7 +14,7 @@ systems_to_test = ['Detock']
 image = "omraz/seq_eval:latest"
 conf = "examples/tu_cluster.conf"
 user = "omraz"
-duration = 10
+duration = 60
 #tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
@@ -27,7 +27,7 @@ if FINAL_FOLDER == 'baseline':
 elif FINAL_FOLDER == 'skew':
     benchmark_params = "\"mh=50,mp=50,hot={}\""
     clients = 3000
-    x_vals = [0, 1, 10, 100, 1000, 10000]
+    x_vals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 elif FINAL_FOLDER == 'scalability':
     benchmark_params = "\"mh=50,mp=50\""
     clients = None
@@ -124,3 +124,4 @@ for system in systems_to_test:
 print("#####################")
 print(f"\n All {FINAL_FOLDER} experiments done. You can now copy logs with:")
 print(f"scp -r {MACHINE}:{detock_dir}/data/{FINAL_FOLDER}/* ~/Documents/GitHub/Detock/plots/raw_data/{FINAL_FOLDER}")
+print("============================================")

@@ -5,7 +5,7 @@ import time
 import json
 import argparse
 import paramiko
-import subprocess
+import subprocess as sp
 import csv
 from concurrent.futures import ThreadPoolExecutor
 
@@ -112,7 +112,7 @@ def launch_instances(config, key_folder):
             server_instances.append({"InstanceId": instance.id, "Region": region, "Name": unique_name})
         
         # Special name for the client VMs
-        client_name = f'ClinetVM_{region}'
+        client_name = f'ClientVM_{region}'
         instances[-1].create_tags(
             Tags=[{'Key': 'Name', 'Value': client_name}]
         )
@@ -299,7 +299,7 @@ def test_connectivity(public_ips):
     for src_ip in public_ips:
         for dest_ip in public_ips:
             if src_ip != dest_ip:
-                rtt = subprocess.run(
+                rtt = sp.run(
                     ["ping", "-c", "1", dest_ip],
                     capture_output=True,
                     text=True,
@@ -369,23 +369,33 @@ def update_conf_file_ips():
                 f.write(f"{line}\n")
 
 
-def spawn_db_service(workload='YCSBT'):
+def spawn_db_service(workload='YCSBT', image='omraz/seq_eval:latest'):
+    spawn_db_service_cmd = "python3.8 tools/admin.py start --image {} examples/{}.conf -u ubuntu -e GLOG_v=1"
     if workload == 'YCSBT':
         print("Spawning YCSB-T DB service")
+        conf_file = 'aws_cluster_ycsbt'
+        spawn_db_service_cmd = spawn_db_service_cmd.format(image, conf_file)
     elif workload == 'TPCC':
         print("Spawning YCSB-T DB service")
+        conf_file = 'aws_cluster_tpcc'
+        spawn_db_service_cmd = spawn_db_service_cmd.format(image, conf_file)
     else:
         print("Invalid workload selected")
+    result = sp.run(spawn_db_service_cmd, shell=True, capture_output=True, text=True)
+    if hasattr(result, "returncode") and result.returncode != 0:
+        print(f"Spawning DB service failed with exit code {result.returncode}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
-    parser.add_argument("action", choices=["start", "status", "stop"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("action", choices=["start", "status", "stop", "setup_db"], help="Action to perform: start or stop the cluster.")
     parser.add_argument("-cfg", default="aws/aws.json", help="Path to the config file.")
+    parser.add_argument("-img", default="omraz/seq_eval:latest", help="Docker img to use.")
     args = parser.parse_args()
 
     config_file = args.cfg
     config = load_config(config_file)
+    image = args.img
     AWS_USERNAME = config["aws_username"]
     REGIONS = config["regions"]
     VM_TYPE = config["vm_type"]
@@ -413,8 +423,8 @@ if __name__ == "__main__":
                 public_ips.append(instance["ip"])
 
         test_connectivity_between_regions(region_ips)
-    elif args.action == "experiment":
+    elif args.action == "setup_db":
         update_conf_file_ips()
-        spawn_db_service(workload='YCSBT')
+        spawn_db_service(workload='YCSBT', image=image)
     elif args.action == "stop":
         stop_cluster()

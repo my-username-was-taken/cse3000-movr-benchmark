@@ -79,6 +79,7 @@ def make_plot(plot):
             ax.set_xlim(0, 1)
         elif plot == 'scalability':
             ax.set_xlim(left=1)
+            ax.set_xscale('log')
         elif plot == 'network':
             ax.set_xlim(left=0)
         elif plot == 'packet_loss':

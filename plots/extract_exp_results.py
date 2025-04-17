@@ -13,18 +13,13 @@ The script will populate the CSVs in 'plots/data'.
 
 # Define paths
 SCENARIOS = ['baseline', "skew", "scalability", "network", "packet_loss", "example"]
-scenario_id = 0
+scenario_id = 1
 exp_raw_data_dir = SCENARIOS[scenario_id] #2025-04-09-14-20-49' #example'
 BASE_DIR_PATH = os.path.join("plots/raw_data", exp_raw_data_dir)
 #CLIENT_DATA_DIR = os.path.join(BASE_DIR_PATH, "client")
 #LOG_DIR = os.path.join(BASE_DIR_PATH, "raw_logs")
 
-# Give these as arguments. They will determine which cell in the table the generated data points belong to.
-scenario_name = SCENARIOS[scenario_id]
-sys_name = 'Detock'
-x_var_val = 10
-
-out_csv = f'{scenario_name}.csv'
+out_csv = f'{exp_raw_data_dir}.csv'
 OUT_CSV_PATH = os.path.join("plots/data/final", out_csv)
 SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Caerus', 'Mencius']
 METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'cost']
@@ -142,6 +137,16 @@ for system in system_dirs:
             [711,712,713,714,715,716,717,718], # apne1
             [811,812,813,814,815,816,817,818]  # apne2
         ]
+        bytes_transfered_matrix = [
+            [0,0,0,0,0,0,0,0], # euw1
+            [0,0,0,0,0,0,0,0], # euw2
+            [0,0,0,0,0,0,0,0], # usw1
+            [0,0,0,0,0,0,0,0], # usw2
+            [0,0,0,0,0,0,0,0], # use1
+            [0,0,0,0,0,0,0,0], # use2
+            [0,0,0,0,0,0,0,0], # apne1
+            [0,0,0,0,0,0,0,0]  # apne2
+        ]
         total_bytes_transfered = 0
         total_data_transfer_cost = 0
         for i in range(len(data_transfer_cost_matrix)):
@@ -167,8 +172,12 @@ df = pd.DataFrame(data=[], columns=colnames)
 for x_val in x_vals:
     x_val = x_val.split('/')[-1]
     new_row = {col: np.nan for col in df.columns}
-    new_row['x_var'] = float(x_val)
+    if exp_raw_data_dir == 'skew':
+        new_row['x_var'] = (100.0 - float(x_val)) / 100.0
+    else:
+        new_row['x_var'] = float(x_val)
     for system in system_dirs:
+        sys_name = system.split('/')[-1]
         new_row[f'{sys_name}_throughput'] = throughputs[system.split('/')[-1]][x_val.split('/')[-1]]
         new_row[f'{sys_name}_p50'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p50']
         new_row[f'{sys_name}_p90'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p90']
