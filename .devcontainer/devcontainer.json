@@ -1,0 +1,14 @@
+{
+    "name": "Detock Benchmark",
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscodium": {
+            "extensions": [
+                "formulahendry.code-runner"
+            ]
+        }
+    }
+}
