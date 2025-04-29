@@ -8,4 +8,6 @@ target_sources(slog-core
     remastering.h
     tpcc.cpp
     tpcc.h
+    movr.cpp
+    movr.h
     workload.h)

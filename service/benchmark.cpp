@@ -16,6 +16,7 @@
 #include "workload/cockroach.h"
 #include "workload/remastering.h"
 #include "workload/tpcc.h"
+#include "workload/movr.h"
 
 DEFINE_string(config, "slog.conf", "Path to the configuration file");
 DEFINE_int32(generators, 1, "Number of generator threads");
@@ -70,6 +71,8 @@ vector<unique_ptr<ModuleRunner>> InitializeGenerators() {
       workload = make_unique<RemasteringWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_data_dir, FLAGS_params, seed + i);
     } else if (FLAGS_wl == "tpcc") {
       workload = make_unique<TPCCWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), seed + i);
+    } else if (FLAGS_wl == "movr") {
+      workload = make_unique<MovrWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), seed + i);
     } else {
       LOG(FATAL) << "Unknown workload: " << FLAGS_wl;
     }
