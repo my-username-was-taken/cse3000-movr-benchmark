@@ -23,7 +23,7 @@ FROM ubuntu:focal AS builder
         && cmake .. -DBUILD_SLOG_TESTS=OFF ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=release \
         && make -j$(nproc) \
         && cd ..
-    
+
     USER devuser
 
 FROM ubuntu:focal AS runner
@@ -43,7 +43,9 @@ FROM ubuntu:focal AS runner
     COPY --from=builder /src/examples/* ./
     COPY --from=builder /src/tools/ tools/
 
-    RUN apt-get update && apt-get install -y wget curl git netcat
+    ENV DEBIAN_FRONTEND=noninteractive
+    RUN apt-get update && apt-get install -y \
+        wget curl git netcat cmake build-essential pkg-config sudo
 
     RUN if [ -n "$INCLUDE_TOOLS" ]; then \
         apt-get update; \
@@ -52,6 +54,7 @@ FROM ubuntu:focal AS runner
         chmod +x tools/*.py; \
         fi
 
+    RUN echo 'devuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
     USER devuser
 
     ENV PATH="/opt/slog:${PATH}"
