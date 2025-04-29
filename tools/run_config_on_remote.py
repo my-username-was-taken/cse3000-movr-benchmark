@@ -1,12 +1,19 @@
 import os
+import sys
 import subprocess as sp
 import shutil
+
+import simulate_network
 
 # --- Config ---
 MACHINE = 'st5'
 WORKLOAD = 'ycsbt'
 DRY_RUN = False # We don't actually run it, just see the commands it will run
-FINAL_FOLDER = 'baseline'
+FINAL_FOLDER = 'network'
+BASIC_IFTOP_CMD = 'iftop 2>&1'
+
+#INTERFACE = 'eno33np0' # TODO: Check!!! May differ for AWS
+interfaces = {}
 
 #venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
 detock_dir = os.path.expanduser("~/Detock")
@@ -27,7 +34,7 @@ if FINAL_FOLDER == 'baseline':
 elif FINAL_FOLDER == 'skew':
     benchmark_params = "\"mh=50,mp=50,hot={}\""
     clients = 3000
-    x_vals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    x_vals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250]
 elif FINAL_FOLDER == 'scalability':
     benchmark_params = "\"mh=50,mp=50\""
     clients = None
@@ -56,6 +63,33 @@ def run_subprocess(cmd, dry_run=False):
     else:
         return sp.run(cmd, shell=True, capture_output=True, text=True)
 
+def get_ips_from_conf(conf_path):
+    with open(conf_path, "r") as f:
+        conf_data = f.readlines()
+    ips_used = set()
+    for line in conf_data:
+        if '    addresses: ' in line:
+            ips_used.add(line.split('    addresses: "')[1].split('"')[0])
+    ips_used = list(ips_used)
+    return ips_used
+
+def get_network_interfaces(ips_used):
+    interface = run_subprocess(BASIC_IFTOP_CMD).stdout.split('\n')[0].split('interface: ')[1]
+    print(f"This machine uses the network interface: {interface}")
+    for ip in ips_used:
+        try:
+            ssh_target = f"{user}@{ip}" if user else ip
+            ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
+            result = run_subprocess(ssh_cmd, DRY_RUN)
+            print(f"Result is: {result}")
+            interfaces[ip] = result.stdout.split('\n')[0].split('interface: ')[1]
+        except:
+            print(f"Unable to find interface for IP: {ip}")
+
+ips_used = get_ips_from_conf(conf_path=conf)
+print(f"The IPs used in this experiment are: {ips_used}")
+get_network_interfaces(ips_used=ips_used)
+
 os.makedirs(f'data/{FINAL_FOLDER}', exist_ok=True)
 # For now, we hard code this for the baseline exp (varying MH from 0 to 100) and just for Detock
 tags = []
@@ -72,7 +106,23 @@ for system in systems_to_test:
         cur_clients = clients if clients is not None else x_val
         cur_benchmark_cmd = single_benchmark_cmd.format(image=image, conf=conf, user=user, clients=cur_clients, duration=duration, benchmark_params=cur_benchmark_params, short_benchmark_log=short_benchmark_log)
         print(f"\n>>> Running: {cur_benchmark_cmd}")
+        if FINAL_FOLDER == 'network':
+            # Emulate the network conditions first
+            delay = f"{x_val}ms"
+            jitter = f"{int(x_val / 10)}ms"
+            loss = "0%"
+        elif FINAL_FOLDER == 'packet_loss':
+            delay = "0ms"
+            jitter = "0ms"
+            loss = f"{x_val}%"
+        # Note: the netem command may require allowing passwordless sudo for tc commands
+        # I.e., add something like 'omraz ALL=(ALL) NOPASSWD: /usr/sbin/tc' to 'sudo visudo'
+        if FINAL_FOLDER == 'network' or FINAL_FOLDER == 'packet_loss':
+            simulate_network.apply_netem(delay=delay, jitter=jitter, loss=loss, ips=interfaces, user=user)
         result = run_subprocess(cur_benchmark_cmd, DRY_RUN) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
+        if FINAL_FOLDER == 'network' or FINAL_FOLDER == 'packet_loss':
+            # Remove emulated network conditions first
+            simulate_network.remove_netem(ips=interfaces, user=user)
         benchmark_cmd_log = ['']
         if not DRY_RUN:
             print(result.stdout)

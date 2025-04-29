@@ -24,6 +24,8 @@ OUT_CSV_PATH = os.path.join("plots/data/final", out_csv)
 SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Caerus', 'Mencius']
 METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'cost']
 
+MAX_YCSBT_HOT_RECORDS = 250.0
+
 # Constants for the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
 #              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
 vm_cost = 4 * (0.444+0.464+0.468+0.400+0.400+0.400+0.516+0.492)
@@ -173,7 +175,7 @@ for x_val in x_vals:
     x_val = x_val.split('/')[-1]
     new_row = {col: np.nan for col in df.columns}
     if exp_raw_data_dir == 'skew':
-        new_row['x_var'] = (100.0 - float(x_val)) / 100.0
+        new_row['x_var'] = (MAX_YCSBT_HOT_RECORDS - float(x_val)) / MAX_YCSBT_HOT_RECORDS
     else:
         new_row['x_var'] = float(x_val)
     for system in system_dirs:
