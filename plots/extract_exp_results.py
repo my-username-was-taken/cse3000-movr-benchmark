@@ -1,30 +1,43 @@
 import os
 from os.path import join, isdir
 import numpy as np
-import csv
 import pandas as pd
+import argparse
 
 import eval_systems
+
 '''
 Script for extracting the final results out of the logs and CSVs created during the experiment runs.
 Intended to be run on own PC, just before the actual plotting of the results.
-The script will populate the CSVs in 'plots/data'.
+The script will populate the CSVs in 'plots/data' and generate a graph in 'plots/output'.
 '''
 
-# Define paths
-SCENARIOS = ['baseline', "skew", "scalability", "network", "packet_loss", "example"]
-scenario_id = 1
-exp_raw_data_dir = SCENARIOS[scenario_id] #2025-04-09-14-20-49' #example'
-BASE_DIR_PATH = os.path.join("plots/raw_data", exp_raw_data_dir)
-#CLIENT_DATA_DIR = os.path.join(BASE_DIR_PATH, "client")
-#LOG_DIR = os.path.join(BASE_DIR_PATH, "raw_logs")
+VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
+VALID_WORKLOADS = ['ycsbt', 'tpcc']
 
-out_csv = f'{exp_raw_data_dir}.csv'
-OUT_CSV_PATH = os.path.join("plots/data/final", out_csv)
+# Argument parser
+parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
+parser.add_argument('-s', '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+
+args = parser.parse_args()
+scenario = args.scenario
+workload = args.workload
+
+print(f"Extracting data for scenario: {scenario} and workload: {workload}")
+
+# Define paths
+
+BASE_DIR_PATH = join("plots/raw_data", workload, scenario)
+#CLIENT_DATA_DIR = join(BASE_DIR_PATH, "client")
+#LOG_DIR = join(BASE_DIR_PATH, "raw_logs")
+
+out_csv = f'{scenario}.csv'
+OUT_CSV_PATH = join("plots/data/final", workload, out_csv)
 SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Caerus', 'Mencius']
 METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'cost']
 
-MAX_YCSBT_HOT_RECORDS = 250.0
+MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per current exp setup
 
 # Constants for the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
 #              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
@@ -174,7 +187,7 @@ df = pd.DataFrame(data=[], columns=colnames)
 for x_val in x_vals:
     x_val = x_val.split('/')[-1]
     new_row = {col: np.nan for col in df.columns}
-    if exp_raw_data_dir == 'skew':
+    if scenario == 'skew':
         new_row['x_var'] = (MAX_YCSBT_HOT_RECORDS - float(x_val)) / MAX_YCSBT_HOT_RECORDS
     else:
         new_row['x_var'] = float(x_val)
@@ -193,9 +206,10 @@ for x_val in x_vals:
 
 # Save the result
 df = df.sort_values('x_var')
+os.makedirs('/'.join(OUT_CSV_PATH.split('/')[:-1]), exist_ok=True)
 df.to_csv(OUT_CSV_PATH, index=False)
 
 # Create new version of plots directly
-eval_systems.make_plot(exp_raw_data_dir)
+eval_systems.make_plot(plot=scenario, workload=workload)
 
 print("Done")

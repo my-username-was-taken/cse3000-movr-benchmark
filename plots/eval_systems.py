@@ -8,7 +8,7 @@ import argparse
 # TODO: Change to use p50, p95, and p99 latencies
 LATENCY_PERCENTILE = 'p95'
 
-def make_plot(plot):
+def make_plot(plot='baseline', workload='ycsbt'):
 
     # For the resource demads and cost, we use a different script
     if plot == 'baseline':
@@ -25,7 +25,7 @@ def make_plot(plot):
         x_lab = 'Example x-axis'
 
     # Read data from CSV
-    csv_path = f'plots/data/final/{plot}.csv'  # Adjust this path
+    csv_path = f'plots/data/final/{workload}/{plot}.csv'  # Adjust this path
     data = pd.read_csv(csv_path)
 
     # Extract data
@@ -92,9 +92,10 @@ def make_plot(plot):
     plt.tight_layout(rect=[0, 0, 1, 1])  # Further reduce whitespace
 
     # Save figures
-    output_path = f'plots/output/{plot}'
+    output_path = f'plots/output/{workload}/{plot}'
     jpg_path = output_path + '.jpg'
     pdf_path = output_path + '.pdf'
+    os.makedirs('/'.join(output_path.split('/')[:-1]), exist_ok=True)
     plt.savefig(jpg_path, dpi=300, bbox_inches='tight')
     plt.savefig(pdf_path, bbox_inches='tight')
     plt.show()
