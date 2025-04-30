@@ -3,6 +3,8 @@ from os.path import join, isdir
 import numpy as np
 import pandas as pd
 import argparse
+import re
+from datetime import datetime
 
 import eval_systems
 
@@ -13,18 +15,18 @@ The script will populate the CSVs in 'plots/data' and generate a graph in 'plots
 '''
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
-VALID_WORKLOADS = ['ycsbt', 'tpcc']
+VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 
 args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
 
-print(f"Extracting data for scenario: {scenario} and workload: {workload}")
+print(f"Extracting data for scenario: '{scenario}' and workload: '{workload}'")
 
 # Define paths
 
@@ -54,15 +56,30 @@ data_transfer_cost_matrix = [
     [0.08,0.08,0.08,0.08,0.08,0.08,0.08,0]  # apne2
 ]
 
+def extract_timestamp(timestamp_str):
+    # Extract timestamp: I0430 10:14:36.795380
+    ts_str = re.search(r"I\d{4} (\d{2}:\d{2}:\d{2}\.\d+)", line).group(1)
+    # Extract date part: 0430 (MMDD)
+    date_part = re.search(r"I(\d{4})", line).group(1)
+    month, day = int(date_part[:2]), int(date_part[2:])
+    # Convert to full datetime
+    now = datetime.now()
+    ts = datetime(now.year, month, day, *map(int, ts_str.split(":")[:2]), int(float(ts_str.split(":")[2])))
+    return int(ts.timestamp() * 1000)
+
 # Load log files into strings
 log_files = {}
 tags = {}
 throughputs = {}
+start_timestamps = {}
+end_timestamps = {}
 system_dirs = [join(BASE_DIR_PATH, dir) for dir in os.listdir(BASE_DIR_PATH) if isdir(join(BASE_DIR_PATH, dir))]
 for system in system_dirs:
     log_files[system.split('/')[-1]] = {}
     tags[system.split('/')[-1]] = {}
     throughputs[system.split('/')[-1]] = {}
+    start_timestamps[system.split('/')[-1]] = {}
+    end_timestamps[system.split('/')[-1]] = {}
     x_vals = [join(system, dir) for dir in os.listdir(system)]
     for x_val in x_vals:
         log_files[system.split('/')[-1]][x_val.split('/')[-1]] = {}
@@ -78,8 +95,12 @@ for system in system_dirs:
         # Extract throughput from container log
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container']:
             if 'Avg. TPS: ' in line:
-                throughput = int(line.split('Avg. TPS: ')[1])
-        throughputs[system.split('/')[-1]][x_val.split('/')[-1]] = throughput
+                throughputs[system.split('/')[-1]][x_val.split('/')[-1]] = int(line.split('Avg. TPS: ')[1])
+            # Get the timestamp between the actual start and end of the experiment
+            elif 'Start sending transactions with' in line:
+                start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+            elif 'Results were written to' in line:
+                end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
 print(f"All log files loaded")
 
 # Load CSV files into pandas DataFrames
@@ -97,6 +118,8 @@ for system in system_dirs:
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['summary'] = pd.read_csv(join(client, 'summary.csv'))
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['transactions'] = pd.read_csv(join(client, 'transactions.csv'))
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['txn_events'] = pd.read_csv(join(client, 'txn_events.csv'))
+            if 'iftop_eg.csv' in os.listdir(client):
+                csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
 print("All CSV files loaded")
 
 # Get the latencies (p50, p90, p95, p99)

@@ -6,22 +6,29 @@ import argparse
 import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
-VALID_WORKLOADS = ['ycsbt', 'tpcc']
+VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
-parser.add_argument('-s', '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
-parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-s',  '--scenario', default='network', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
+parser.add_argument('-w',  '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
+parser.add_argument('-d',  '--duration', default=10, help='Duration (in seconds) of a single experiment')
+parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
+parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
+parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
 
 args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
+conf = args.conf
+duration = args.duration
+dry_run = args.dry_run
+user = args.user
+machine = args.machine
 
-print(f"Running scenario: {scenario} and workload: {workload}")
+print(f"Running scenario: '{scenario}' and workload: '{workload}'")
 
-# --- Config ---
-MACHINE = 'st5'
-DRY_RUN = False # We don't actually run it, just see the commands it will run
 BASIC_IFTOP_CMD = 'iftop 2>&1'
 
 #INTERFACE = 'eno33np0' # TODO: Check!!! May differ for AWS
@@ -31,9 +38,6 @@ interfaces = {}
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = ['Detock']
 image = "omraz/seq_eval:latest"
-conf = "examples/tu_cluster.conf"
-user = "omraz"
-duration = 60
 #tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
@@ -68,6 +72,7 @@ if workload == 'ycsbt':
     single_benchmark_cmd = single_ycsbt_benchmark_cmd
 elif workload == 'tpcc':
     single_benchmark_cmd = single_tpcc_benchmark_cmd
+
 collect_client_cmd = "python3 tools/admin.py collect_client --config {conf} --out-dir data --tag {tag}"
 
 def run_subprocess(cmd, dry_run=False):
@@ -94,7 +99,7 @@ def get_network_interfaces(ips_used):
         try:
             ssh_target = f"{user}@{ip}" if user else ip
             ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
-            result = run_subprocess(ssh_cmd, DRY_RUN)
+            result = run_subprocess(ssh_cmd, dry_run)
             print(f"Result is: {result}")
             interfaces[ip] = result.stdout.split('\n')[0].split('interface: ')[1]
         except:
@@ -116,7 +121,7 @@ for system in systems_to_test:
         print("---------------------")
         print(f"Running experiment with x_val: {x_val}")
         tag = None
-        cur_benchmark_params = benchmark_params.format(x_val) # Works for both baseline AND skew
+        cur_benchmark_params = benchmark_params.format(x_val) # Works for: baseline, skew, scalability, network, packet_loss
         cur_clients = clients if clients is not None else x_val
         cur_benchmark_cmd = single_benchmark_cmd.format(image=image, conf=conf, user=user, clients=cur_clients, duration=duration, benchmark_params=cur_benchmark_params, short_benchmark_log=short_benchmark_log)
         print(f"\n>>> Running: {cur_benchmark_cmd}")
@@ -133,12 +138,11 @@ for system in systems_to_test:
         # I.e., add something like 'omraz ALL=(ALL) NOPASSWD: /usr/sbin/tc' to 'sudo visudo'
         if scenario == 'network' or scenario == 'packet_loss':
             simulate_network.apply_netem(delay=delay, jitter=jitter, loss=loss, ips=interfaces, user=user)
-        result = run_subprocess(cur_benchmark_cmd, DRY_RUN) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
-        if scenario == 'network' or scenario == 'packet_loss':
-            # Remove emulated network conditions first
-            simulate_network.remove_netem(ips=interfaces, user=user)
+            print(f"All servers simulating an additional delay of {delay}, jitter of {jitter}, and packet loss of {loss}")
+        result = run_subprocess(cur_benchmark_cmd, dry_run) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
+        # Print and collect output
         benchmark_cmd_log = ['']
-        if not DRY_RUN:
+        if not dry_run:
             print(result.stdout)
             print("[stderr]:", result.stderr)
             if result.returncode != 0:
@@ -161,15 +165,14 @@ for system in systems_to_test:
         with open(f"{cur_log_dir}/{short_benchmark_log}", 'w') as f:
             for line in benchmark_cmd_log:
                 f.write(f"{line}\n")
-        #move_logs_cmd = f"mkdir -p {cur_log_dir} && mv {short_benchmark_log} {cur_log_dir}/"
+        # Remove any network restrictions
+        if scenario == 'network' or scenario == 'packet_loss':
+            # Remove emulated network conditions first
+            simulate_network.remove_netem(ips=interfaces, user=user)
+            print(f"Network settings on all servers back to normal!")
         collect_benchmark_container_cmd = f"docker container logs benchmark 2>&1"
-        # Create directory to store logs and results
-        #result = run_subprocess(move_logs_cmd, DRY_RUN) #sp.run(move_logs_cmd, shell=True, capture_output=True, text=True)
-        #if hasattr(result, "returncode") and result.returncode != 0:
-        #    print(f"mkdir and mv commands failed with exit code {result.returncode}")
-        #    break
         # Collect logs from the benchmark container (for throughput)
-        result = run_subprocess(collect_benchmark_container_cmd, DRY_RUN) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
+        result = run_subprocess(collect_benchmark_container_cmd, dry_run) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
         with open(f"{cur_log_dir}/benchmark_container.log", 'w') as f:
             for line in result.stdout.split('\n'):
                 f.write(f"{line}\n")
@@ -177,15 +180,14 @@ for system in systems_to_test:
             print(f"collect_benchmark_container command failed with exit code {result.returncode}")
             break
         # Collect the metrics from all clients (TODO: add iftop metrics too)
-        result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), DRY_RUN) #sp.run(collect_client_cmd.format(conf=conf, tag=tag), shell=True, capture_output=True, text=True)
+        result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), dry_run) #sp.run(collect_client_cmd.format(conf=conf, tag=tag), shell=True, capture_output=True, text=True)
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"collect_client command failed with exit code {result.returncode}")
             break
         # Rename folder accordingly
         shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
-        #os.rename(f'data/{scenario}/{system}/{tag}', f'data/{scenario}/{system}/{x_val}')
 
 print("#####################")
 print(f"\n All {scenario} experiments done. You can now copy logs with:")
-print(f"scp -r {MACHINE}:{detock_dir}/data/{scenario}/* ~/Documents/GitHub/Detock/plots/raw_data/{workload}/{scenario}")
+print(f"scp -r {machine}:{detock_dir}/data/{scenario} ~/Documents/GitHub/Detock/plots/raw_data/{workload}/{scenario}")
 print("============================================")
