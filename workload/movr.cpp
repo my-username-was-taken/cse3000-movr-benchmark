@@ -98,6 +98,98 @@ int GetNumRegions(const ConfigurationPtr& config) {
 
 }  // namespace
 
+namespace generator {
+
+  struct LatLong {
+    double lat;
+    double lon;
+  };
+
+  template <typename T>
+  T WeightedChoice(std::mt19937& rng, const std::vector<std::pair<T, double>>& items) {
+    double total_weight = 0.0;
+    for (const auto& item : items) total_weight += item.second;
+
+    std::uniform_real_distribution<double> dist(0.0, total_weight);
+    double n = dist(rng);
+
+    for (const auto& [value, weight] : items) {
+      if (n < weight) return value;
+      n -= weight;
+    }
+
+    return items.back().first; // fallback in case of rounding errors
+  }
+
+  inline std::string GenerateUUID(std::mt19937& rng) {
+    std::uniform_int_distribution<int> dist(0, 15);
+    std::uniform_int_distribution<int> dist2(8, 11); // variant field
+  
+    std::stringstream ss;
+    ss << std::hex;
+  
+    for (int i = 0; i < 8; i++) ss << dist(rng);
+    ss << "-";
+    for (int i = 0; i < 4; i++) ss << dist(rng);
+    ss << "-4"; // UUID version 4
+    for (int i = 0; i < 3; i++) ss << dist(rng);
+    ss << "-";
+    ss << dist2(rng); // UUID variant
+    for (int i = 0; i < 3; i++) ss << dist(rng);
+    ss << "-";
+    for (int i = 0; i < 12; i++) ss << dist(rng);
+  
+    return ss.str();
+  }
+
+  inline double GenerateRevenue(std::mt19937& rng) {
+    std::uniform_real_distribution<double> dist(1.0, 100.0);
+    return dist(rng);
+  }
+
+  inline std::string GenerateRandomVehicleType(std::mt19937& rng) {
+    static const std::vector<std::string> types = {"skateboard", "bike", "scooter"};
+    std::uniform_int_distribution<> dist(0, types.size() - 1);
+    return types[dist(rng)];
+  }
+
+  inline std::string GetVehicleAvailability(std::mt19937& rng) {
+    static const std::vector<std::pair<std::string, double>> choices = {
+      {"available", 0.4}, {"in_use", 0.55}, {"lost", 0.05}
+    };
+    return WeightedChoice(rng, choices);
+  }
+
+  inline std::string GenerateRandomColor(std::mt19937& rng) {
+    static const std::vector<std::string> colors = {"red", "yellow", "blue", "green", "black"};
+    std::uniform_int_distribution<> dist(0, colors.size() - 1);
+    return colors[dist(rng)];
+  }
+
+  inline LatLong GenerateRandomLatLong(std::mt19937& rng) {
+    std::uniform_real_distribution<double> lat_dist(-90.0, 90.0);
+    std::uniform_real_distribution<double> lon_dist(-180.0, 180.0);
+    return {lat_dist(rng), lon_dist(rng)};
+  }
+
+  inline std::string GenerateBikeBrand(std::mt19937& rng) {
+    static const std::vector<std::string> brands = {
+      "Merida", "Fuji", "Cervelo", "Pinarello", "Santa Cruz", "Kona", "Schwinn"
+    };
+    std::uniform_int_distribution<> dist(0, brands.size() - 1);
+    return brands[dist(rng)];
+  }
+
+  inline std::map<std::string, std::string> GenerateVehicleMetadata(std::mt19937& rng, const std::string& type) {
+    std::map<std::string, std::string> metadata;
+    metadata["color"] = GenerateRandomColor(rng);
+    if (type == "bike") {
+      metadata["brand"] = GenerateBikeBrand(rng);
+    }
+    return metadata;
+  }
+} // namespace generator
+
 MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const string& params_str,
                            std::pair<int, int> id_slot, const uint32_t seed)
     : Workload(DEFAULT_PARAMS, params_str),
@@ -108,7 +200,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
       zipf_coef_(params_.GetInt32(MH_ZIPF)),
       rg_(seed),
       client_txn_id_counter_(0) {
-  name_ = "tpcc";
+  name_ = "movr";
   CHECK(config_->proto_config().has_tpcc_partitioning()) << "TPC-C workload is only compatible with TPC-C partitioning";
 
   auto num_regions = GetNumRegions(config_);
