@@ -100,11 +100,6 @@ int GetNumRegions(const ConfigurationPtr& config) {
 
 namespace generator {
 
-  struct LatLong {
-    double lat;
-    double lon;
-  };
-
   template <typename T>
   T WeightedChoice(std::mt19937& rng, const std::vector<std::pair<T, double>>& items) {
     double total_weight = 0.0;
@@ -142,9 +137,9 @@ namespace generator {
     return ss.str();
   }
 
-  inline double GenerateRevenue(std::mt19937& rng) {
+  inline std::string GenerateRevenue(std::mt19937& rng) {
     std::uniform_real_distribution<double> dist(1.0, 100.0);
-    return dist(rng);
+    return std::to_string(dist(rng));
   }
 
   inline std::string GenerateRandomVehicleType(std::mt19937& rng) {
@@ -166,10 +161,13 @@ namespace generator {
     return colors[dist(rng)];
   }
 
-  inline LatLong GenerateRandomLatLong(std::mt19937& rng) {
+  inline std::pair<std::string, std::string> GenerateRandomLatLong(std::mt19937& rng) {
     std::uniform_real_distribution<double> lat_dist(-90.0, 90.0);
     std::uniform_real_distribution<double> lon_dist(-180.0, 180.0);
-    return {lat_dist(rng), lon_dist(rng)};
+    return {
+      std::to_string(lat_dist(rng)),
+      std::to_string(lon_dist(rng))
+    };
   }
 
   inline std::string GenerateBikeBrand(std::mt19937& rng) {
@@ -180,14 +178,89 @@ namespace generator {
     return brands[dist(rng)];
   }
 
-  inline std::map<std::string, std::string> GenerateVehicleMetadata(std::mt19937& rng, const std::string& type) {
-    std::map<std::string, std::string> metadata;
-    metadata["color"] = GenerateRandomColor(rng);
-    if (type == "bike") {
-      metadata["brand"] = GenerateBikeBrand(rng);
+  inline std::string GenerateVehicleMetadata(std::mt19937& rng, const std::string& type) {
+    std::string color = GenerateRandomColor(rng);
+    std::string brand = (type == "bike") ? GenerateBikeBrand(rng) : "";
+    std::string result = "{\"color\": \"" + color + "\"";
+    if (!brand.empty()) {
+      result += ", \"brand\": \"" + brand + "\"";
     }
-    return metadata;
+    result += "}";
+    return result;
   }
+
+  inline std::string GenerateName(std::mt19937& rng) {
+    static const std::vector<std::string> first_names = {
+        "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", 
+        "Thomas", "Charles", "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", 
+        "Barbara", "Susan", "Jessica", "Sarah", "Karen"
+    };
+    
+    static const std::vector<std::string> last_names = {
+        "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", 
+        "Garcia", "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", 
+        "Thomas", "Hernandez", "Moore", "Martin", "Jackson", "Thompson", "White"
+    };
+    
+    std::uniform_int_distribution<size_t> first_dist(0, first_names.size() - 1);
+    std::uniform_int_distribution<size_t> last_dist(0, last_names.size() - 1);
+    
+    return first_names[first_dist(rng)] + " " + last_names[last_dist(rng)];
+  }
+
+  inline std::string GenerateAddress(std::mt19937& rng) {
+    static const std::vector<std::string> street_names = {
+        "Main", "Oak", "Pine", "Maple", "Cedar", "Elm", "View", "Washington", 
+        "Lake", "Hill", "Park", "Sunset", "Highland", "Railroad", "Church", 
+        "Willow", "Meadow", "Broad", "Forest", "River"
+    };
+    
+    static const std::vector<std::string> street_suffixes = {
+        "St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Ct", "Pl", "Cir", "Way"
+    };
+    
+    static const std::vector<std::string> cities = {
+        "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", 
+        "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Jacksonville", 
+        "San Francisco", "Columbus", "Charlotte", "Indianapolis", "Seattle", "Denver", 
+        "Washington", "Boston"
+    };
+    
+    static const std::vector<std::string> states = {
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", 
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+    };
+    
+    std::uniform_int_distribution<int> house_num_dist(100, 9999);
+    std::uniform_int_distribution<size_t> street_dist(0, street_names.size() - 1);
+    std::uniform_int_distribution<size_t> suffix_dist(0, street_suffixes.size() - 1);
+    std::uniform_int_distribution<size_t> city_dist(0, cities.size() - 1);
+    std::uniform_int_distribution<size_t> state_dist(0, states.size() - 1);
+    std::uniform_int_distribution<int> zip_dist(10000, 99999);
+    
+    return std::to_string(house_num_dist(rng)) + " " + 
+           street_names[street_dist(rng)] + " " + 
+           street_suffixes[suffix_dist(rng)] + ", " + 
+           cities[city_dist(rng)] + ", " + 
+           states[state_dist(rng)] + " " + 
+           std::to_string(zip_dist(rng));
+  }
+  std::string GenerateCreditCard(std::mt19937& rng) {
+    std::string number;
+    std::uniform_int_distribution<int> digit_dist(0, 9);
+    
+    for (int i = 0; i < 16; i++) {
+        if (i > 0 && i % 4 == 0) {
+            number += " ";
+        }
+        number += std::to_string(digit_dist(rng));
+    }
+    
+    return number;
+}
 } // namespace generator
 
 MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const string& params_str,
@@ -201,7 +274,14 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
       rg_(seed),
       client_txn_id_counter_(0) {
   name_ = "movr";
-  CHECK(config_->proto_config().has_tpcc_partitioning()) << "TPC-C workload is only compatible with TPC-C partitioning";
+  // Access and validate movr_partitioning
+  CHECK(config_->proto_config().has_movr_partitioning()) << "MOVR workload requires movr_partitioning block in config.";
+
+  const auto& movr_part = config_->proto_config().movr_partitioning();
+  for (const auto& city : movr_part.cities()) {
+    cities_.push_back(city);
+  }
+  CHECK(!cities_.empty()) << "City list in movr_partitioning is empty";
 
   auto num_regions = GetNumRegions(config_);
   if (distance_ranking_.empty()) {
@@ -304,6 +384,108 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   client_txn_id_counter_++;
 
   return {txn, pro};
+}
+
+void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile&) {
+  const std::string city = SampleOnce(rg_, cities_);
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("view_vehicles");
+  procedure->add_args(city);  // Only input required in WHERE clause
+}
+
+void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile&) {
+  const std::string id = generator::GenerateUUID(rg_);
+  const std::string city = SampleOnce(rg_, cities_);
+  const std::string name = generator::GenerateName(rg_);
+  const std::string address = generator::GenerateAddress(rg_);
+  const std::string credit_card = generator::GenerateCreditCard(rg_);
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("user_signup");
+  procedure->add_args(id);
+  procedure->add_args(name);
+  procedure->add_args(address);
+  procedure->add_args(city);
+  procedure->add_args(credit_card);
+}
+
+void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile&) {
+  std::string id = generator::GenerateUUID(rg_);
+  const std::string city = SampleOnce(rg_, cities_);
+  const std::string type = generator::GenerateRandomVehicleType(rg_);
+  const std::string owner_id = generator::GenerateUUID(rg_); // Link to an already generated user id
+  const std::string creation_time = std::to_string(
+    std::chrono::system_clock::now().time_since_epoch().count());
+  const std::string status = generator::GetVehicleAvailability(rg_);
+  const auto loc = generator::GenerateRandomLatLong(rg_);
+  const std::string current_location = loc.first + "," + loc.second;
+  const std::string ext = generator::GenerateVehicleMetadata(rg_, type);
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("add_vehicle");
+  procedure->add_args(id);
+  procedure->add_args(city);
+  procedure->add_args(type);
+  procedure->add_args(owner_id);
+  procedure->add_args(creation_time);
+  procedure->add_args(status);
+  procedure->add_args(current_location);
+  procedure->add_args(ext);
+}
+
+void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile&) {
+  const std::string user_id = generator::GenerateUUID(rg_); // Link to an already generated user
+  const std::string vehicle_id = generator::GenerateUUID(rg_); // Link to an already generated vehicle
+  const std::string ride_id = generator::GenerateUUID(rg_);
+  const std::string city = SampleOnce(rg_, cities_);
+  const std::string vehicle_city = SampleOnce(rg_, cities_); // Link to actual vehicle city
+  const std::string start_address = generator::GenerateAddress(rg_);
+  const std::string start_time = std::to_string(
+    std::chrono::system_clock::now().time_since_epoch().count());
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("start_ride");
+  procedure->add_args(user_id);
+  procedure->add_args(vehicle_id);
+  procedure->add_args(ride_id);
+  procedure->add_args(city);
+  procedure->add_args(vehicle_city);
+  procedure->add_args(start_address);
+  procedure->add_args(start_time);
+}
+
+void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile&) {
+  const std::string city = SampleOnce(rg_, cities_);
+  std::string ride_id = generator::GenerateUUID(rg_); // Link to an actual ride
+  const std::string timestamp = std::to_string(
+    std::chrono::system_clock::now().time_since_epoch().count());
+  const auto loc = generator::GenerateRandomLatLong(rg_);
+  const std::string lat = loc.first;
+  const std::string lon = loc.second;
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("update_location");
+  procedure->add_args(city);
+  procedure->add_args(ride_id);
+  procedure->add_args(timestamp);
+  procedure->add_args(lat);
+  procedure->add_args(lon);
+}
+
+void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile&) {
+  const std::string vehicle_id = generator::GenerateUUID(rg_); // Link to an actual vehicle
+  const std::string end_address = generator::GenerateAddress(rg_);
+  const std::string end_time = std::to_string(
+    std::chrono::system_clock::now().time_since_epoch().count());
+  const std::string revenue = generator::GenerateRevenue(rg_);
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("end_ride");
+  procedure->add_args(vehicle_id);
+  procedure->add_args(end_address);
+  procedure->add_args(end_time);
+  procedure->add_args(revenue);
 }
 
 void MovrWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {

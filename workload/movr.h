@@ -12,6 +12,17 @@ using std::vector;
 
 namespace slog {
 
+// Define constants for MovR transaction types
+enum class MovrTxnType {
+  VIEW_VEHICLES,
+  USER_SIGNUP,
+  ADD_VEHICLE,
+  START_RIDE,
+  UPDATE_LOCATION,
+  END_RIDE,
+  NUM_TXN_TYPES // Keep last
+};
+
 class MovrWorkload : public Workload {
  public:
   MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const std::string& params_str,
@@ -21,6 +32,14 @@ class MovrWorkload : public Workload {
 
  private:
   int local_region() { return config_->num_regions() == 1 ? local_replica_ : local_region_; }
+
+  // Helper methods for generating specific transaction types
+  void GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro);
+  void GenerateUserSignupTxn(Transaction& txn, TransactionProfile& pro);
+  void GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro);
+  void GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro);
+  void GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro);
+  void GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro);
 
   void NewOrder(Transaction& txn, TransactionProfile& pro, int w_id, int partition);
   void Payment(Transaction& txn, TransactionProfile& pro, int w_id, int partition);
@@ -41,6 +60,7 @@ class MovrWorkload : public Workload {
   std::mt19937 rg_;
   TxnId client_txn_id_counter_;
   std::vector<int> txn_mix_;
+  std::vector<std::string> cities_;
 
   struct TPCCIds {
     TPCCIds(int i = 1) : o_id(tpcc::kOrdPerDist + i), no_o_id(1), h_id(i + 1) {}
