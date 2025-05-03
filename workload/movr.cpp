@@ -47,24 +47,31 @@ const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "
 //const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}}; // Not sure why they had 45% and 43%?
 
 int new_order_count = 0;
+int view_vehicle_count = 0;
 int fsh_no = 0;
 int mh_no = 0;
 
 int payment_count = 0;
+int user_signup_count = 0;
 int fsh_pay = 0;
 int mh_pay = 0;
 
 int delivery_count = 0;
+int add_vehicle_count = 0;
 int fsh_del = 0;
 int mh_del = 0;
 
 int order_status_count = 0;
+int start_ride_count = 0;
 int fsh_os = 0;
 int mh_os = 0;
 
 int stock_level_count = 0;
+int update_location_count = 0;
 int fsh_sl = 0;
 int mh_sl = 0;
+
+int end_ride_count = 0;
 
 int total_txn_count = 0;
 
@@ -310,16 +317,9 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
     vector<vector<int>> partitions(num_regions);
     warehouse_index_.push_back(partitions);
   }
-  auto num_warehouses = config_->proto_config().tpcc_partitioning().warehouses();
-  for (int i = 0; i < num_warehouses; i++) {
-    int partition = i % num_partitions;
-    int home = i / num_partitions % num_regions;
-    warehouse_index_[partition][home].push_back(i + 1);
-  }
-  id_generator_ = TPCCIdGenerator(num_warehouses, id_slot.first, id_slot.second);
 
   auto txn_mix_str = Split(params_.GetString(TXN_MIX), ":");
-  CHECK_EQ(txn_mix_str.size(), 5) << "There must be exactly 5 values for txn mix";
+  CHECK_EQ(txn_mix_str.size(), 6) << "There must be exactly 6 values for txn mix";
   for (const auto& t : txn_mix_str) {
     txn_mix_.push_back(std::stoi(t));
   }
@@ -345,27 +345,31 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   int w = SampleOnce(rg_, selectable_w);
 
   Transaction* txn = new Transaction();
-  std::discrete_distribution<> select_tpcc_txn(txn_mix_.begin(), txn_mix_.end());
-  switch (select_tpcc_txn(rg_)) {
+  std::discrete_distribution<> select_movr_txn(txn_mix_.begin(), txn_mix_.end());
+  switch (select_movr_txn(rg_)) {
     case 0:
-      NewOrder(*txn, pro, w, partition);
-      new_order_count++;
+      GenerateViewVehiclesTxn(*txn, pro);
+      view_vehicle_count++;
       break;
     case 1:
-      Payment(*txn, pro, w, partition);
-      payment_count++;
+      GenerateUserSignupTxn(*txn, pro);
+      user_signup_count++;
       break;
     case 2:
-      OrderStatus(*txn, w);
-      order_status_count++;
+      GenerateAddVehicleTxn(*txn, pro);
+      add_vehicle_count++;
       break;
     case 3:
-      Deliver(*txn, w);
-      delivery_count++;
+      GenerateStartRideTxn(*txn, pro);
+      start_ride_count++;
       break;
     case 4:
-      StockLevel(*txn, w);
-      stock_level_count++;
+      GenerateUpdateLocationTxn(*txn, pro);
+      update_location_count++;
+      break;
+    case 5:
+      GenerateEndRideTxn(*txn, pro);
+      end_ride_count++;
       break;
     default:
       LOG(FATAL) << "Invalid txn choice";
@@ -486,244 +490,6 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile&) {
   procedure->add_args(end_address);
   procedure->add_args(end_time);
   procedure->add_args(revenue);
-}
-
-void MovrWorkload::NewOrder(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {
-  //LOG(INFO) << "Making new NewOrder txn";
-  double skew = params_.GetDouble(SKEW);
-  int final_item_skew, final_cust_skew;
-  if (skew == -1.0) {
-    final_item_skew = org_item_skew;
-    final_cust_skew = org_cust_skew;
-  } else {
-    final_item_skew = skew * tpcc::kMaxItems;
-    final_cust_skew = skew * tpcc::kCustPerDist;
-  }
-  auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-  auto remote_warehouses = SelectRemoteWarehouses(partition);
-  int d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
-  int o_id = id_generator_.NextOId(w_id, d_id);
-  // Partition ID on global scale
-  int i_w_id = partition + static_cast<int>(local_region() * config_->num_partitions()) + 1;
-  auto datetime = std::chrono::system_clock::now().time_since_epoch().count();
-  std::array<tpcc::NewOrderTxn::OrderLine, tpcc::kLinePerOrder> ol;
-  std::bernoulli_distribution is_remote(params_.GetDouble(REM_ITEM_PROB));
-  std::uniform_int_distribution<> quantity_rnd(1, 10);
-  int supply_w_ids[tpcc::kLinePerOrder];
-  std::set<int> unique_regions;
-  for (size_t i = 0; i < tpcc::kLinePerOrder; i++) {
-    auto supply_w_id = w_id;
-    if (is_remote(rg_) && !remote_warehouses.empty()) {
-      supply_w_id = remote_warehouses[i % remote_warehouses.size()];
-      pro.is_multi_home = true;
-    }
-    ol[i] = tpcc::NewOrderTxn::OrderLine({
-        .id = static_cast<int>(i),
-        .supply_w_id = supply_w_id,
-        .item_id = NURand(rg_, final_item_skew, 1, tpcc::kMaxItems),
-        .quantity = quantity_rnd(rg_),
-    });
-    supply_w_ids[i] = supply_w_id;
-    int supply_region = GetRegionFromWarehouse(supply_w_id);
-    //LOG(INFO) << "Current Region: " << supply_region;
-    unique_regions.insert(supply_region);
-  }
-  if (pro.is_multi_home) {
-    mh_no++;
-  }
-  // Count number of unique '.supply_w_id's in all Order Lines to get whether we have a FSH or a MH txn
-  // Note FSH txns will now be counted both as FSH and MH txns
-  //for (int i = 0; i < tpcc::kLinePerOrder; i++) {
-  //  LOG(INFO) << "Current SH txn counts: Total: "
-  //}
-  if (unique_regions.size() == 1 && pro.is_multi_home) {
-    pro.is_foreign_single_home = true;
-    fsh_no++;
-  }
-
-  tpcc::NewOrderTxn new_order_txn(txn_adapter, w_id, d_id, c_id, o_id, datetime, i_w_id, ol);
-  new_order_txn.Read();
-  new_order_txn.Write();
-  txn_adapter->Finialize();
-
-  // Serialize the new Order to a string
-  auto procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("new_order");
-  procedure->add_args(to_string(w_id));
-  procedure->add_args(to_string(d_id));
-  procedure->add_args(to_string(c_id));
-  procedure->add_args(to_string(o_id));
-  procedure->add_args(to_string(datetime));
-  procedure->add_args(to_string(i_w_id));
-  for (const auto& l : ol) {
-    auto order_lines = txn.mutable_code()->add_procedures();
-    order_lines->add_args(to_string(l.id));
-    order_lines->add_args(to_string(l.supply_w_id));
-    order_lines->add_args(to_string(l.item_id));
-    order_lines->add_args(to_string(l.quantity));
-  }
-}
-
-void MovrWorkload::Payment(Transaction& txn, TransactionProfile& pro, int w_id, int partition) {
-  double skew = params_.GetDouble(SKEW);
-  int final_cust_skew;
-  if (skew == -1.0) {
-    final_cust_skew = org_cust_skew;
-  } else {
-    final_cust_skew = skew * tpcc::kCustPerDist;
-  }
-  auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-
-  auto remote_warehouses = SelectRemoteWarehouses(partition);
-  std::uniform_int_distribution<> d_id_rnd(1, tpcc::kDistPerWare);
-  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
-  auto datetime = std::chrono::system_clock::now().time_since_epoch().count();
-  std::uniform_int_distribution<> quantity_rnd(1, 10);
-  std::bernoulli_distribution is_remote(params_.GetDouble(REM_PAYMENT_PROB));
-
-  auto d_id = d_id_rnd(rg_);
-  auto c_w_id = w_id;
-  auto c_d_id = d_id;
-  auto h_id = id_generator_.NextHId(w_id, d_id);
-  auto amount = std::uniform_int_distribution<int64_t>(100, 500000)(rg_);
-  if (is_remote(rg_) && !remote_warehouses.empty()) {
-    c_w_id = SampleOnce(rg_, remote_warehouses);
-    c_d_id = d_id_rnd(rg_);
-    // Note: all Payment txns that are FSH, are also counted as MH
-    pro.is_foreign_single_home = true;
-    pro.is_multi_home = true;
-    mh_pay++;
-    fsh_pay++;
-  }
-  tpcc::PaymentTxn payment_txn(txn_adapter, w_id, d_id, c_w_id, c_d_id, c_id, amount, datetime, h_id);
-  payment_txn.Read();
-  payment_txn.Write();
-  // Imitating a commit using Finalize()
-  txn_adapter->Finialize();
-
-  auto procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("payment");
-  procedure->add_args(to_string(w_id));
-  procedure->add_args(to_string(d_id));
-  procedure->add_args(to_string(c_w_id));
-  procedure->add_args(to_string(c_d_id));
-  procedure->add_args(to_string(c_id));
-  procedure->add_args(to_string(amount));
-  procedure->add_args(to_string(datetime));
-  procedure->add_args(to_string(h_id));
-}
-
-void MovrWorkload::OrderStatus(Transaction& txn, int w_id) {
-  auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-
-  double skew = params_.GetDouble(SKEW);
-  int final_cust_skew;
-  if (skew == -1.0) {
-    final_cust_skew = org_cust_skew;
-  } else {
-    final_cust_skew = skew * tpcc::kCustPerDist;
-  }
-  auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
-  auto max_o_id = id_generator_.max_o_id();
-  auto o_id = std::uniform_int_distribution<>(max_o_id - 5, max_o_id)(rg_);
-
-  tpcc::OrderStatusTxn order_status_txn(txn_adapter, w_id, d_id, c_id, o_id);
-  order_status_txn.Read();
-  txn_adapter->Finialize();
-
-  auto procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("order_status");
-  procedure->add_args(to_string(w_id));
-  procedure->add_args(to_string(d_id));
-  procedure->add_args(to_string(c_id));
-  procedure->add_args(to_string(o_id));
-}
-
-void MovrWorkload::Deliver(Transaction& txn, int w_id) {
-  auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-  double skew = params_.GetDouble(SKEW);
-  int final_cust_skew;
-  if (skew == -1.0) {
-    final_cust_skew = org_cust_skew;
-  } else {
-    final_cust_skew = skew * tpcc::kCustPerDist;
-  }
-  int c_id = NURand(rg_, final_cust_skew, 1, tpcc::kCustPerDist);
-  auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  auto no_o_id = id_generator_.NextNOOId(w_id, d_id);
-  auto datetime = std::chrono::system_clock::now().time_since_epoch().count();
-  auto carrier = std::uniform_int_distribution<>(1, 10)(rg_);
-  tpcc::DeliverTxn deliver(txn_adapter, w_id, d_id, no_o_id, c_id, carrier, datetime);
-  deliver.Read();
-  deliver.Write();
-  txn_adapter->Finialize();
-
-  auto procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("deliver");
-  procedure->add_args(to_string(w_id));
-  procedure->add_args(to_string(d_id));
-  procedure->add_args(to_string(no_o_id));
-  procedure->add_args(to_string(c_id));
-  procedure->add_args(to_string(carrier));
-  procedure->add_args(to_string(datetime));
-}
-
-void MovrWorkload::StockLevel(Transaction& txn, int w_id) {
-  auto txn_adapter = std::make_shared<tpcc::TxnKeyGenStorageAdapter>(txn);
-
-  auto d_id = std::uniform_int_distribution<>(1, tpcc::kDistPerWare)(rg_);
-  auto o_id = id_generator_.max_o_id();
-  std::array<int, tpcc::StockLevelTxn::kTotalItems> i_ids;
-  std::uniform_int_distribution<> i_id_rnd(1, tpcc::kMaxItems);
-  for (size_t i = 0; i < i_ids.size(); i++) {
-    i_ids[i] = i_id_rnd(rg_);
-  }
-  tpcc::StockLevelTxn stock_level(txn_adapter, w_id, d_id, o_id, i_ids);
-  stock_level.Read();
-  txn_adapter->Finialize();
-
-  auto procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("stock_level");
-  procedure->add_args(to_string(w_id));
-  procedure->add_args(to_string(d_id));
-  procedure->add_args(to_string(o_id));
-  auto items = txn.mutable_code()->add_procedures();
-  for (auto i_id : i_ids) {
-    items->add_args(to_string(i_id));
-  }
-}
-
-std::vector<int> MovrWorkload::SelectRemoteWarehouses(int partition) {
-  if (params_.GetInt32(SH_ONLY) == 1) {
-    return {SampleOnce(rg_, warehouse_index_[partition][local_region()])};
-  }
-
-  auto num_regions = GetNumRegions(config_);
-  auto max_num_homes = std::min(params_.GetInt32(HOMES), num_regions);
-  if (max_num_homes < 2) {
-    return {};
-  }
-  auto num_homes = std::uniform_int_distribution{2, max_num_homes}(rg_);
-  auto remote_warehouses = zipf_sample(rg_, zipf_coef_, distance_ranking_, num_homes - 1);
-
-  for (size_t i = 0; i < remote_warehouses.size(); i++) {
-    auto r = remote_warehouses[i];
-    remote_warehouses[i] = SampleOnce(rg_, warehouse_index_[partition][r]);
-  }
-
-  return remote_warehouses;
-}
-
-int MovrWorkload::GetRegionFromWarehouse(int warehouse_id) {
-  auto num_partitions = config_->num_partitions();
-  auto num_regions = config_->num_regions();
-
-  int partition = (warehouse_id - 1) % num_partitions; // Warehouses are 1-indexed
-  int region = ((warehouse_id - 1) / num_partitions) % num_regions;
-
-  return region;
 }
 
 }  // namespace slog
