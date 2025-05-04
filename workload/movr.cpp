@@ -18,78 +18,42 @@ using std::unordered_set;
 namespace slog {
 namespace {
 
-// Partition that is used in a single-partition transaction.
-// Use a negative number to select a random partition for
-// each transaction
-constexpr char PARTITION[] = "sp_partition";
-// Max number of regions to select warehouse from
-constexpr char HOMES[] = "homes";
-// Zipf coefficient for selecting regions to access in a txn. Must be non-negative.
-// The lower this is, the more uniform the regions are selected
-constexpr char MH_ZIPF[] = "mh_zipf";
-// Colon-separated list of % of the 5 txn types. Default is: "45:43:4:4:4"
-constexpr char TXN_MIX[] = "mix";
-// Only send single-home transactions
-constexpr char SH_ONLY[] = "sh_only";
-// Modify the probability of any item on the new order list coming from a remote warehouse. Default is 0.01.
-constexpr char REM_ITEM_PROB[] = "rem_item_prob";
-// Modify the probability of any payment txn going to a remote warehouse. Default is 0.01.
-constexpr char REM_PAYMENT_PROB[] = "rem_payment_prob";
-// Skewness of the workload. A theta value between 0.0 and 1.0. Use -1 for defaul skewing
-constexpr char SKEW[] = "skew";
+// Existing parameters (copied from TPCC)
+constexpr char PARTITION[] = "partition"; // Use specific partition, -1 for random
+constexpr char HOMES[] = "homes";         // Max number of regions accessed in a multi-home txn
+constexpr char MH_ZIPF[] = "mh_zipf";     // Zipf coefficient for selecting remote regions
+constexpr char TXN_MIX[] = "mix";         // Colon-separated percentages for MovR txn types
+constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
 
-// Should actually contain an equal amount of New Order & Payement. 1 Delivery, 1 Stock Level, 1 Order Status per 10 New Order txns.
-// "TPC-C specification requires that 10% of New Order transactions need to access two separate warehouses, which may
-// become multi-partition and/or multi-home transactions if those two warehouses are located in separate partitions (which is greater than
-// 75% probability in our 4-partition set-up) or have different home regions."
-const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "44:44:4:4:4"},
-                                    {SH_ONLY, "0"}, {REM_ITEM_PROB, "0.01"}, {REM_PAYMENT_PROB, "0.01"}, {SKEW, "-1.0"}};
-//const RawParamMap DEFAULT_PARAMS = {{PARTITION, "-1"}, {HOMES, "2"}, {MH_ZIPF, "0"}, {TXN_MIX, "45:43:4:4:4"}, {SH_ONLY, "0"}}; // Not sure why they had 45% and 43%?
+// MovR specific parameters
+constexpr char CITIES[] = "cities";                 // Comma-separated list of cities to use
+constexpr char MULTI_HOME_PCT[] = "multi_home_pct"; // Percentage of transactions that are multi-home (0-100)
+constexpr char CONTENTION_FACTOR[] = "contention";  // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
+constexpr char REGION_REQUEST_MIX[] = "region_mix"; // Colon-separated percentages for request origins per region
 
-int new_order_count = 0;
+// Default values for MovR parameters
+const RawParamMap DEFAULT_PARAMS =
+  {{PARTITION, "-1"},
+  {HOMES, "2"},
+  {MH_ZIPF, "0"},
+  {TXN_MIX, "40:5:5:30:15:5"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
+  {SH_ONLY, "0"},
+  {CITIES, "amsterdam,boston,new york,paris,rome"},
+  {MULTI_HOME_PCT, "10"},      // Default 10% multi-home transactions
+  {CONTENTION_FACTOR, "0.0"},  // Default uniform access (no contention)
+  {REGION_REQUEST_MIX, ""}};   // Default empty (implies uniform distribution or based on config)
+
+// Counters (for debugging/logging)
 int view_vehicle_count = 0;
-int fsh_no = 0;
-int mh_no = 0;
-
-int payment_count = 0;
 int user_signup_count = 0;
-int fsh_pay = 0;
-int mh_pay = 0;
-
-int delivery_count = 0;
 int add_vehicle_count = 0;
-int fsh_del = 0;
-int mh_del = 0;
-
-int order_status_count = 0;
 int start_ride_count = 0;
-int fsh_os = 0;
-int mh_os = 0;
-
-int stock_level_count = 0;
 int update_location_count = 0;
-int fsh_sl = 0;
-int mh_sl = 0;
-
 int end_ride_count = 0;
-
 int total_txn_count = 0;
+int multi_home_count = 0;
 
-// TODO: Add default params from TPC-C skewness spec
-int default_item_skewness = 8191; // maxItems at 100k
-int default_cust_skewness = 1023; // maxCust per district at 3k
-
-double org_item_skew = (double) default_item_skewness / tpcc::kMaxItems; // 0.08191
-double org_cust_skew = (double) default_cust_skewness / tpcc::kCustPerDist; // 0.341
-
-// Random number generator to 
-template <typename G>
-int NURand(G& g, int A, int x, int y) {
-  std::uniform_int_distribution<> rand1(0, A);
-  std::uniform_int_distribution<> rand2(x, y);
-  return (rand1(g) | rand2(g)) % (y - x + 1) + x;
-}
-
+// Helper: Sample one element randomly (copied from TPCC)
 template <typename T, typename G>
 T SampleOnce(G& g, const std::vector<T>& source) {
   CHECK(!source.empty());
@@ -97,8 +61,7 @@ T SampleOnce(G& g, const std::vector<T>& source) {
   return source[i];
 }
 
-// For the Calvin experiment, there is a single region, so replace the regions by the replicas so that
-// we generate the same workload as other experiments
+// Helper: Get number of regions (copied from TPCC)
 int GetNumRegions(const ConfigurationPtr& config) {
   return config->num_regions() == 1 ? config->num_replicas(config->local_region()) : config->num_regions();
 }
@@ -315,7 +278,6 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   auto num_partitions = config_->num_partitions();
   for (int i = 0; i < num_partitions; i++) {
     vector<vector<int>> partitions(num_regions);
-    warehouse_index_.push_back(partitions);
   }
 
   auto txn_mix_str = Split(params_.GetString(TXN_MIX), ":");
