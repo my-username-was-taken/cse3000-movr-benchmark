@@ -4,16 +4,23 @@
 
 #include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "common/proto_utils.h"
-#include "execution/tpcc/constants.h"
+#include "common/string_utils.h"
+#include "execution/movr/constants.h"
 #include "execution/tpcc/transaction.h"
 
 using std::bernoulli_distribution;
 using std::iota;
 using std::sample;
+using std::string;
+using std::stringstream;
 using std::to_string;
 using std::unordered_set;
+using std::vector;
 
 namespace slog {
 namespace {
