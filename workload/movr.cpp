@@ -360,62 +360,69 @@ std::string MovrWorkload::SelectRemoteCity(const std::string& home_city) {
 }
 
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
-  //LOG(INFO) << "Creating next TPCC transaction";
+  Transaction* txn = new Transaction();
   TransactionProfile pro;
 
   pro.client_txn_id = client_txn_id_counter_;
-  pro.is_multi_partition = false;
   pro.is_multi_home = false;
-  pro.is_foreign_single_home = false;
 
-  auto num_partitions = config_->num_partitions();
-  auto partition = params_.GetInt32(PARTITION);
-  if (partition < 0) {
-    partition = std::uniform_int_distribution<>(0, num_partitions - 1)(rg_);
+  // Determine if this transaction should be multi-home
+  bool is_multi_home_txn = false;
+  if (!sh_only_ && num_regions_ > 1) {
+      is_multi_home_txn = multi_home_dist_(rg_);
+  }
+  pro.is_multi_home = is_multi_home_txn;
+  if (is_multi_home_txn) {
+      multi_home_count++;
   }
 
-  const auto& selectable_w = warehouse_index_[partition][local_region()];
-  CHECK(!selectable_w.empty()) << "Not enough warehouses";
-  int w = SampleOnce(rg_, selectable_w);
+  // Select the home city for the transaction based on regional mix
+  std::string home_city = SelectHomeCity();
 
-  Transaction* txn = new Transaction();
-  std::discrete_distribution<> select_movr_txn(txn_mix_.begin(), txn_mix_.end());
-  switch (select_movr_txn(rg_)) {
-    case 0:
-      GenerateViewVehiclesTxn(*txn, pro);
+  // Select the transaction type
+  MovrTxnType txn_type = static_cast<MovrTxnType>(select_txn_dist_(rg_));
+
+  // Generate transaction based on type
+  switch (txn_type) {
+    case MovrTxnType::VIEW_VEHICLES:
+      GenerateViewVehiclesTxn(*txn, pro, home_city);
       view_vehicle_count++;
       break;
-    case 1:
-      GenerateUserSignupTxn(*txn, pro);
+    case MovrTxnType::USER_SIGNUP:
+      GenerateUserSignupTxn(*txn, pro, home_city);
       user_signup_count++;
       break;
-    case 2:
-      GenerateAddVehicleTxn(*txn, pro);
+    case MovrTxnType::ADD_VEHICLE:
+      GenerateAddVehicleTxn(*txn, pro, home_city, is_multi_home_txn);
       add_vehicle_count++;
       break;
-    case 3:
-      GenerateStartRideTxn(*txn, pro);
+    case MovrTxnType::START_RIDE:
+      GenerateStartRideTxn(*txn, pro, home_city, is_multi_home_txn);
       start_ride_count++;
       break;
-    case 4:
-      GenerateUpdateLocationTxn(*txn, pro);
+    case MovrTxnType::UPDATE_LOCATION:
+      GenerateUpdateLocationTxn(*txn, pro, home_city);
       update_location_count++;
       break;
-    case 5:
-      GenerateEndRideTxn(*txn, pro);
+    case MovrTxnType::END_RIDE:
+      GenerateEndRideTxn(*txn, pro, home_city, is_multi_home_txn);
       end_ride_count++;
       break;
     default:
-      LOG(FATAL) << "Invalid txn choice";
+      LOG(FATAL) << "Invalid MovR txn type selected";
   }
+
   total_txn_count++;
-  if (total_txn_count % 100000 == 0) {
-    LOG(INFO) << "Current SH txn counts: Total: " << total_txn_count << " NO: " << new_order_count << " P: "<< payment_count << " OS: " << order_status_count << " D: "<< delivery_count << " SL: "<< stock_level_count;
-    LOG(INFO) << "Current FSH txn counts: Total: " << total_txn_count << " NO: " << fsh_no << " P: " << fsh_pay << " OS: " << fsh_os << " D: " << fsh_del << " SL: "<< fsh_sl;
-    LOG(INFO) << "Current MH txn counts: Total: " << total_txn_count << " NO: " << mh_no << " P: " << mh_pay << " OS: " << mh_os << " D: " << mh_del << " SL: "<< mh_sl;
-    LOG(INFO) << "Current SH txn percentages: NO: " << 100*new_order_count/(double)total_txn_count << " P: " << 100*payment_count/(double)total_txn_count << " OS: " << 100*order_status_count/(double)total_txn_count << " D: " << 100*delivery_count/(double)total_txn_count << " SL: " << 100*stock_level_count/(double)total_txn_count;
-    LOG(INFO) << "Current FSH txn percentages: NO: " << 100*fsh_no/(double)total_txn_count << " P: " << 100*fsh_pay/(double)total_txn_count << " OS: " << 100*fsh_os/(double)total_txn_count << " D: " << 100*fsh_del/(double)total_txn_count << " SL: " << 100*fsh_sl/(double)total_txn_count;
-    LOG(INFO) << "Current MH txn percentages: NO: " << 100*mh_no/(double)total_txn_count << " P: " << 100*mh_pay/(double)total_txn_count << " OS: " << 100*mh_os/(double)total_txn_count << " D: " << 100*mh_del/(double)total_txn_count << " SL: " << 100*mh_sl/(double)total_txn_count;
+  // Logging for transaction counts/percentages
+  if (total_txn_count % 10000 == 0) { // Log every 10k transactions
+      LOG(INFO) << "MovR Txn Counts (Total: " << total_txn_count << ") - "
+                << "ViewVehicles: " << view_vehicle_count << ", "
+                << "UserSignup: " << user_signup_count << ", "
+                << "AddVehicle: " << add_vehicle_count << ", "
+                << "StartRide: " << start_ride_count << ", "
+                << "UpdateLoc: " << update_location_count << ", "
+                << "EndRide: " << end_ride_count << ". "
+                << "Multi-Home: " << multi_home_count << " (" << (100.0 * multi_home_count / total_txn_count) << "%)";
   }
 
   txn->mutable_internal()->set_id(client_txn_id_counter_);
