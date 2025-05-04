@@ -219,23 +219,51 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
       local_region_(region),
       local_replica_(replica),
       distance_ranking_(config->distance_ranking_from(region)),
-      zipf_coef_(params_.GetInt32(MH_ZIPF)),
       rg_(seed),
       client_txn_id_counter_(0) {
   name_ = "movr";
-  // Access and validate movr_partitioning
-  CHECK(config_->proto_config().has_movr_partitioning()) << "MOVR workload requires movr_partitioning block in config.";
 
-  const auto& movr_part = config_->proto_config().movr_partitioning();
-  for (const auto& city : movr_part.cities()) {
-    cities_.push_back(city);
+  // Parse parameters
+  zipf_coef_ = params_.GetDouble(MH_ZIPF);
+  multi_home_pct_ = params_.GetInt32(MULTI_HOME_PCT);
+  contention_factor_ = params_.GetDouble(CONTENTION_FACTOR);
+  sh_only_ = params_.GetInt32(SH_ONLY) == 1;
+
+  // Validate multi_home_pct
+  if (multi_home_pct_ < 0 || multi_home_pct_ > 100) {
+      LOG(FATAL) << "Invalid multi_home_pct: " << multi_home_pct_ << ". Must be between 0 and 100.";
   }
-  CHECK(!cities_.empty()) << "City list in movr_partitioning is empty";
+  multi_home_dist_ = std::bernoulli_distribution(multi_home_pct_ / 100.0);
 
-  auto num_regions = GetNumRegions(config_);
+  // Parse cities
+  auto city_names = Split(params_.GetString(CITIES), ",");
+  CHECK(!city_names.empty()) << "No cities specified in parameters.";
+  for(const auto& city_name : city_names) {
+      cities_.push_back(Trim(city_name));
+  }
+  num_cities_ = cities_.size();
+  CHECK_EQ(num_cities_, config->proto_config().movr_partitioning().cities_size());
+
+  // Parse transaction mix
+  auto txn_mix_str = Split(params_.GetString(TXN_MIX), ":");
+  CHECK_EQ(txn_mix_str.size(), static_cast<size_t>(MovrTxnType::NUM_TXN_TYPES))
+      << "Invalid number of values for MovR txn mix. Expected "
+      << static_cast<int>(MovrTxnType::NUM_TXN_TYPES);
+  int total_mix_pct = 0;
+  for (const auto& t : txn_mix_str) {
+    int pct = std::stoi(Trim(t));
+    CHECK(pct >= 0) << "Transaction mix percentages must be non-negative.";
+    txn_mix_pct_.push_back(pct);
+    total_mix_pct += pct;
+  }
+  CHECK_EQ(total_mix_pct, 100) << "Transaction mix percentages must sum to 100.";
+  select_txn_dist_ = std::discrete_distribution<>(txn_mix_pct_.begin(), txn_mix_pct_.end());
+
+  // Setup region information and distance ranking (similar to TPCC)
+  num_regions_ = GetNumRegions(config_);
   if (distance_ranking_.empty()) {
-    for (int i = 0; i < num_regions; i++) {
-      if (i != local_region()) {
+    for (int i = 0; i < num_regions_; i++) {
+      if (i != local_region_) {
         distance_ranking_.push_back(i);
       }
     }
@@ -246,24 +274,35 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   } else if (config_->num_regions() == 1) {
     // This case is for the Calvin experiment where there is only a single region.
     // The num_regions variable is equal to num_replicas at this point
-    CHECK_EQ(distance_ranking_.size(), num_regions * (num_regions - 1));
-    size_t from = local_region() * (num_regions - 1);
-    std::copy_n(distance_ranking_.begin() + from, num_regions, distance_ranking_.begin());
-    distance_ranking_.resize(num_regions - 1);
+    CHECK_EQ(distance_ranking_.size(), num_regions_ * (num_regions_ - 1));
+    size_t from = local_region_ * (num_regions_ - 1);
+    std::copy_n(distance_ranking_.begin() + from, num_regions_ - 1, distance_ranking_.begin());
+    distance_ranking_.resize(num_regions_ - 1);
+  }
+  CHECK_EQ(distance_ranking_.size(), num_regions_ - 1) << "Distance ranking size must match the number of regions";
+
+  // Parse region request mix
+  auto region_mix_str = params_.GetString(REGION_REQUEST_MIX);
+  if (!region_mix_str.empty()) {
+      auto region_mix_pct_str = Split(region_mix_str, ":");
+      CHECK_EQ(region_mix_pct_str.size(), num_regions_) << "Region mix must have percentages for all regions.";
+      int total_region_pct = 0;
+      for (const auto& pct_str : region_mix_pct_str) {
+          int pct = std::stoi(Trim(pct_str));
+          CHECK(pct >= 0) << "Region mix percentages must be non-negative.";
+          region_request_pct_.push_back(pct);
+          total_region_pct += pct;
+      }
+      CHECK_EQ(total_region_pct, 100) << "Region mix percentages must sum to 100.";
+      select_origin_region_dist_ = std::discrete_distribution<>(region_request_pct_.begin(), region_request_pct_.end());
+  } else {
+      // Default to uniform distribution if no mix is provided
+      std::vector<double> uniform_dist(num_regions_, 100.0 / num_regions_);
+      select_origin_region_dist_ = std::discrete_distribution<>(uniform_dist.begin(), uniform_dist.end());
   }
 
-  CHECK_EQ(distance_ranking_.size(), num_regions - 1) << "Distance ranking size must match the number of regions";
-
-  auto num_partitions = config_->num_partitions();
-  for (int i = 0; i < num_partitions; i++) {
-    vector<vector<int>> partitions(num_regions);
-  }
-
-  auto txn_mix_str = Split(params_.GetString(TXN_MIX), ":");
-  CHECK_EQ(txn_mix_str.size(), 6) << "There must be exactly 6 values for txn mix";
-  for (const auto& t : txn_mix_str) {
-    txn_mix_.push_back(std::stoi(t));
-  }
+  max_users_ = 10000; // Placeholder
+  max_vehicles_ = 5000; // Placeholder
 }
 
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
