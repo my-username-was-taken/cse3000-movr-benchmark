@@ -68,6 +68,7 @@ int GetNumRegions(const ConfigurationPtr& config) {
 
 }  // namespace
 
+// Namespace for data generation functions
 namespace generator {
 
   template <typename T>
@@ -109,8 +110,10 @@ namespace generator {
 
   inline std::string GenerateRevenue(std::mt19937& rng) {
     std::uniform_real_distribution<double> dist(1.0, 100.0);
-    return std::to_string(dist(rng));
-  }
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << dist(rng);
+    return ss.str();
+}
 
   inline std::string GenerateRandomVehicleType(std::mt19937& rng) {
     static const std::vector<std::string> types = {"skateboard", "bike", "scooter"};
@@ -134,10 +137,10 @@ namespace generator {
   inline std::pair<std::string, std::string> GenerateRandomLatLong(std::mt19937& rng) {
     std::uniform_real_distribution<double> lat_dist(-90.0, 90.0);
     std::uniform_real_distribution<double> lon_dist(-180.0, 180.0);
-    return {
-      std::to_string(lat_dist(rng)),
-      std::to_string(lon_dist(rng))
-    };
+    std::stringstream ss_lat, ss_lon;
+    ss_lat << std::fixed << std::setprecision(6) << lat_dist(rng);
+    ss_lon << std::fixed << std::setprecision(6) << lon_dist(rng);
+    return {ss_lat.str(), ss_lon.str()};
   }
 
   inline std::string GenerateBikeBrand(std::mt19937& rng) {
@@ -151,6 +154,8 @@ namespace generator {
   inline std::string GenerateVehicleMetadata(std::mt19937& rng, const std::string& type) {
     std::string color = GenerateRandomColor(rng);
     std::string brand = (type == "bike") ? GenerateBikeBrand(rng) : "";
+
+    // Simple JSON-like string
     std::string result = "{\"color\": \"" + color + "\"";
     if (!brand.empty()) {
       result += ", \"brand\": \"" + brand + "\"";
@@ -180,45 +185,20 @@ namespace generator {
 
   inline std::string GenerateAddress(std::mt19937& rng) {
     static const std::vector<std::string> street_names = {
-        "Main", "Oak", "Pine", "Maple", "Cedar", "Elm", "View", "Washington", 
-        "Lake", "Hill", "Park", "Sunset", "Highland", "Railroad", "Church", 
-        "Willow", "Meadow", "Broad", "Forest", "River"
-    };
-    
+      "Main", "Oak", "Pine", "Maple", "Cedar", "Elm", "View",
+      "Washington", "Lake", "Hill", "Park", "Sunset", "Highland",
+      "Railroad", "Church", "Willow", "Meadow", "Broad", "Forest", "River"};
+
     static const std::vector<std::string> street_suffixes = {
-        "St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Ct", "Pl", "Cir", "Way"
-    };
-    
-    static const std::vector<std::string> cities = {
-        "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", 
-        "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Jacksonville", 
-        "San Francisco", "Columbus", "Charlotte", "Indianapolis", "Seattle", "Denver", 
-        "Washington", "Boston"
-    };
-    
-    static const std::vector<std::string> states = {
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", 
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
-        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
-    };
-    
+      "St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Ct", "Pl", "Cir", "Way"};
+
     std::uniform_int_distribution<int> house_num_dist(100, 9999);
     std::uniform_int_distribution<size_t> street_dist(0, street_names.size() - 1);
     std::uniform_int_distribution<size_t> suffix_dist(0, street_suffixes.size() - 1);
-    std::uniform_int_distribution<size_t> city_dist(0, cities.size() - 1);
-    std::uniform_int_distribution<size_t> state_dist(0, states.size() - 1);
-    std::uniform_int_distribution<int> zip_dist(10000, 99999);
-    
-    return std::to_string(house_num_dist(rng)) + " " + 
-           street_names[street_dist(rng)] + " " + 
-           street_suffixes[suffix_dist(rng)] + ", " + 
-           cities[city_dist(rng)] + ", " + 
-           states[state_dist(rng)] + " " + 
-           std::to_string(zip_dist(rng));
+    return std::to_string(house_num_dist(rng)) + " " + street_names[street_dist(rng)] + " " + street_suffixes[suffix_dist(rng)];
   }
-  std::string GenerateCreditCard(std::mt19937& rng) {
+
+  inline std::string GenerateCreditCard(std::mt19937& rng) {
     std::string number;
     std::uniform_int_distribution<int> digit_dist(0, 9);
     
@@ -228,9 +208,8 @@ namespace generator {
         }
         number += std::to_string(digit_dist(rng));
     }
-    
     return number;
-}
+  }
 } // namespace generator
 
 MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const string& params_str,
