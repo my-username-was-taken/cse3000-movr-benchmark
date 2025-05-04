@@ -54,7 +54,6 @@ class MovrWorkload : public Workload {
   ReplicaId local_replica_;
   std::vector<int> distance_ranking_;
   std::mt19937 rg_;
-  TxnId client_txn_id_counter_;
 
   // Parsed parameters
   int zipf_coef_;
@@ -72,7 +71,6 @@ class MovrWorkload : public Workload {
   
   TxnId client_txn_id_counter_;
   std::vector<int> txn_mix_;
-  std::vector<std::string> cities_;
 
   // Placeholder limits for contended ID generation
   int max_users_;

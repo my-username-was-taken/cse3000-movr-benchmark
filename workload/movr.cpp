@@ -295,18 +295,18 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   } else if (config_->num_regions() == 1) {
     // This case is for the Calvin experiment where there is only a single region.
     // The num_regions variable is equal to num_replicas at this point
-    CHECK_EQ(distance_ranking_.size(), num_regions_ * (num_regions_ - 1));
+    CHECK_EQ(static_cast<int>(distance_ranking_.size()), num_regions_ * (num_regions_ - 1));
     size_t from = local_region_ * (num_regions_ - 1);
     std::copy_n(distance_ranking_.begin() + from, num_regions_ - 1, distance_ranking_.begin());
     distance_ranking_.resize(num_regions_ - 1);
   }
-  CHECK_EQ(distance_ranking_.size(), num_regions_ - 1) << "Distance ranking size must match the number of regions";
+  CHECK_EQ(static_cast<int>(distance_ranking_.size()), num_regions_ - 1) << "Distance ranking size must match the number of regions";
 
   // Parse region request mix
   auto region_mix_str = params_.GetString(REGION_REQUEST_MIX);
   if (!region_mix_str.empty()) {
       auto region_mix_pct_str = Split(region_mix_str, ":");
-      CHECK_EQ(region_mix_pct_str.size(), num_regions_) << "Region mix must have percentages for all regions.";
+      CHECK_EQ(static_cast<int>(region_mix_pct_str.size()), num_regions_) << "Region mix must have percentages for all regions.";
       int total_region_pct = 0;
       for (const auto& pct_str : region_mix_pct_str) {
           int pct = std::stoi(Trim(pct_str));
