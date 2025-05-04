@@ -210,6 +210,20 @@ namespace generator {
     }
     return number;
   }
+
+  // Function to generate a potentially contended ID based on contention_factor_
+  inline std::string GenerateContendedID(std::mt19937& rng, double contention_factor, int max_id) {
+    if (contention_factor <= 0.0 || max_id <= 1) { // Uniform distribution if no contention or not enough items
+        std::uniform_int_distribution<> dist(1, max_id);
+        return std::to_string(dist(rng));
+    }
+    
+    // Simple Zipfian-like selection
+    std::vector<int> ids(max_id);
+    std::iota(ids.begin(), ids.end(), 1);
+    auto sampled_ids = zipf_sample(rng, contention_factor, ids, 1);
+    return std::to_string(sampled_ids[0]);
+  }
 } // namespace generator
 
 MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const string& params_str,
@@ -259,7 +273,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   CHECK_EQ(total_mix_pct, 100) << "Transaction mix percentages must sum to 100.";
   select_txn_dist_ = std::discrete_distribution<>(txn_mix_pct_.begin(), txn_mix_pct_.end());
 
-  // Setup region information and distance ranking (similar to TPCC)
+  // Setup region information and distance ranking
   num_regions_ = GetNumRegions(config_);
   if (distance_ranking_.empty()) {
     for (int i = 0; i < num_regions_; i++) {
@@ -303,6 +317,46 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
 
   max_users_ = 10000; // Placeholder
   max_vehicles_ = 5000; // Placeholder
+}
+
+// Selects a home city based on the configured region mix
+std::string MovrWorkload::SelectHomeCity() {
+  // Determine the origin region based on the distribution
+  int origin_region_idx = select_origin_region_dist_(rg_);
+  
+  // Map the region index to a city (this mapping needs to be defined based on config)
+  // Assume cities are distributed round-robin across regions
+  if (cities_.empty()) {
+      LOG(FATAL) << "No cities available to select from.";
+      return ""; // Should not happen due to CHECK in constructor
+  }
+  int city_idx = origin_region_idx % cities_.size();
+  return cities_[city_idx];
+}
+
+// Selects a remote city, potentially based on distance ranking and Zipf distribution
+std::string MovrWorkload::SelectRemoteCity(const std::string& home_city) {
+  if (num_regions_ <= 1 || distance_ranking_.empty()) {
+      return home_city; // Cannot select a remote city
+  }
+
+  int home_region_idx = local_region_; // Placeholder: Assume home_city is in local_region_
+
+  // Select a remote region index based on distance ranking and zipf coefficient
+  std::vector<int> remote_region_indices;
+  if (zipf_coef_ > 0) {
+      remote_region_indices = zipf_sample(rg_, zipf_coef_, distance_ranking_, 1);
+  } else {
+      // Uniform selection from other regions
+      std::uniform_int_distribution<size_t> dist(0, distance_ranking_.size() - 1);
+      remote_region_indices.push_back(distance_ranking_[dist(rg_)]);
+  }
+  int remote_region_idx = remote_region_indices[0];
+
+  // Map the remote region index to a city (requires mapping)
+  // Simple example: Assume cities are distributed round-robin across regions
+  int remote_city_idx = remote_region_idx % cities_.size(); // Very basic mapping
+  return cities_[remote_city_idx];
 }
 
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
@@ -370,60 +424,94 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   return {txn, pro};
 }
 
-void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile&) {
-  const std::string city = SampleOnce(rg_, cities_);
+// --- Transaction Generation Implementations --- 
+
+// Simple read transaction: Find vehicles near a location in the specified city.
+// This transaction is typically single-home, focused on the 'city'.
+void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
+  const int limit = 25;
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("view_vehicles");
-  procedure->add_args(city);  // Only input required in WHERE clause
+  procedure->add_args(city);
+  procedure->add_args(to_string(limit));
 }
 
-void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile&) {
-  const std::string id = generator::GenerateUUID(rg_);
-  const std::string city = SampleOnce(rg_, cities_);
+// Write transaction: Insert a new user record.
+// This transaction is typically single-home, writing to the 'city' where the user signs up.
+void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
+  const std::string user_id = generator::GenerateUUID(rg_);
   const std::string name = generator::GenerateName(rg_);
   const std::string address = generator::GenerateAddress(rg_);
   const std::string credit_card = generator::GenerateCreditCard(rg_);
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("user_signup");
-  procedure->add_args(id);
+  procedure->add_args(user_id);
+  procedure->add_args(city);
   procedure->add_args(name);
   procedure->add_args(address);
-  procedure->add_args(city);
   procedure->add_args(credit_card);
 }
 
-void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile&) {
-  std::string id = generator::GenerateUUID(rg_);
-  const std::string city = SampleOnce(rg_, cities_);
+// Write transaction: Add a new vehicle owned by a user.
+// Can be multi-home if the owner (user) is in a different city than the vehicle's home city.
+void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+  std::string owner_city = home_city;
+  if (is_multi_home) {
+      owner_city = SelectRemoteCity(home_city);
+      pro.is_multi_home = true;
+  } else {
+      pro.is_multi_home = false;
+  }
+
+  // Generate potentially contended IDs based on contention_factor_
+  const std::string owner_id = generator::GenerateContendedID(rg_, contention_factor_, max_users_); 
+  const std::string vehicle_id = generator::GenerateContendedID(rg_, contention_factor_, max_vehicles_);
+
   const std::string type = generator::GenerateRandomVehicleType(rg_);
-  const std::string owner_id = generator::GenerateUUID(rg_); // Link to an already generated user id
   const std::string creation_time = std::to_string(
     std::chrono::system_clock::now().time_since_epoch().count());
-  const std::string status = generator::GetVehicleAvailability(rg_);
-  const auto loc = generator::GenerateRandomLatLong(rg_);
-  const std::string current_location = loc.first + "," + loc.second;
+  const std::string status = "available"; // New vehicles start as available
+  const std::string current_location = generator::GenerateAddress(rg_);
   const std::string ext = generator::GenerateVehicleMetadata(rg_, type);
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("add_vehicle");
-  procedure->add_args(id);
-  procedure->add_args(city);
+  procedure->add_args(vehicle_id);
+  procedure->add_args(home_city);
   procedure->add_args(type);
   procedure->add_args(owner_id);
+  procedure->add_args(owner_city);
   procedure->add_args(creation_time);
   procedure->add_args(status);
   procedure->add_args(current_location);
   procedure->add_args(ext);
 }
 
-void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile&) {
-  const std::string user_id = generator::GenerateUUID(rg_); // Link to an already generated user
-  const std::string vehicle_id = generator::GenerateUUID(rg_); // Link to an already generated vehicle
+// Read/Write transaction: A user starts a ride on a vehicle.
+// Reads user info, vehicle status. Writes new ride record, updates vehicle status.
+// Can be multi-home if the user is in a different city than the vehicle.
+void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+  std::string user_city = home_city;
+  std::string vehicle_city = home_city; // Link to actual vehicle city
+  if (is_multi_home) {
+      // Decide which entity is remote (user or vehicle)
+      if (std::bernoulli_distribution(0.5)(rg_)) { // 50% chance user is remote
+          user_city = SelectRemoteCity(home_city);
+      } else { // Vehicle is remote
+          vehicle_city = SelectRemoteCity(home_city);
+      }
+      pro.is_multi_home = true;
+  } else {
+      pro.is_multi_home = false;
+  }
+
+  // Generate potentially contended IDs
+  const std::string user_id = generator::GenerateContendedID(rg_, contention_factor_, max_users_); // Link to actual existing user id
+  const std::string vehicle_id = generator::GenerateContendedID(rg_, contention_factor_, max_vehicles_); // Link to actual existing vehicle id
+  
   const std::string ride_id = generator::GenerateUUID(rg_);
-  const std::string city = SampleOnce(rg_, cities_);
-  const std::string vehicle_city = SampleOnce(rg_, cities_); // Link to actual vehicle city
   const std::string start_address = generator::GenerateAddress(rg_);
   const std::string start_time = std::to_string(
     std::chrono::system_clock::now().time_since_epoch().count());
@@ -431,17 +519,19 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile&) {
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("start_ride");
   procedure->add_args(user_id);
+  procedure->add_args(user_city);
   procedure->add_args(vehicle_id);
-  procedure->add_args(ride_id);
-  procedure->add_args(city);
   procedure->add_args(vehicle_city);
+  procedure->add_args(ride_id);
+  procedure->add_args(home_city);
   procedure->add_args(start_address);
   procedure->add_args(start_time);
 }
 
-void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile&) {
-  const std::string city = SampleOnce(rg_, cities_);
-  std::string ride_id = generator::GenerateUUID(rg_); // Link to an actual ride
+// Write transaction: Append a location update to a ride's history.
+// Typically single-home, writing to the city where the ride is happening.
+void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
+  const std::string ride_id = generator::GenerateUUID(rg_); // Link to an actual active ride
   const std::string timestamp = std::to_string(
     std::chrono::system_clock::now().time_since_epoch().count());
   const auto loc = generator::GenerateRandomLatLong(rg_);
@@ -457,8 +547,27 @@ void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfil
   procedure->add_args(lon);
 }
 
-void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile&) {
+// Read/Write transaction: End a ride, update vehicle status, calculate revenue.
+// Reads ride info, vehicle info. Updates ride record, updates vehicle status.
+// Can be multi-home if the ride spanned cities or user/vehicle are in different cities.
+void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+  std::string user_city = home_city; // Assume user ends ride in their home city
+  std::string vehicle_city = home_city; // Assume vehicle started in home_city
+
+  const std::string ride_id = generator::GenerateUUID(rg_); // Link to an actual active ride
   const std::string vehicle_id = generator::GenerateUUID(rg_); // Link to an actual vehicle
+
+  if (is_multi_home) {
+    // Determine the vehicle's actual city (might need to be read from ride/vehicle record)
+    // For simulation, randomly choose if the vehicle's origin was remote.
+    if (std::bernoulli_distribution(0.5)(rg_)) { 
+        vehicle_city = SelectRemoteCity(home_city);
+    }
+    pro.is_multi_home = true;
+  } else {
+    pro.is_multi_home = false;
+  }
+
   const std::string end_address = generator::GenerateAddress(rg_);
   const std::string end_time = std::to_string(
     std::chrono::system_clock::now().time_since_epoch().count());
@@ -466,7 +575,11 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile&) {
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("end_ride");
+  procedure->add_args(ride_id);
+  procedure->add_args(home_city);
   procedure->add_args(vehicle_id);
+  procedure->add_args(vehicle_city);
+  procedure->add_args(user_city);
   procedure->add_args(end_address);
   procedure->add_args(end_time);
   procedure->add_args(revenue);
