@@ -21,5 +21,10 @@ target_sources(slog-core
     tpcc/transaction.h
     tpcc/types.h
     movr/constants.h
+    movr/scalar.h
+    movr/storage_adapter.cpp
+    movr/storage_adapter.h
     movr/table.h
+    movr/transaction.h
+    movr/types.h
 )

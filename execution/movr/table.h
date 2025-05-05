@@ -9,8 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "execution/tpcc/scalar.h"
-#include "execution/tpcc/storage_adapter.h"
+#include "execution/movr/scalar.h"
+#include "execution/movr/storage_adapter.h"
 
 namespace slog {
 namespace movr {

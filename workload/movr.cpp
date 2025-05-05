@@ -11,7 +11,7 @@
 #include "common/proto_utils.h"
 #include "common/string_utils.h"
 #include "execution/movr/constants.h"
-#include "execution/tpcc/transaction.h"
+#include "execution/movr/transaction.h"
 
 using std::bernoulli_distribution;
 using std::iota;
