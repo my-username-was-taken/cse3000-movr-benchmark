@@ -1,5 +1,4 @@
 import sys
-
 import os
 import subprocess as sp
 import shutil
@@ -125,10 +124,10 @@ def start_net_monitor(user, interfaces):
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"Launch network monitoring command in ip '{ip}' failed with exit code {result.returncode}!")
 
-def stop_and_collect_monitor(user, interfaces):
+def stop_and_collect_monitor(user, interfaces, cur_log_dir):
     for ip in interfaces.keys():
         sp.run(f"ssh {user}@{ip} pkill -f net_traffic.csv", shell=True)
-        result = sp.run(f"scp {user}@{ip}:net_traffic.csv data/{tag}/net_traffic_{ip.replace('.', '_')}.csv", shell=True)
+        result = sp.run(f"scp {user}@{ip}:net_traffic.csv {cur_log_dir}/net_traffic_{ip.replace('.', '_')}.csv", shell=True)
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"Collecting network monitoring command failed with exit code {result.returncode}!")
             break
@@ -167,7 +166,9 @@ for system in systems_to_test:
         if scenario == 'network' or scenario == 'packet_loss':
             simulate_network.apply_netem(delay=delay, jitter=jitter, loss=loss, ips=interfaces, user=user)
             print(f"All servers simulating an additional delay of {delay}, jitter of {jitter}, and packet loss of {loss}")
-        # Start monitoring the outbound traffic on remote machines
+        # End any leftover monitoring, and start a new monitoring of the outbound traffic on remote machines
+        for ip in interfaces.keys():
+            sp.run(f"ssh {user}@{ip} pkill -f net_traffic.csv", shell=True)
         start_net_monitor(user=user, interfaces=interfaces)
         # THE ACTUAL EXPERIMENT RUN
         result = run_subprocess(cur_benchmark_cmd, dry_run) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
@@ -216,7 +217,7 @@ for system in systems_to_test:
             print(f"collect_client command failed with exit code {result.returncode}!")
             break
         # Stop and collect network monitoring script
-        stop_and_collect_monitor(user, interfaces)
+        stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Rename folder accordingly
         shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
 
