@@ -1,12 +1,10 @@
 import sys
-sys.path.append('../')
 
 import os
 import subprocess as sp
 import shutil
 import argparse
 
-from .aws import monitor_util
 import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
