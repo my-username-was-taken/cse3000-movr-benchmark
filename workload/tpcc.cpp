@@ -35,7 +35,7 @@ constexpr char SH_ONLY[] = "sh_only";
 constexpr char REM_ITEM_PROB[] = "rem_item_prob";
 // Modify the probability of any payment txn going to a remote warehouse. Default is 0.01.
 constexpr char REM_PAYMENT_PROB[] = "rem_payment_prob";
-// Skewness of the workload. A theta value between 0.0 and 1.0. Use -1 for defaul skewing
+// Skewness of the workload. A theta value between 0.0 and 1.0. Use -1 for default skewing
 constexpr char SKEW[] = "skew";
 
 // Should actually contain an equal amount of New Order & Payement. 1 Delivery, 1 Stock Level, 1 Order Status per 10 New Order txns.

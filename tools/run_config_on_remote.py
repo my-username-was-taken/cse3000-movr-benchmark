@@ -1,8 +1,12 @@
+import sys
+sys.path.append('../')
+
 import os
 import subprocess as sp
 import shutil
 import argparse
 
+from .aws import monitor_util
 import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
@@ -31,7 +35,6 @@ print(f"Running scenario: '{scenario}' and workload: '{workload}'")
 
 BASIC_IFTOP_CMD = 'iftop 2>&1'
 
-#INTERFACE = 'eno33np0' # TODO: Check!!! May differ for AWS
 interfaces = {}
 
 #venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
@@ -105,6 +108,33 @@ def get_network_interfaces(ips_used):
         except:
             print(f"Unable to find interface for IP: {ip}")
 
+def start_net_monitor(user, interfaces):
+    for ip, iface in interfaces.items():  # assuming interfaces is a dict {ip: iface}
+        cmd = (
+            f"ssh {user}@{ip} '"
+            f"echo \"timestamp_ms,bytes_sent\" > net_traffic.csv; "
+            f"prev=$(awk '\\''$1 ~ \"{iface}:\" {{print $10}}'\\'' /proc/net/dev); "
+            f"while true; do "
+            f"sleep 1; "
+            f"now=$(date +%s%3N); "
+            f"curr=$(awk '\\''$1 ~ \"{iface}:\" {{print $10}}'\\'' /proc/net/dev); "
+            f"delta=$((curr - prev)); "
+            f"echo \"$now,$delta\" >> net_traffic.csv; "
+            f"prev=$curr; "
+            f"done' > /dev/null 2>&1 &"
+        )
+        result = sp.run(cmd, shell=True)
+        if hasattr(result, "returncode") and result.returncode != 0:
+            print(f"Launch network monitoring command in ip '{ip}' failed with exit code {result.returncode}!")
+
+def stop_and_collect_monitor(user, interfaces):
+    for ip in interfaces.keys():
+        sp.run(f"ssh {user}@{ip} pkill -f net_traffic.csv", shell=True)
+        result = sp.run(f"scp {user}@{ip}:net_traffic.csv data/{tag}/net_traffic_{ip.replace('.', '_')}.csv", shell=True)
+        if hasattr(result, "returncode") and result.returncode != 0:
+            print(f"Collecting network monitoring command failed with exit code {result.returncode}!")
+            break
+
 ips_used = get_ips_from_conf(conf_path=conf)
 print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
@@ -139,6 +169,9 @@ for system in systems_to_test:
         if scenario == 'network' or scenario == 'packet_loss':
             simulate_network.apply_netem(delay=delay, jitter=jitter, loss=loss, ips=interfaces, user=user)
             print(f"All servers simulating an additional delay of {delay}, jitter of {jitter}, and packet loss of {loss}")
+        # Start monitoring the outbound traffic on remote machines
+        start_net_monitor(user=user, interfaces=interfaces)
+        # THE ACTUAL EXPERIMENT RUN
         result = run_subprocess(cur_benchmark_cmd, dry_run) #sp.run(cur_benchmark_cmd, shell=True, capture_output=True, text=True)
         # Print and collect output
         benchmark_cmd_log = ['']
@@ -146,7 +179,7 @@ for system in systems_to_test:
             print(result.stdout)
             print("[stderr]:", result.stderr)
             if result.returncode != 0:
-                print(f"Benchmark command failed with exit code {result.returncode}")
+                print(f"Benchmark command failed with exit code {result.returncode}!")
                 #break
             # Get tag from benchmark cmd log
             benchmark_cmd_log = result.stdout.split('\n')
@@ -177,13 +210,15 @@ for system in systems_to_test:
             for line in result.stdout.split('\n'):
                 f.write(f"{line}\n")
         if hasattr(result, "returncode") and result.returncode != 0:
-            print(f"collect_benchmark_container command failed with exit code {result.returncode}")
+            print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
             break
         # Collect the metrics from all clients (TODO: add iftop metrics too)
         result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), dry_run) #sp.run(collect_client_cmd.format(conf=conf, tag=tag), shell=True, capture_output=True, text=True)
         if hasattr(result, "returncode") and result.returncode != 0:
-            print(f"collect_client command failed with exit code {result.returncode}")
+            print(f"collect_client command failed with exit code {result.returncode}!")
             break
+        # Stop and collect network monitoring script
+        stop_and_collect_monitor(user, interfaces)
         # Rename folder accordingly
         shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
 
