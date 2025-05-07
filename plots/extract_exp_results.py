@@ -20,7 +20,7 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='network', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
@@ -102,6 +102,9 @@ def summarize_bytes_sent(df, start_ts, end_ts):
     summary = summary.sort_values(by="FromBytes", ascending=False)
     return summary
 
+def get_server_ips_from_conf(conf):
+    return []
+
 # Load log files into strings
 log_files = {}
 tags = {}
@@ -122,6 +125,18 @@ for system in system_dirs:
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd'] = f.read().split('\n')
         with open(join(x_val, 'raw_logs', 'benchmark_container.log'), "r", encoding="utf-8") as f:
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container'] = f.read().split('\n')
+        log_files = os.listdir(join(x_val, 'raw_logs'))
+        # Get the '.conf' file (for getting all the IPs involved)
+        for file in log_files:
+            if '.conf' in file:
+                with open(join(x_val, 'raw_logs', file), "r", encoding="utf-8") as f:
+                    log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'] = f.read().split('\n')
+        server_ips = get_server_ips_from_conf(log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'])
+        net_traffic_log_files = [f'net_traffic_{ip.replace()}.csv' for ip in server_ips]
+        # Load all the network traffic data
+        log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'] = {}
+        for ip in server_ips:
+            pass # TODO: Continue here
         # Extract tag name from cmd log
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd']:
             if 'admin INFO: Tag: ' in line:
@@ -153,10 +168,10 @@ for system in system_dirs:
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['summary'] = pd.read_csv(join(client, 'summary.csv'))
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['transactions'] = pd.read_csv(join(client, 'transactions.csv'))
             csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['txn_events'] = pd.read_csv(join(client, 'txn_events.csv'))
-            if 'iftop_eg.csv' in os.listdir(client):
-                csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
-            elif 'net_traffic.csv' in os.listdir(client):
-                csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
+            #if 'iftop_eg.csv' in os.listdir(client):
+            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
+            #if 'net_traffic.csv' in os.listdir(client):
+            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
 print("All CSV files loaded")
 
 # Get the latencies (p50, p90, p95, p99)
