@@ -102,8 +102,13 @@ def summarize_bytes_sent(df, start_ts, end_ts):
     summary = summary.sort_values(by="FromBytes", ascending=False)
     return summary
 
-def get_server_ips_from_conf(conf):
-    return []
+def get_server_ips_from_conf(conf_data):
+    ips_used = []
+    for line in conf_data:
+        if '    addresses: ' in line:
+            ips_used.append(line.split('    addresses: "')[1].split('"')[0])
+    ips_used = list(ips_used)
+    return ips_used
 
 # Load log files into strings
 log_files = {}
@@ -125,17 +130,19 @@ for system in system_dirs:
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd'] = f.read().split('\n')
         with open(join(x_val, 'raw_logs', 'benchmark_container.log'), "r", encoding="utf-8") as f:
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container'] = f.read().split('\n')
-        log_files = os.listdir(join(x_val, 'raw_logs'))
+        log_file_names = os.listdir(join(x_val, 'raw_logs'))
         # Get the '.conf' file (for getting all the IPs involved)
-        for file in log_files:
+        for file in log_file_names:
             if '.conf' in file:
                 with open(join(x_val, 'raw_logs', file), "r", encoding="utf-8") as f:
                     log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'] = f.read().split('\n')
         server_ips = get_server_ips_from_conf(log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'])
-        net_traffic_log_files = [f'net_traffic_{ip.replace()}.csv' for ip in server_ips]
+        #net_traffic_log_files = []
+        #[f'net_traffic_{ip.replace('.', '_')}.csv' for ip in server_ips]
         # Load all the network traffic data
         log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'] = {}
         for ip in server_ips:
+            log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip] = pd.read_csv(join(x_val, 'raw_logs', f'net_traffic_{ip}.csv'))
             pass # TODO: Continue here
         # Extract tag name from cmd log
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd']:

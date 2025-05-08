@@ -219,7 +219,7 @@ for system in systems_to_test:
         # Stop and collect network monitoring script
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment
-        shutil.copyfile(conf, cur_log_dir)
+        shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))
         # Rename folder accordingly
         shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
 
