@@ -218,8 +218,13 @@ for system in systems_to_test:
             break
         # Stop and collect network monitoring script
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
-        # Save '.conf' file that was used to set up the cluster & experiment
+        # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
         shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))
+        if machine == 'st5':
+            ips_file = 'examples/st_ips.json'
+        else:
+            ips_file = 'aws/ips.json'
+        shutil.copyfile(ips_file, os.path.join(cur_log_dir, 'ips.json'))
         # Rename folder accordingly
         shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
 

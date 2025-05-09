@@ -5,6 +5,7 @@ import pandas as pd
 import argparse
 import re
 from datetime import datetime
+import json
 
 import eval_systems
 
@@ -20,7 +21,7 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='network', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
@@ -29,7 +30,7 @@ scenario = args.scenario
 workload = args.workload
 env = args.environment
 
-print(f"Extracting data for scenario: '{scenario}' and workload: '{workload}'")
+print(f"Extracting data for scenario: '{scenario}', workload: '{workload}' and environment: '{env}'")
 
 # Define paths
 
@@ -47,6 +48,10 @@ MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per curr
 # Constants for the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
 #              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
 vm_cost = 4 * (0.444+0.464+0.468+0.400+0.400+0.400+0.516+0.492)
+
+# TODO: Extract the duration from the log file and adjust the vm_cost appropriately. (Or extend the data transfer cost to 1 hour [might be even better])
+
+
 # The cost of transferring 1GB of data out from the source region (the row). Price as of 28.3.25
 if env == 'local' or env == 'st':
     data_transfer_cost_matrix = [ # Here we just pretend that we have data transfer costs and make them uniform for all source, destination pairs
@@ -61,6 +66,8 @@ if env == 'local' or env == 'st':
         # [0.02,0.02,0.02,0.02,0.02,0.02,0,0.02], # apne1
         # [0.02,0.02,0.02,0.02,0.02,0.02,0.02,0]  # apne2
     ]
+    st_regions = ["us-west-1", "us-west-2"]
+    data_transfer_cost_df = pd.DataFrame(data_transfer_cost_matrix, columns=st_regions, index=st_regions)
 elif env == 'aws':
     data_transfer_cost_matrix = [
         [0,0.02,0.02,0.02,0.02,0.02,0.02,0.02], # euw1
@@ -72,17 +79,22 @@ elif env == 'aws':
         [0.09,0.09,0.09,0.09,0.09,0.09,0,0.09], # apne1
         [0.08,0.08,0.08,0.08,0.08,0.08,0.08,0]  # apne2
     ]
+    aws_regions = ["us-west-1", "us-west-2", "us-east-1", "us-east-2", "eu-west-1", "eu-west-2", "ap-northeast-1" "ap-northeast-2"]
+    data_transfer_cost_df = pd.DataFrame(data_transfer_cost_matrix, columns=aws_regions, index=aws_regions)
+
+bytes_transfered_df = None
 
 def extract_timestamp(timestamp_str):
     # Extract timestamp: I0430 10:14:36.795380
-    ts_str = re.search(r"I\d{4} (\d{2}:\d{2}:\d{2}\.\d+)", line).group(1)
+    ts_str = re.search(r"I\d{4} (\d{2}:\d{2}:\d{2}\.\d+)", timestamp_str).group(1)
     # Extract date part: 0430 (MMDD)
-    date_part = re.search(r"I(\d{4})", line).group(1)
+    date_part = re.search(r"I(\d{4})", timestamp_str).group(1)
     month, day = int(date_part[:2]), int(date_part[2:])
     # Convert to full datetime
     now = datetime.now()
     ts = datetime(now.year, month, day, *map(int, ts_str.split(":")[:2]), int(float(ts_str.split(":")[2])))
-    return int(ts.timestamp() * 1000)
+    # On st machines, the time seems shifted by 2 hours for some reason
+    return int((ts.timestamp() + 7200) * 1000)
 
 def summarize_bytes_sent(df, start_ts, end_ts):
     """
@@ -136,13 +148,15 @@ for system in system_dirs:
             if '.conf' in file:
                 with open(join(x_val, 'raw_logs', file), "r", encoding="utf-8") as f:
                     log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'] = f.read().split('\n')
+            if '.json' in file:
+                with open(join(x_val, 'raw_logs', file), "r", encoding="utf-8") as f:
+                    log_files[system.split('/')[-1]][x_val.split('/')[-1]]['ips_file'] = json.loads(f.read())
         server_ips = get_server_ips_from_conf(log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'])
-        #net_traffic_log_files = []
-        #[f'net_traffic_{ip.replace('.', '_')}.csv' for ip in server_ips]
         # Load all the network traffic data
         log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'] = {}
         for ip in server_ips:
-            log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip] = pd.read_csv(join(x_val, 'raw_logs', f'net_traffic_{ip}.csv'))
+            underscore_ip = ip.replace('.', '_')
+            log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip] = pd.read_csv(join(x_val, 'raw_logs', f'net_traffic_{underscore_ip}.csv'))
             pass # TODO: Continue here
         # Extract tag name from cmd log
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd']:
@@ -158,6 +172,14 @@ for system in system_dirs:
                 start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
             elif 'Results were written to' in line:
                 end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+        # Get the data transfers relavant to the experiment period
+        for ip in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'].keys():
+            byte_log = log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip]
+            timestamps = byte_log['timestamp_ms']
+            lower_bound = timestamps[timestamps < start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]]].max()
+            upper_bound = timestamps[timestamps > end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]]].min()
+            filtered = byte_log[(timestamps > lower_bound) & (timestamps < upper_bound)]
+            log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip] = filtered
 print(f"All log files loaded")
 
 # Load CSV files into pandas DataFrames
@@ -240,15 +262,18 @@ for system in system_dirs:
                 # [711,712,713,714,715,716,717,718], # apne1
                 # [811,812,813,814,815,816,817,818]  # apne2
             ]
-            for i, client in enumerate(csv_files[system.split('/')[-1]][x_val.split('/')[-1]].keys()):
-                if 'byte_transfers' in csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]].keys():
-                    byte_log = csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers']
-                    timestamps = byte_log['timestamp_ms']
-                    lower_bound = timestamps[timestamps < start].max()
-                    upper_bound = timestamps[timestamps > end].min()
-                    filtered = byte_log[(timestamps > lower_bound) & (timestamps < upper_bound)]
-                    total_bytes_sent_per_location = filtered['bytes_sent'].sum() / (no_clients-1)
-                    bytes_transfered_matrix[i] = [total_bytes_sent_per_location*dest for dest in bytes_transfered_matrix[i]]
+            if 'ips_file' in log_files[system.split('/')[-1]][x_val.split('/')[-1]].keys():
+                ips_file = log_files[system.split('/')[-1]][x_val.split('/')[-1]]['ips_file']
+                regions_used = ips_file.keys()
+                bytes_transfered_df = pd.DataFrame(0, columns=regions_used, index=regions_used) # Rows are source, Cols are dest
+                for region in regions_used:
+                    cur_ips = [ip['ip'] for ip in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['ips_file'][region]]
+                    # Collect and summarize the data transfers for all ips in the current region
+                    total_bytes_sent_per_location = 0
+                    for ip in cur_ips:
+                        total_bytes_sent_per_location += log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip]['bytes_sent'].sum() / (len(regions_used)-1)
+                    bytes_transfered_df.loc[region] = total_bytes_sent_per_location
+                    bytes_transfered_df.loc[region][region] = 0 # Fix for the 'self-sending cell' which doesn't actually cost anything
         elif env == 'aws':
             bytes_transfered_matrix = [
                 [111,112,113,114,115,116,117,118], # euw1
@@ -273,10 +298,16 @@ for system in system_dirs:
             ]
         total_bytes_transfered = 0
         total_data_transfer_cost = 0
-        for i in range(len(data_transfer_cost_matrix)):
-            for j in range(len(data_transfer_cost_matrix[0])):
-                total_bytes_transfered += bytes_transfered_matrix[i][j]
-                total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_matrix[i][j]
+        if bytes_transfered_df is None:
+            for i in range(len(data_transfer_cost_matrix)):
+                for j in range(len(data_transfer_cost_matrix[0])):
+                    total_bytes_transfered += bytes_transfered_matrix[i][j]
+                    total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_matrix[i][j]
+        else:
+            for i in range(len(list(regions_used))):
+                for j in range(len(list(regions_used))):
+                    total_bytes_transfered += bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]]
+                    total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]] / 1_000_000
         total_hourly_cost = vm_cost + total_data_transfer_cost
         byte_transfers[system.split('/')[-1]][x_val.split('/')[-1]] = total_bytes_transfered
         total_costs[system.split('/')[-1]][x_val.split('/')[-1]] = total_hourly_cost
