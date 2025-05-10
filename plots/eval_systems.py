@@ -8,7 +8,7 @@ import argparse
 # TODO: Change to use p50, p95, and p99 latencies
 LATENCY_PERCENTILE = 'p95'
 
-def make_plot(plot='baseline', workload='ycsbt'):
+def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99]):
 
     # For the resource demads and cost, we use a different script
     if plot == 'baseline':
@@ -30,10 +30,12 @@ def make_plot(plot='baseline', workload='ycsbt'):
 
     # Extract data
     xaxis_points = data['x_var']
-    metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
+    #metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
+    metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
     y_labels = [
         'Throughput (txn/s)',
-        f'{LATENCY_PERCENTILE} Latency (ms)',
+        #f'{LATENCY_PERCENTILE} Latency (ms)',
+        'Latency (ms)',
         'Aborts (%)',
         'Bytes Transferred (MB)',
         'Cost ($)'
@@ -58,15 +60,29 @@ def make_plot(plot='baseline', workload='ycsbt'):
 
     for ax, metric, y_label, subplot_title in zip(axes, metrics, y_labels, subplot_titles):
         for db, color, style in zip(databases, colors, line_styles):
-            column_name = f'{db}_{metric}'
-            if column_name in data.columns:  # Plot only if the column exists in the CSV
-                ax.plot(
-                    xaxis_points,
-                    data[column_name],
-                    label=db,
-                    color=color,
-                    linestyle=style
-                )
+            if metric != 'latency':
+                column_name = f'{db}_{metric}'
+                if column_name in data.columns:  # Plot only if the column exists in the CSV
+                    ax.plot(
+                        xaxis_points,
+                        data[column_name],
+                        label=db,
+                        color=color,
+                        linestyle=style
+                        # TODO: Find a way to distinguish between the the 3 percentiles (e.g., via darkness of the color)
+                    )
+            else:
+                for percentile in latency_percentiles:
+                    column_name = f'{db}_p{percentile}'
+                    if column_name in data.columns:  # Plot only if the column exists in the CSV
+                        ax.plot(
+                            xaxis_points,
+                            data[column_name],
+                            label=db,
+                            color=color,
+                            linestyle=style
+                        )
+
         ax.set_title(subplot_title)
         ax.set_ylabel(y_label)
         ax.set_xlabel(x_lab)
@@ -102,9 +118,13 @@ def make_plot(plot='baseline', workload='ycsbt'):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
-    parser.add_argument("plot", default="mh_proportions", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
+    parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
+    parser.add_argument("-w",  "--workload", default="ycsbt", choices=["ycsbt", "tpcc"], help="The workload that was evaluated.")
+    parser.add_argument("-lp", "--latency_percentiles", default="50;95;99", help="The latency percentiles to plot")
     args = parser.parse_args()
 
-    make_plot(args.plot)
+    latencies = [int(latency) for latency in args.latency_percentiles.split(';')]
+
+    make_plot(plot=args.plot, workload=args.workload, latency_percentiles=latencies)
 
     print("Done")

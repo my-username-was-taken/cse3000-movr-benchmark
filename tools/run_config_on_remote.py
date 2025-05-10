@@ -9,12 +9,11 @@ import simulate_network
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
 VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 
-# Argument parser
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='network', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
-parser.add_argument('-d',  '--duration', default=10, help='Duration (in seconds) of a single experiment')
+parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
 parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
@@ -230,5 +229,5 @@ for system in systems_to_test:
 
 print("#####################")
 print(f"\n All {scenario} experiments done. You can now copy logs with:")
-print(f"scp -r {machine}:{detock_dir}/data/{scenario} ~/Documents/GitHub/Detock/plots/raw_data/{workload}/{scenario}")
+print(f"scp -r {machine}:{detock_dir}/data/{scenario} plots/raw_data/{workload}")
 print("============================================")

@@ -17,11 +17,12 @@ The script will populate the CSVs in 'plots/data' and generate a graph in 'plots
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
 VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
+LATENCY_PERCENTILES = [50,95,99]
 VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
@@ -48,7 +49,7 @@ MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per curr
 # Constants for the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
 #              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
 vm_cost = 4 * (0.444+0.464+0.468+0.400+0.400+0.400+0.516+0.492)
-
+exp_duration = None
 # TODO: Extract the duration from the log file and adjust the vm_cost appropriately. (Or extend the data transfer cost to 1 hour [might be even better])
 
 
@@ -162,6 +163,8 @@ for system in system_dirs:
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd']:
             if 'admin INFO: Tag: ' in line:
                 tag = line.split('admin INFO: Tag: ')[1]
+            elif 'Synced config and ran command: benchmark ' in line:
+                duration = int(line.split(' --duration ')[1].split(' ')[0])
         tags[system.split('/')[-1]][x_val.split('/')[-1]] = tag
         # Extract throughput from container log
         for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container']:
@@ -307,8 +310,8 @@ for system in system_dirs:
             for i in range(len(list(regions_used))):
                 for j in range(len(list(regions_used))):
                     total_bytes_transfered += bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]]
-                    total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]] / 1_000_000
-        total_hourly_cost = vm_cost + total_data_transfer_cost
+                    total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]] / 1_000_000_000
+        total_hourly_cost = (duration/3600 * vm_cost) + total_data_transfer_cost
         byte_transfers[system.split('/')[-1]][x_val.split('/')[-1]] = total_bytes_transfered
         total_costs[system.split('/')[-1]][x_val.split('/')[-1]] = total_hourly_cost
 
@@ -350,6 +353,6 @@ os.makedirs('/'.join(OUT_CSV_PATH.split('/')[:-1]), exist_ok=True)
 df.to_csv(OUT_CSV_PATH, index=False)
 
 # Create new version of plots directly
-eval_systems.make_plot(plot=scenario, workload=workload)
+eval_systems.make_plot(plot=scenario, workload=workload, latency_percentiles=LATENCY_PERCENTILES)
 
 print("Done")
