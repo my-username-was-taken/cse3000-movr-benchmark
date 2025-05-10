@@ -108,9 +108,9 @@ class AddVehicleTxn : public MovrTransaction {
 class StartRideTxn : public MovrTransaction {
     public:
      StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::string& user_id, const std::string& user_city, const std::string& vehicle_id,
-        const std::string& vehicle_city, const std::string& ride_id, const std::string& city,
-        const std::string& start_address, const std::string& start_time);
+        const int user_id, const std::string& user_city, const std::string& code, const int vehicle_id,
+        const std::string& vehicle_city, const int ride_id, const std::string& city,
+        const std::string& start_address, const int start_time);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -124,6 +124,7 @@ class StartRideTxn : public MovrTransaction {
      // Arguments
      Int32ScalarPtr a_user_id_;
      FixedTextScalarPtr a_user_city_;
+     FixedTextScalarPtr a_code_;
      Int32ScalarPtr a_vehicle_id_;
      FixedTextScalarPtr a_vehicle_city_;
      Int32ScalarPtr a_ride_id_;
@@ -138,8 +139,8 @@ class StartRideTxn : public MovrTransaction {
 class UpdateLocationTxn : public MovrTransaction {
     public:
      UpdateLocationTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::string& city, const std::string& ride_id, const std::string& timestamp,
-        const std::string& lat, const std::string& lon);
+        const std::string& city, const int ride_id, const int timestamp,
+        const double lat, const double lon);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -158,9 +159,9 @@ class UpdateLocationTxn : public MovrTransaction {
    class EndRideTxn : public MovrTransaction {
     public:
      EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::string& ride_id, const std::string& city, const std::string& vehicle_id,
+        const int ride_id, const std::string& city, const int vehicle_id,
         const std::string& vehicle_city, const std::string& user_city,
-        const std::string& end_address, const std::string& end_time, const std::string& revenue);
+        const std::string& end_address, const int end_time, const double revenue);
      bool Read() final;
      void Compute() final;
      bool Write() final;
