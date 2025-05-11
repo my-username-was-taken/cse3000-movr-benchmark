@@ -40,7 +40,8 @@ class MovrTransaction {
 
 class ViewVehiclesTxn : public MovrTransaction {
     public:
-     ViewVehiclesTxn(const std::shared_ptr<StorageAdapter>& storage_adapter, const std::string& city, int limit);
+     ViewVehiclesTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
+        const std::vector<int> ids, const std::vector<std::string> cities);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -49,13 +50,14 @@ class ViewVehiclesTxn : public MovrTransaction {
      Table<VehiclesSchema> vehicles_;
    
      // Arguments
-     FixedTextScalarPtr a_city_;
-     Int32ScalarPtr a_limit_;
+     std::vector<Int32ScalarPtr> a_ids_;
+     std::vector<FixedTextScalarPtr> a_cities_;
+     
    
      // Read results
-     Int32ScalarPtr vehicle_id_result = MakeInt32Scalar();
-     FixedTextScalarPtr city_result = MakeFixedTextScalar();
-     FixedTextScalarPtr status_result = MakeFixedTextScalar();
+     std::vector<Int32ScalarPtr> vehicle_id_results;
+     std::vector<FixedTextScalarPtr> city_results;
+     std::vector<FixedTextScalarPtr> status_results;
 };
 
 class UserSignupTxn : public MovrTransaction {

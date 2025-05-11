@@ -32,4 +32,5 @@ target_sources(slog-core
     movr/types.h
     movr/update_location.cpp
     movr/user_signup.cpp
+    movr/view_vehicles.cpp
 )

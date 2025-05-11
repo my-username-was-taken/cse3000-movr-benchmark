@@ -443,12 +443,14 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
 // Simple read transaction: Find vehicles near a location in the specified city.
 // This transaction is typically single-home, focused on the 'city'.
 void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
-  const int limit = 25;
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("view_vehicles");
   procedure->add_args(city);
-  procedure->add_args(to_string(limit));
+  for (int i = 0; i < movr::kVehicleViewLimit; i++) {
+    const std::string id = generator::GenerateContendedID(rg_, contention_factor_, max_users_);
+    procedure->add_args(id);
+  }
 }
 
 // Write transaction: Insert a new user record.
