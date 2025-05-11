@@ -218,6 +218,16 @@ namespace generator {
     return number;
   }
 
+  inline std::string GeneratePromoCode(std::mt19937& rng) {
+    static const std::vector<std::string> words = {
+      "free", "summer", "discount", "save", "code", "quick",
+      "deal", "offer", "special", "limited", "bonus", "credit",
+      "voucher", "gift", "reward", "holiday", "welcome", "newuser"
+    };
+    std::uniform_int_distribution<size_t> word_dist(0, words.size() - 1);
+    return words[word_dist(rng)] + "_" + words[word_dist(rng)] + "_" + words[word_dist(rng)];
+  }
+
   // Function to generate a potentially contended ID based on contention_factor_
   inline std::string GenerateContendedID(std::mt19937& rng, double contention_factor, int max_id) {
     if (contention_factor <= 0.0 || max_id <= 1) { // Uniform distribution if no contention or not enough items
@@ -510,6 +520,7 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
 // Can be multi-home if the user is in a different city than the vehicle.
 void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
   std::string user_city = home_city;
+  std::string code = generator::GeneratePromoCode(rg_);
   std::string vehicle_city = home_city; // Link to actual vehicle city
   if (is_multi_home) {
       // Decide which entity is remote (user or vehicle)
@@ -536,6 +547,7 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   procedure->add_args("start_ride");
   procedure->add_args(user_id);
   procedure->add_args(user_city);
+  procedure->add_args(code);
   procedure->add_args(vehicle_id);
   procedure->add_args(vehicle_city);
   procedure->add_args(ride_id);

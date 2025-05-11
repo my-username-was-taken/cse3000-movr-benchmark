@@ -42,4 +42,14 @@ class TPCCExecution : public Execution {
   std::shared_ptr<Storage> storage_;
 };
 
+class MovrExecution : public Execution {
+  public:
+   MovrExecution(const SharderPtr& sharder, const std::shared_ptr<Storage>& storage);
+   void Execute(Transaction& txn) final;
+ 
+  private:
+   SharderPtr sharder_;
+   std::shared_ptr<Storage> storage_;
+ };
+
 }  // namespace slog

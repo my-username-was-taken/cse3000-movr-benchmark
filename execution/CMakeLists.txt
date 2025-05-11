@@ -20,6 +20,7 @@ target_sources(slog-core
     tpcc/table.h
     tpcc/transaction.h
     tpcc/types.h
+    movr.cpp
     movr/add_vehicle.cpp
     movr/constants.h
     movr/end_ride.cpp

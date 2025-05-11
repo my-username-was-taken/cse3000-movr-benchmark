@@ -41,7 +41,7 @@ class MovrTransaction {
 class ViewVehiclesTxn : public MovrTransaction {
     public:
      ViewVehiclesTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::vector<int> ids, const std::vector<std::string> cities);
+        const std::vector<int> ids, const std::string city);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -51,7 +51,7 @@ class ViewVehiclesTxn : public MovrTransaction {
    
      // Arguments
      std::vector<Int32ScalarPtr> a_ids_;
-     std::vector<FixedTextScalarPtr> a_cities_;
+     FixedTextScalarPtr a_city_;
      
    
      // Read results
