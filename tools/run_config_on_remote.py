@@ -66,7 +66,7 @@ elif scenario == 'sunflower':
     raise Exception("The sunflower scenario is not yet implemented")
 
 single_ycsbt_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
-single_tpcc_benchmark_cmd = f""
+single_tpcc_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl tpcc --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 if workload == 'ycsbt':
     single_benchmark_cmd = single_ycsbt_benchmark_cmd
 elif workload == 'tpcc':
