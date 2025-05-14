@@ -1,4 +1,5 @@
 import sys
+import time
 import os
 import subprocess as sp
 import shutil
@@ -10,8 +11,8 @@ VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 
 VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
-parser.add_argument('-s',  '--scenario', default='network', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
-parser.add_argument('-w',  '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-s',  '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
+parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
@@ -42,28 +43,41 @@ short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
 
-if scenario == 'baseline':
-    benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
-    clients = 3000
-    x_vals = [0, 20, 40, 60, 80, 100]
-elif scenario == 'skew':
-    benchmark_params = "\"mh=50,mp=50,hot={}\""
-    clients = 3000
-    x_vals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250]
-elif scenario == 'scalability':
-    benchmark_params = "\"mh=50,mp=50\""
-    clients = None
-    x_vals = [1, 10, 100, 1000, 10000, 1000000]
-elif scenario == 'network':
-    benchmark_params = "\"mh=50,mp=50\""
-    clients = 3000
-    x_vals = [0, 10, 50, 100, 250, 500, 1000]
-elif scenario == 'packet_loss':
-    benchmark_params = "\"mh=50,mp=50\""
-    clients = 3000
-    x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
-elif scenario == 'sunflower':
-    raise Exception("The sunflower scenario is not yet implemented")
+if workload == 'ycsbt':
+    multi_partition_settings = 'mp=50,'
+elif workload == 'tpcc':
+    multi_partition_settings = ''
+else:
+    multi_partition_settings = '' # This may need to be adjusted for other workloads
+
+if workload == 'tpcc':
+    if scenario == 'baseline':
+        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the baseline scenario
+        clients = 3000
+        x_vals = [0, 20, 40, 60, 80, 100]
+else:
+    if scenario == 'baseline':
+        benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
+        clients = 3000
+        x_vals = [0, 20, 40, 60, 80, 100]
+    elif scenario == 'skew':
+        benchmark_params = "\"mh=50,mp=50,hot={}\""
+        clients = 3000
+        x_vals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250]
+    elif scenario == 'scalability':
+        benchmark_params = "\"mh=50,mp=50\""
+        clients = None
+        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+    elif scenario == 'network':
+        benchmark_params = "\"mh=50,mp=50\""
+        clients = 3000
+        x_vals = [0, 10, 50, 100, 250, 500, 1000]
+    elif scenario == 'packet_loss':
+        benchmark_params = "\"mh=50,mp=50\""
+        clients = 3000
+        x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+    elif scenario == 'sunflower':
+        raise Exception("The sunflower scenario is not yet implemented")
 
 single_ycsbt_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 single_tpcc_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl tpcc --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
@@ -131,9 +145,43 @@ def stop_and_collect_monitor(user, interfaces, cur_log_dir):
             print(f"Collecting network monitoring command failed with exit code {result.returncode}!")
             break
 
+# Helper function for TPC-C (possibly other benchmarks)
+# Since loading the tables can take 
+def check_table_loading_finished(ips, workload, conf_path):
+    if workload == 'tpcc':
+        # Check if all the orders in each warehouse have been loaded already
+        total_warehouses = 1200
+        no_regions = 0
+        with open(conf_path, "r") as f:
+            conf_data = f.readlines()
+        for line in conf_data:
+            if 'regions: {' in line:
+                no_regions += 1
+        target_warehouses_per_region = total_warehouses / no_regions
+        for ip in ips:
+            print(f"Checking readiness on server on IP {ip}. It should have {target_warehouses_per_region} warehouses .....")
+            try:
+                ssh_target = f"{user}@{ip}" if user else ip
+                server_container_cmd = 'docker container logs slog 2>&1'
+                ssh_cmd = f"ssh {ssh_target} '{server_container_cmd}'"
+                result = run_subprocess(ssh_cmd, dry_run)
+                warehouses_ready = [l for l in result.stdout.split('\n') if 'Loading orders in warehouse' in l]
+                if len(warehouses_ready) < target_warehouses_per_region:
+                    return False
+            except:
+                print(f"Unable to check loading status for IP: {ip}")
+        return True
+    else:
+        return True
+
 ips_used = get_ips_from_conf(conf_path=conf)
 print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
+
+if workload == 'tpcc':
+    while not check_table_loading_finished(ips_used, workload, conf):
+        time.sleep(10)
+    print("All TPC-C tables loaded")
 
 os.makedirs(f'data/{scenario}', exist_ok=True)
 # For now, we hard code this for the baseline exp (varying MH from 0 to 100) and just for Detock
@@ -205,8 +253,9 @@ for system in systems_to_test:
         # Collect logs from the benchmark container (for throughput)
         result = run_subprocess(collect_benchmark_container_cmd, dry_run) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
         with open(f"{cur_log_dir}/benchmark_container.log", 'w') as f:
-            for line in result.stdout.split('\n'):
-                f.write(f"{line}\n")
+            if not dry_run:
+                for line in result.stdout.split('\n'):
+                    f.write(f"{line}\n")
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
             break

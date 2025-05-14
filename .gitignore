@@ -70,6 +70,9 @@ data/
 logs/
 keys/
 
+# Build directories (that are deleted and recreated anyway)
+build/*
+
 # GitHub username & token
 aws/github_credentials.json
 
