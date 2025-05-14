@@ -10,6 +10,8 @@
 #include "common/offline_data_reader.h"
 #include "common/sharder.h"
 #include "execution/tpcc/load_tables.h"
+#include "execution/movr/load_tables.h"
+#include "execution/movr/metadata_initializer.h"
 #include "proto/offline_data.pb.h"
 
 namespace slog {
@@ -45,6 +47,11 @@ std::pair<shared_ptr<MemOnlyStorage>, shared_ptr<MetadataInitializer>> MakeStora
     case internal::Configuration::kTpccPartitioning:
       metadata_initializer =
           make_shared<tpcc::TPCCMetadataInitializer>(config->num_regions(), config->num_partitions());
+      GenerateTPCCData(storage, metadata_initializer, config);
+      break;
+    case internal::Configuration::kMovrPartitioning:
+      metadata_initializer =
+          make_shared<movr::MovrMetadataInitializer>(config->num_regions(), config->num_partitions());
       GenerateTPCCData(storage, metadata_initializer, config);
       break;
     default:
@@ -193,6 +200,14 @@ void GenerateTPCCData(shared_ptr<Storage> storage, const shared_ptr<MetadataInit
   auto tpcc_partitioning = config->proto_config().tpcc_partitioning();
   auto storage_adapter = std::make_shared<tpcc::KVStorageAdapter>(storage, metadata_initializer);
   tpcc::LoadTables(storage_adapter, tpcc_partitioning.warehouses(), config->num_regions(), config->num_partitions(),
+                   config->local_partition(), kDataGenThreads);
+}
+
+void GenerateMovrData(shared_ptr<Storage> storage, const shared_ptr<MetadataInitializer>& metadata_initializer,
+                      const ConfigurationPtr& config) {
+  auto movr_partitioning = config->proto_config().movr_partitioning();
+  auto storage_adapter = std::make_shared<movr::KVStorageAdapter>(storage, metadata_initializer);
+  movr::LoadTables(storage_adapter, movr_partitioning.cities(), config->num_regions(), config->num_partitions(),
                    config->local_partition(), kDataGenThreads);
 }
 

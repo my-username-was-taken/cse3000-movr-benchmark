@@ -28,6 +28,8 @@ target_sources(slog-core
     movr/end_ride.cpp
     movr/load_tables.cpp
     movr/load_tables.h
+    movr/metadata_initializer.cpp
+    movr/metadata_initializer.h
     movr/scalar.h
     movr/start_ride.cpp
     movr/storage_adapter.cpp

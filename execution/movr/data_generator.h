@@ -9,7 +9,20 @@ namespace movr {
 class DataGenerator {
 public:
     template <typename T>
-    T WeightedChoice(std::mt19937& rng, const std::vector<std::pair<T, double>>& items);
+    static T WeightedChoice(std::mt19937& rng, const std::vector<std::pair<T, double>>& items) {
+      double total_weight = 0.0;
+    for (const auto& item : items) total_weight += item.second;
+
+    std::uniform_real_distribution<double> dist(0.0, total_weight);
+    double n = dist(rng);
+
+    for (const auto& [value, weight] : items) {
+        if (n < weight) return value;
+        n -= weight;
+    }
+
+    return items.back().first; // fallback in case of rounding errors
+    }
 
     static std::string GenerateUUID(std::mt19937& rng);
     static std::string GenerateRevenue(std::mt19937& rng);
