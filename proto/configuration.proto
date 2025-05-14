@@ -103,7 +103,7 @@ message TPCCPartitioning {
 }
 
 message MovrPartitioning {
-  repeated string cities = 1;
+  int32 cities = 1;
 }
 
 message CpuPinning {
@@ -130,6 +130,7 @@ enum ExecutionType {
     KEY_VALUE = 0;
     NOOP = 1;
     TPC_C = 2;
+    MOVR = 3;
 }
 
 /**

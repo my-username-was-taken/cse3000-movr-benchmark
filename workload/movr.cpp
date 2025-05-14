@@ -273,7 +273,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
       cities_.push_back(Trim(city_name));
   }
   num_cities_ = cities_.size();
-  CHECK_EQ(num_cities_, config->proto_config().movr_partitioning().cities_size());
+  CHECK_EQ(num_cities_, config->proto_config().movr_partitioning().cities());
 
   // Parse transaction mix
   auto txn_mix_str = Split(params_.GetString(TXN_MIX), ":");

@@ -23,7 +23,11 @@ target_sources(slog-core
     movr.cpp
     movr/add_vehicle.cpp
     movr/constants.h
+    movr/data_generator.cpp
+    movr/data_generator.h
     movr/end_ride.cpp
+    movr/load_tables.cpp
+    movr/load_tables.h
     movr/scalar.h
     movr/start_ride.cpp
     movr/storage_adapter.cpp
