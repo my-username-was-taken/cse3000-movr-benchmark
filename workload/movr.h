@@ -44,9 +44,13 @@ class MovrWorkload : public Workload {
   void GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro, const std::string& city);
   void GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home);
 
+  void InitializeTxnMix();
+  void InitializeRegionSelection();
+  void LogStatistics();
+
   // Helper methods for city selection
   std::string SelectHomeCity();
-  std::string SelectRemoteCity(const std::string& home_city);
+  std::string SelectRemoteCity();
 
   // Configuration and state
   ConfigurationPtr config_;

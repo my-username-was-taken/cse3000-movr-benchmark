@@ -14,6 +14,7 @@ const int kDefaultRides = 100;
 const int kDefaultHistories = 100;
 const int kDefaultPromoCodes = 100;
 const int kDefaultUserPromoCodes = 100;
+const int kDefaultCities = 50;
 
 }  // namespace movr
 }  // namespace slog
