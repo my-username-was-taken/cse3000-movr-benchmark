@@ -61,7 +61,6 @@ class MovrWorkload : public Workload {
   double contention_factor_;
   bool sh_only_;
   vector<std::string> cities_;
-  size_t num_cities_;
   vector<int> txn_mix_pct_;
   std::discrete_distribution<> select_txn_dist_;
   int num_regions_;
@@ -71,10 +70,6 @@ class MovrWorkload : public Workload {
   
   TxnId client_txn_id_counter_;
   std::vector<int> txn_mix_;
-
-  // Placeholder limits for contended ID generation
-  int max_users_;
-  int max_vehicles_;
 };
 
 }  // namespace slog
