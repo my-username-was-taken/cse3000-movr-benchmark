@@ -29,6 +29,8 @@ static void GenerateSimpleData2(shared_ptr<Storage> storage,
                                 const ConfigurationPtr& config);
 static void GenerateTPCCData(shared_ptr<Storage> storage, const shared_ptr<MetadataInitializer>& metadata_initializer,
                              const ConfigurationPtr& config);
+static void GenerateMovrData(shared_ptr<Storage> storage, const shared_ptr<MetadataInitializer>& metadata_initializer,
+                             const ConfigurationPtr& config);
 static void LoadData(Storage& storage, const ConfigurationPtr& config, const string& data_dir);
 
 std::pair<shared_ptr<MemOnlyStorage>, shared_ptr<MetadataInitializer>> MakeStorage(const ConfigurationPtr& config,
@@ -52,7 +54,7 @@ std::pair<shared_ptr<MemOnlyStorage>, shared_ptr<MetadataInitializer>> MakeStora
     case internal::Configuration::kMovrPartitioning:
       metadata_initializer =
           make_shared<movr::MovrMetadataInitializer>(config->num_regions(), config->num_partitions());
-      GenerateTPCCData(storage, metadata_initializer, config);
+      GenerateMovrData(storage, metadata_initializer, config);
       break;
     default:
       metadata_initializer = make_shared<ConstantMetadataInitializer>(0);
