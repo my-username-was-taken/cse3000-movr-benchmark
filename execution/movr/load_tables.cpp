@@ -22,7 +22,7 @@ const std::string kCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 class PartitionedMovrDataLoader {
  public:
   PartitionedMovrDataLoader(const StorageAdapterPtr& storage_adapter, std::vector<std::string> partition_cities, int num_users,
-    int num_vehicles, int num_rides, int num_codes, int num_user_codes, int num_histories, int num_regions,
+    int num_vehicles, int num_rides, int num_histories, int num_codes, int num_user_codes, int num_regions,
     int num_partitions, int seed)
       : rg_(seed),
       str_gen_(seed),
@@ -49,7 +49,7 @@ class PartitionedMovrDataLoader {
 
   void LoadUsers() {
     Table<UsersSchema> users(storage_adapter_);
-    LOG(INFO) << "Loading " << num_users_ << " users across " << partition_cities_.size() << " cities";
+    LOG(INFO) << "Loading " << num_users_ << " users for each of the " << partition_cities_.size() << " cities";
     
     const uint64_t users_per_city = num_users_ / partition_cities_.size();
     
@@ -74,7 +74,7 @@ class PartitionedMovrDataLoader {
 
   void LoadVehicles() {
     Table<VehiclesSchema> vehicles(storage_adapter_);
-    LOG(INFO) << "Loading " << num_vehicles_ << " vehicles across " << partition_cities_.size() << " cities";
+    LOG(INFO) << "Loading " << num_vehicles_ << " vehicles for each of the " << partition_cities_.size() << " cities";
     
     const uint64_t vehicles_per_city = num_vehicles_ / partition_cities_.size();
     const uint64_t users_per_city = num_users_ / partition_cities_.size();
@@ -122,7 +122,7 @@ class PartitionedMovrDataLoader {
 
   void LoadRides() {
     Table<RidesSchema> rides(storage_adapter_);
-    LOG(INFO) << "Loading " << num_rides_ << " rides across " << partition_cities_.size() << " cities";
+    LOG(INFO) << "Loading " << num_rides_ << " rides for each of the " << partition_cities_.size() << " cities";
     
     const uint64_t rides_per_city = num_rides_ / partition_cities_.size();
     const uint64_t users_per_city = num_users_ / partition_cities_.size();
@@ -154,7 +154,7 @@ class PartitionedMovrDataLoader {
           MakeFixedTextScalar<64>(end_address),
           MakeInt64Scalar(start_time),
           MakeInt64Scalar(end_time),
-          MakeInt32Scalar(revenue)
+          MakeInt64Scalar(revenue)
         });
       }
     }
@@ -162,7 +162,7 @@ class PartitionedMovrDataLoader {
 
   void LoadHistories() {
     Table<VehicleLocationHistoriesSchema> histories(storage_adapter_);
-    LOG(INFO) << "Loading " << num_histories_ << " histories across " << partition_cities_.size() << " cities";
+    LOG(INFO) << "Loading " << num_histories_ << " histories for each of the " << partition_cities_.size() << " cities";
     
     const uint64_t histories_per_city = num_histories_ / partition_cities_.size();
     const uint64_t rides_per_city = num_rides_ / partition_cities_.size();
@@ -182,8 +182,8 @@ class PartitionedMovrDataLoader {
           MakeFixedTextScalar<64>(city),
           MakeInt64Scalar(ride_id),
           MakeInt64Scalar(timestamp),
-          MakeInt32Scalar(lat),
-          MakeInt32Scalar(lon)
+          MakeInt64Scalar(lat),
+          MakeInt64Scalar(lon)
         });
       }
     }
@@ -204,8 +204,8 @@ class PartitionedMovrDataLoader {
       codes.Insert({
         MakeFixedTextScalar<64>(code),
         MakeFixedTextScalar<64>(description),
-        MakeInt32Scalar(creation_time),
-        MakeInt32Scalar(expiration_time),
+        MakeInt64Scalar(creation_time),
+        MakeInt64Scalar(expiration_time),
         MakeFixedTextScalar<64>(rules)
         });
     }
@@ -213,7 +213,7 @@ class PartitionedMovrDataLoader {
 
   void LoadUserCodes() {
     Table<UserPromoCodesSchema> user_codes(storage_adapter_);
-    LOG(INFO) << "Loading " << num_user_codes_ << " user promo codes across " << partition_cities_.size() << " cities";
+    LOG(INFO) << "Loading " << num_user_codes_ << " user promo codes for each of the " << partition_cities_.size() << " cities";
     
     const uint64_t codes_per_city = num_user_codes_ / partition_cities_.size();
     const uint64_t users_per_city = num_users_ / partition_cities_.size();
@@ -234,7 +234,7 @@ class PartitionedMovrDataLoader {
           MakeInt64Scalar(user_id),
           MakeFixedTextScalar<64>(code),
           MakeInt64Scalar(timestamp),
-          MakeInt32Scalar(usage_count)
+          MakeInt64Scalar(usage_count)
         });
       }
     }
@@ -296,14 +296,12 @@ void LoadTables(const StorageAdapterPtr& storage_adapter, int cities, int num_re
     }
   }
 
-  //LOG(INFO) << "Loading data for cities: " << absl::StrJoin(partition_cities, ", ");
-
   // Calculate per-city record counts
   const int users_per_city = kDefaultUsers / cities;
   const int vehicles_per_city = kDefaultVehicles / cities;
   const int rides_per_city = kDefaultRides / cities;
   const int histories_per_city = kDefaultHistories / cities;
-  const int codes_per_city = kDefaultPromoCodes / cities;
+  const int codes = kDefaultPromoCodes;
   const int user_codes_per_city = kDefaultUserPromoCodes / cities;
 
   // Create data loader for this partition
@@ -314,7 +312,7 @@ void LoadTables(const StorageAdapterPtr& storage_adapter, int cities, int num_re
       vehicles_per_city,
       rides_per_city,
       histories_per_city,
-      codes_per_city,
+      codes,
       user_codes_per_city,
       num_regions,
       num_partitions,

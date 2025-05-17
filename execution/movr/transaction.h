@@ -85,7 +85,7 @@ class AddVehicleTxn : public MovrTransaction {
      AddVehicleTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
         const uint64_t vehicle_id, const std::string& city, const std::string& type,
         const uint64_t owner_id, const std::string& owner_city,
-        const int creation_time, const std::string& status,
+        const uint64_t creation_time, const std::string& status,
         const std::string& current_location, const std::string& ext);
      bool Read() final;
      void Compute() final;
@@ -101,7 +101,7 @@ class AddVehicleTxn : public MovrTransaction {
      FixedTextScalarPtr a_type_;
      Int64ScalarPtr a_owner_id_;
      FixedTextScalarPtr a_owner_city_;
-     Int32ScalarPtr a_creation_time_;
+     Int64ScalarPtr a_creation_time_;
      FixedTextScalarPtr a_status_;
      FixedTextScalarPtr a_current_location_;
      FixedTextScalarPtr a_ext_;
@@ -112,7 +112,7 @@ class StartRideTxn : public MovrTransaction {
      StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
         const uint64_t user_id, const std::string& user_city, const std::string& code, const uint64_t vehicle_id,
         const std::string& vehicle_city, const uint64_t ride_id, const std::string& city,
-        const std::string& start_address, const int start_time);
+        const std::string& start_address, const uint64_t start_time);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -132,7 +132,7 @@ class StartRideTxn : public MovrTransaction {
      Int64ScalarPtr a_ride_id_;
      FixedTextScalarPtr a_home_city_;
      FixedTextScalarPtr a_start_address_;
-     Int32ScalarPtr a_start_time_;
+     Int64ScalarPtr a_start_time_;
    
      // Read results 
      FixedTextScalarPtr code_result = MakeFixedTextScalar();
@@ -141,7 +141,7 @@ class StartRideTxn : public MovrTransaction {
 class UpdateLocationTxn : public MovrTransaction {
     public:
      UpdateLocationTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::string& city, const uint64_t ride_id, const int timestamp,
+        const std::string& city, const uint64_t ride_id, const uint64_t timestamp,
         const double lat, const double lon);
      bool Read() final;
      void Compute() final;
@@ -153,9 +153,9 @@ class UpdateLocationTxn : public MovrTransaction {
      // Arguments
      FixedTextScalarPtr a_city_;
      Int64ScalarPtr a_ride_id_;
-     Int32ScalarPtr a_timestamp_;
-     Int32ScalarPtr a_lat_;
-     Int32ScalarPtr a_lon_;
+     Int64ScalarPtr a_timestamp_;
+     Int64ScalarPtr a_lat_;
+     Int64ScalarPtr a_lon_;
    };
 
    class EndRideTxn : public MovrTransaction {
@@ -163,7 +163,7 @@ class UpdateLocationTxn : public MovrTransaction {
      EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
         const uint64_t ride_id, const std::string& city, const uint64_t vehicle_id,
         const std::string& vehicle_city, const std::string& end_address,
-        const int end_time, const double revenue);
+        const uint64_t end_time, const double revenue);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -178,8 +178,8 @@ class UpdateLocationTxn : public MovrTransaction {
      Int64ScalarPtr a_vehicle_id_;
      FixedTextScalarPtr a_vehicle_city_;
      FixedTextScalarPtr a_end_address_;
-     Int32ScalarPtr a_end_time_;
-     Int32ScalarPtr a_revenue_;
+     Int64ScalarPtr a_end_time_;
+     Int64ScalarPtr a_revenue_;
    };
 
 }  // namespace movr

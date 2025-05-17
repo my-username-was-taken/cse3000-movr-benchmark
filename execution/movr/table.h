@@ -343,7 +343,7 @@ SCHEMA(VehiclesSchema,
               FixedTextType<64>::Get(),    // CITY
               FixedTextType<64>::Get(),    // TYPE
               Int64Type::Get(),            // OWNER_ID
-              Int32Type::Get(),            // CREATION_TIME
+              Int64Type::Get(),            // CREATION_TIME
               FixedTextType<64>::Get(),    // STATUS
               FixedTextType<64>::Get(),   // CURRENT_LOCATION
               FixedTextType<64>::Get())); // EXTRAS (JSON as string)
@@ -370,9 +370,9 @@ SCHEMA(RidesSchema,
               Int64Type::Get(),            // VEHICLE_ID
               FixedTextType<64>::Get(),   // START_ADDRESS
               FixedTextType<64>::Get(),   // END_ADDRESS
-              Int32Type::Get(),            // START_TIME
-              Int32Type::Get(),            // END_TIME
-              Int32Type::Get()));          // REVENUE
+              Int64Type::Get(),            // START_TIME
+              Int64Type::Get(),            // END_TIME
+              Int64Type::Get()));          // REVENUE
 
 SCHEMA(PromoCodesSchema,
         TableId::PROMO_CODES,
@@ -386,8 +386,8 @@ SCHEMA(PromoCodesSchema,
               RULES),
         ARRAY(FixedTextType<64>::Get(),    // CODE
               FixedTextType<64>::Get(),   // DESCRIPTION
-              Int32Type::Get(),            // CREATION_TIME
-              Int32Type::Get(),            // EXPIRATION_TIME
+              Int64Type::Get(),            // CREATION_TIME
+              Int64Type::Get(),            // EXPIRATION_TIME
               FixedTextType<64>::Get())); // RULES (JSON as string)
 
 SCHEMA(UserPromoCodesSchema,
@@ -403,8 +403,8 @@ SCHEMA(UserPromoCodesSchema,
         ARRAY(FixedTextType<64>::Get(),    // CITY
               Int64Type::Get(),            // USER_ID
               FixedTextType<64>::Get(),    // CODE
-              Int32Type::Get(),            // TIMESTAMP
-              Int32Type::Get()));          // USAGE_COUNT
+              Int64Type::Get(),            // TIMESTAMP
+              Int64Type::Get()));          // USAGE_COUNT
 
 
 SCHEMA(VehicleLocationHistoriesSchema,
@@ -420,9 +420,9 @@ SCHEMA(VehicleLocationHistoriesSchema,
               BOUNDS),
         ARRAY(FixedTextType<64>::Get(),    // CITY
               Int64Type::Get(),            // RIDE_ID
-              Int32Type::Get(),            // TIMESTAMP
-              Int32Type::Get(),            // LAT
-              Int32Type::Get()));          // LONG
+              Int64Type::Get(),            // TIMESTAMP
+              Int64Type::Get(),            // LAT
+              Int64Type::Get()));          // LONG
 
 // clang-format on
 

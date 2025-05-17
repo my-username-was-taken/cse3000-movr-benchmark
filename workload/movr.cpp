@@ -289,6 +289,7 @@ void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile&
 
   movr::ViewVehiclesTxn view_vehicles_txn(txn_adapter, vehicle_ids, city);
   view_vehicles_txn.Read();
+  view_vehicles_txn.Write();
   txn_adapter->Finialize();
 
   auto* procedure = txn.mutable_code()->add_procedures();
@@ -302,21 +303,34 @@ void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile&
 // Write transaction: Insert a new user record.
 // This transaction is typically single-home, writing to the 'city' where the user signs up.
 void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   uint64_t local_id = ++user_signup_count; // Simple sequential ID
   uint64_t global_id = GenerateGlobalId(GetCityIndex(city), local_id);
+  std::string name = DataGenerator::GenerateName(rg_);
+  std::string address = DataGenerator::GenerateAddress(rg_);
+  std::string credit_card = DataGenerator::GenerateCreditCard(rg_);
+
+
+  movr::UserSignupTxn user_signup_txn(txn_adapter, global_id, city, name, address, credit_card);
+  user_signup_txn.Read();
+  user_signup_txn.Write();
+  txn_adapter->Finialize();
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("user_signup");
   procedure->add_args(std::to_string(global_id));
   procedure->add_args(city);
-  procedure->add_args(DataGenerator::GenerateName(rg_));
-  procedure->add_args(DataGenerator::GenerateAddress(rg_));
-  procedure->add_args(DataGenerator::GenerateCreditCard(rg_));
+  procedure->add_args(name);
+  procedure->add_args(address);
+  procedure->add_args(credit_card);
 }
 
 // Write transaction: Add a new vehicle owned by a user.
 // Can be multi-home if the owner (user) is in a different city than the vehicle's home city.
-void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
+  bool is_multi_home) {
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
+
   std::string owner_city = home_city;
   if (is_multi_home) {
       owner_city = SelectRemoteCity();
@@ -324,11 +338,19 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
 
   uint64_t vehicle_local_id = ++add_vehicle_count;
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(home_city), vehicle_local_id);
-  
+  std::string type = DataGenerator::GenerateRandomVehicleType(rg_);
   uint64_t owner_local_id = std::uniform_int_distribution<>(1, kMaxUsersPerCity)(rg_);
   uint64_t owner_id = GenerateGlobalId(GetCityIndex(owner_city), owner_local_id);
+  uint64_t creation_time = std::chrono::system_clock::now().time_since_epoch().count();
+  std::string status = DataGenerator::EnsureFixedLength<64>("available");
+  std::string current_location = DataGenerator::GenerateAddress(rg_);
+  std::string ext = DataGenerator::GenerateVehicleMetadata(rg_, type);
 
-  const std::string type = DataGenerator::GenerateRandomVehicleType(rg_);
+  movr::AddVehicleTxn add_vehicle_txn(txn_adapter, vehicle_id, home_city, type, owner_id, owner_city,
+    creation_time, status, current_location, ext);
+  add_vehicle_txn.Read();
+  add_vehicle_txn.Write();
+  txn_adapter->Finialize();
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("add_vehicle");
@@ -337,19 +359,24 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
   procedure->add_args(type);
   procedure->add_args(std::to_string(owner_id));
   procedure->add_args(owner_city);
-  procedure->add_args(std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
-  procedure->add_args("available");
-  procedure->add_args(DataGenerator::GenerateAddress(rg_));
-  procedure->add_args(DataGenerator::GenerateVehicleMetadata(rg_, type));
+  procedure->add_args(std::to_string(creation_time));
+  procedure->add_args(status);
+  procedure->add_args(current_location);
+  procedure->add_args(ext);
 }
 
 // Read/Write transaction: A user starts a ride on a vehicle.
 // Reads user info, vehicle status. Writes new ride record, updates vehicle status.
 // Can be multi-home if the user is in a different city than the vehicle.
-void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
+  bool is_multi_home) {
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   std::string user_city = home_city;
   std::string vehicle_city = home_city; // Link to actual vehicle city
-  //std::string code = DataGenerator::GeneratePromoCode(rg_);
+  std::string code = DataGenerator::GeneratePromoCode(rg_);
+  std::string start_address = DataGenerator::GenerateAddress(rg_);
+  uint64_t start_time = std::chrono::system_clock::now().time_since_epoch().count();
+
   if (is_multi_home) {
       // 50% chance vehicle is remote, 50% chance user is remote
       if (std::bernoulli_distribution(0.5)(rg_)) { 
@@ -368,46 +395,46 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(vehicle_city), vehicle_local_id);
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(home_city), ride_local_id);
 
-  // const std::string user_id = DataGenerator::GenerateContendedID(rg_, contention_factor_, 1000); // Link to actual existing user id
-  // const std::string vehicle_id = DataGenerator::GenerateContendedID(rg_, contention_factor_, 1000); // Link to actual existing vehicle id
-  
-  // const std::string ride_id = DataGenerator::GenerateUUID(rg_);
-  // const std::string start_address = DataGenerator::GenerateAddress(rg_);
-  // const std::string start_time = std::to_string(
-  //   std::chrono::system_clock::now().time_since_epoch().count());
+  movr::StartRideTxn start_ride_txn(txn_adapter, user_id, user_city, code, vehicle_id, vehicle_city,
+    ride_id, home_city, start_address, start_time);
+  start_ride_txn.Read();
+  start_ride_txn.Write();
+  txn_adapter->Finialize();
 
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("start_ride");
   procedure->add_args(std::to_string(user_id));
   procedure->add_args(user_city);
-  procedure->add_args(DataGenerator::GeneratePromoCode(rg_));
+  procedure->add_args(code);
   procedure->add_args(std::to_string(vehicle_id));
   procedure->add_args(vehicle_city);
   procedure->add_args(std::to_string(ride_id));
   procedure->add_args(home_city);
-  procedure->add_args(DataGenerator::GenerateAddress(rg_));
-  procedure->add_args(std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
+  procedure->add_args(start_address);
+  procedure->add_args(std::to_string(start_time));
 }
 
 // Write transaction: Append a location update to a ride's history.
 // Typically single-home, writing to the city where the ride is happening.
 void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   uint64_t ride_local_id = std::uniform_int_distribution<>(1, kMaxRidesPerCity)(rg_);
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(city), ride_local_id);
-
-  // const std::string ride_id = DataGenerator::GenerateUUID(rg_); // Link to an actual active ride
-  // const std::string timestamp = std::to_string(
-  //   std::chrono::system_clock::now().time_since_epoch().count());
-  
-  // const std::string lat = loc.first;
-  // const std::string lon = loc.second;
-
+  uint64_t timestamp = std::chrono::system_clock::now().time_since_epoch().count();
   const auto loc = DataGenerator::GenerateRandomLatLong(rg_);
+  uint64_t lat = stoll(loc.first);
+  uint64_t lon = stoll(loc.second);
+
+  movr::UpdateLocationTxn update_location_txn(txn_adapter, city, ride_id, timestamp, lat, lon);
+  update_location_txn.Read();
+  update_location_txn.Write();
+  txn_adapter->Finialize();
+
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("update_location");
   procedure->add_args(city);
   procedure->add_args(std::to_string(ride_id));
-  procedure->add_args(std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
+  procedure->add_args(std::to_string(timestamp));
   procedure->add_args(loc.first);
   procedure->add_args(loc.second);
 }
@@ -415,7 +442,9 @@ void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfil
 // Read/Write transaction: End a ride, update vehicle status, calculate revenue.
 // Reads ride info, vehicle info. Updates ride record, updates vehicle status.
 // Can be multi-home if the ride spanned cities or user/vehicle are in different cities.
-void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home) {
+void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
+  bool is_multi_home) {
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   std::string user_city = home_city;
   std::string vehicle_city = home_city;
 
@@ -433,15 +462,25 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(home_city), ride_local_id);
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(vehicle_city), vehicle_local_id);
 
+  std::string end_address = DataGenerator::GenerateAddress(rg_);
+  uint64_t end_time = std::chrono::system_clock::now().time_since_epoch().count();
+  std::string revenue = DataGenerator::GenerateRevenue(rg_);
+
+  movr::EndRideTxn end_ride_txn(txn_adapter, ride_id, home_city, vehicle_id, vehicle_city,
+    end_address, end_time, stoll(revenue));
+  end_ride_txn.Read();
+  end_ride_txn.Write();
+  txn_adapter->Finialize();
+
   auto* procedure = txn.mutable_code()->add_procedures();
   procedure->add_args("end_ride");
   procedure->add_args(std::to_string(ride_id));
   procedure->add_args(home_city);
   procedure->add_args(std::to_string(vehicle_id));
   procedure->add_args(vehicle_city);
-  procedure->add_args(DataGenerator::GenerateAddress(rg_));
-  procedure->add_args(std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
-  procedure->add_args(DataGenerator::GenerateRevenue(rg_));
+  procedure->add_args(end_address);
+  procedure->add_args(std::to_string(end_time));
+  procedure->add_args(revenue);
 }
 
 } // namespace slog
