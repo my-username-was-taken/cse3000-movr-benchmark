@@ -1,5 +1,6 @@
 #include "execution/movr/constants.h"
 #include "execution/movr/transaction.h"
+#include "execution/movr/data_generator.h"
 
 namespace slog {
 namespace movr {
@@ -32,7 +33,7 @@ bool EndRideTxn::Write() {
   bool ok = true;
 
   if (!vehicles_.Update({a_vehicle_id_, a_vehicle_city_}, {VehiclesSchema::Column::STATUS},
-    {MakeFixedTextScalar<16>("available")})) {
+    {MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("available"))})) {
     SetError("Cannot update vehicle status");
     ok = false;
   }

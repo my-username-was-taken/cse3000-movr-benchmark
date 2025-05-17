@@ -65,7 +65,7 @@ class PartitionedMovrDataLoader {
           MakeInt64Scalar(global_id),
           MakeFixedTextScalar<64>(city),
           MakeFixedTextScalar<64>(name),
-          MakeFixedTextScalar<128>(address),
+          MakeFixedTextScalar<64>(address),
           MakeFixedTextScalar<64>(credit_card)
         });
       }
@@ -112,9 +112,9 @@ class PartitionedMovrDataLoader {
           MakeFixedTextScalar<64>(type),
           MakeInt64Scalar(owner_id),
           MakeInt64Scalar(creation_time),
-          MakeFixedTextScalar<16>(status),
-          MakeFixedTextScalar<128>(current_location),
-          MakeFixedTextScalar<512>(ext)
+          MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>(status)),
+          MakeFixedTextScalar<64>(current_location),
+          MakeFixedTextScalar<64>(ext)
         });
       }
     }
@@ -150,8 +150,8 @@ class PartitionedMovrDataLoader {
           MakeFixedTextScalar<64>(city), // vehicle_city same as home_city
           MakeInt64Scalar(rider_id),
           MakeInt64Scalar(vehicle_id),
-          MakeFixedTextScalar<128>(start_address),
-          MakeFixedTextScalar<128>(end_address),
+          MakeFixedTextScalar<64>(start_address),
+          MakeFixedTextScalar<64>(end_address),
           MakeInt64Scalar(start_time),
           MakeInt64Scalar(end_time),
           MakeInt32Scalar(revenue)
@@ -196,17 +196,17 @@ class PartitionedMovrDataLoader {
 
     for (int i = 1; i <= num_codes_; i++) {
       auto code = DataGenerator::GeneratePromoCode(rg_);
-      auto description = "This is a description";
+      auto description = DataGenerator::GenerateDescription(rg_);
       auto creation_time = std::chrono::system_clock::now().time_since_epoch().count();
       std::uniform_int_distribution<> duration(100, 1000);
       auto expiration_time = creation_time + duration(rg_);
-      auto rules = "This is a list of rules";
+      auto rules = DataGenerator::GenerateRules(rg_);
       codes.Insert({
-        MakeFixedTextScalar<32>(code),
-        MakeFixedTextScalar<128>(description),
+        MakeFixedTextScalar<64>(code),
+        MakeFixedTextScalar<64>(description),
         MakeInt32Scalar(creation_time),
         MakeInt32Scalar(expiration_time),
-        MakeFixedTextScalar<512>(rules)
+        MakeFixedTextScalar<64>(rules)
         });
     }
   }
@@ -232,7 +232,7 @@ class PartitionedMovrDataLoader {
         user_codes.Insert({
           MakeFixedTextScalar<64>(city),
           MakeInt64Scalar(user_id),
-          MakeFixedTextScalar<32>(code),
+          MakeFixedTextScalar<64>(code),
           MakeInt64Scalar(timestamp),
           MakeInt32Scalar(usage_count)
         });

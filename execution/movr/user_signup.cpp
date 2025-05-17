@@ -11,8 +11,8 @@ UserSignupTxn::UserSignupTxn(const std::shared_ptr<StorageAdapter>& storage_adap
   a_user_id_ = MakeInt64Scalar(user_id);
   a_city_ = MakeFixedTextScalar<64>(city);
   a_name_ = MakeFixedTextScalar<64>(name);
-  a_address_ = MakeFixedTextScalar<128>(address);
-  a_credit_card_ = MakeFixedTextScalar<32>(credit_card);
+  a_address_ = MakeFixedTextScalar<64>(address);
+  a_credit_card_ = MakeFixedTextScalar<64>(credit_card);
 }
 
 bool UserSignupTxn::Read() {

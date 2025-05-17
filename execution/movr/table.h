@@ -323,8 +323,8 @@ SCHEMA(UsersSchema,
        ARRAY(Int64Type::Get(),           // ID
              FixedTextType<64>::Get(),   // CITY
              FixedTextType<64>::Get(),   // NAME
-             FixedTextType<128>::Get(),  // ADDRESS
-             FixedTextType<32>::Get())); // CREDIT_CARD
+             FixedTextType<64>::Get(),  // ADDRESS
+             FixedTextType<64>::Get())); // CREDIT_CARD
 
 SCHEMA(VehiclesSchema,
         TableId::VEHICLES,
@@ -341,12 +341,12 @@ SCHEMA(VehiclesSchema,
               EXTRAS),
         ARRAY(Int64Type::Get(),            // ID
               FixedTextType<64>::Get(),    // CITY
-              FixedTextType<16>::Get(),    // TYPE
+              FixedTextType<64>::Get(),    // TYPE
               Int64Type::Get(),            // OWNER_ID
               Int32Type::Get(),            // CREATION_TIME
-              FixedTextType<16>::Get(),    // STATUS
-              FixedTextType<128>::Get(),   // CURRENT_LOCATION
-              FixedTextType<512>::Get())); // EXTRAS (JSON as string)
+              FixedTextType<64>::Get(),    // STATUS
+              FixedTextType<64>::Get(),   // CURRENT_LOCATION
+              FixedTextType<64>::Get())); // EXTRAS (JSON as string)
 
 SCHEMA(RidesSchema,
         TableId::RIDES,
@@ -368,8 +368,8 @@ SCHEMA(RidesSchema,
               FixedTextType<64>::Get(),    // VEHICLE_CITY
               Int64Type::Get(),            // RIDER_ID
               Int64Type::Get(),            // VEHICLE_ID
-              FixedTextType<128>::Get(),   // START_ADDRESS
-              FixedTextType<128>::Get(),   // END_ADDRESS
+              FixedTextType<64>::Get(),   // START_ADDRESS
+              FixedTextType<64>::Get(),   // END_ADDRESS
               Int32Type::Get(),            // START_TIME
               Int32Type::Get(),            // END_TIME
               Int32Type::Get()));          // REVENUE
@@ -384,11 +384,11 @@ SCHEMA(PromoCodesSchema,
               CREATION_TIME,
               EXPIRATION_TIME,
               RULES),
-        ARRAY(FixedTextType<32>::Get(),    // CODE
-              FixedTextType<128>::Get(),   // DESCRIPTION
+        ARRAY(FixedTextType<64>::Get(),    // CODE
+              FixedTextType<64>::Get(),   // DESCRIPTION
               Int32Type::Get(),            // CREATION_TIME
               Int32Type::Get(),            // EXPIRATION_TIME
-              FixedTextType<512>::Get())); // RULES (JSON as string)
+              FixedTextType<64>::Get())); // RULES (JSON as string)
 
 SCHEMA(UserPromoCodesSchema,
         TableId::USER_PROMO_CODES,
@@ -402,7 +402,7 @@ SCHEMA(UserPromoCodesSchema,
               USAGE_COUNT),
         ARRAY(FixedTextType<64>::Get(),    // CITY
               Int64Type::Get(),            // USER_ID
-              FixedTextType<32>::Get(),    // CODE
+              FixedTextType<64>::Get(),    // CODE
               Int32Type::Get(),            // TIMESTAMP
               Int32Type::Get()));          // USAGE_COUNT
 

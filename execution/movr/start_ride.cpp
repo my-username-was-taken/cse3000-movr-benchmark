@@ -1,5 +1,6 @@
 #include "execution/movr/constants.h"
 #include "execution/movr/transaction.h"
+#include "execution/movr/data_generator.h"
 
 namespace slog {
 namespace movr {
@@ -14,7 +15,7 @@ StartRideTxn::StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapte
       user_promo_codes_(storage_adapter) {
   a_user_id_ = MakeInt64Scalar(user_id);
   a_user_city_ = MakeFixedTextScalar<64>(user_city);
-  a_code_ = MakeFixedTextScalar<32>(code);
+  a_code_ = MakeFixedTextScalar<64>(code);
   a_vehicle_id_ = MakeInt64Scalar(vehicle_id);
   a_vehicle_city_ = MakeFixedTextScalar<64>(vehicle_city);
   a_ride_id_ = MakeInt64Scalar(ride_id);
@@ -43,13 +44,13 @@ bool StartRideTxn::Write() {
   bool ok = true;
 
   if (!vehicles_.Update({a_vehicle_id_, a_vehicle_city_}, {VehiclesSchema::Column::STATUS},
-    {MakeFixedTextScalar<16>("in_use")})) {
+    {MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("in_use"))})) {
     SetError("Cannot update vehicle status");
     ok = false;
   }
   
   if (!rides_.Insert({a_ride_id_, a_home_city_, a_vehicle_city_, a_user_id_, a_vehicle_id_,
-    a_start_address_, MakeFixedTextScalar<64>(""), a_start_time_, nullptr, MakeInt32Scalar(0.0)})) {
+    a_start_address_, MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("")), a_start_time_, NULL, MakeInt32Scalar(0.0)})) {
     SetError("Cannot insert into rides");
     ok = false;
   }

@@ -15,11 +15,11 @@ AddVehicleTxn::AddVehicleTxn(const std::shared_ptr<StorageAdapter>& storage_adap
   a_home_city_ = MakeFixedTextScalar<64>(city);
   a_type_ = MakeFixedTextScalar<64>(type);
   a_owner_id_ = MakeInt64Scalar(owner_id);
-  a_owner_city_ = MakeFixedTextScalar<32>(owner_city);
+  a_owner_city_ = MakeFixedTextScalar<64>(owner_city);
   a_creation_time_ = MakeInt32Scalar(creation_time);
-  a_status_ = MakeFixedTextScalar<16>(status);
-  a_current_location_ = MakeFixedTextScalar<128>(current_location);
-  a_ext_ = MakeFixedTextScalar<512>(ext);
+  a_status_ = MakeFixedTextScalar<64>(status);
+  a_current_location_ = MakeFixedTextScalar<64>(current_location);
+  a_ext_ = MakeFixedTextScalar<64>(ext);
 }
 
 bool AddVehicleTxn::Read() {

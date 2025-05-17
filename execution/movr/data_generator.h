@@ -24,7 +24,23 @@ public:
     return items.back().first; // fallback in case of rounding errors
     }
 
-    static std::string GenerateUUID(std::mt19937& rng);
+    template<size_t N>
+    static std::string EnsureFixedLength(const std::string& input) {
+        if (input.size() == N) {
+            return input;
+        }
+        
+        if (input.size() > N) {
+            // Truncate the string
+            return input.substr(0, N);
+        }
+        
+        // Pad the string with spaces
+        std::string padded = input;
+        padded.resize(N, ' ');
+        return padded;
+    }
+
     static std::string GenerateRevenue(std::mt19937& rng);
     static std::string GenerateRandomVehicleType(std::mt19937& rng);
     static std::string GetVehicleAvailability(std::mt19937& rng);
@@ -36,6 +52,8 @@ public:
     static std::string GenerateAddress(std::mt19937& rng);
     static std::string GenerateCreditCard(std::mt19937& rng);
     static std::string GeneratePromoCode(std::mt19937& rng);
+    static std::string GenerateDescription(std::mt19937& rng);
+    static std::string GenerateRules(std::mt19937& rng);
     static std::string GenerateContendedID(std::mt19937& rng, double contention_factor, int max_id);
 };
 
