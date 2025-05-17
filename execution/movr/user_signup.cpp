@@ -5,10 +5,10 @@ namespace slog {
 namespace movr {
 
 UserSignupTxn::UserSignupTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-    const int user_id, const std::string& city, const std::string& name,
+    const uint64_t user_id, const std::string& city, const std::string& name,
     const std::string& address, const std::string& credit_card)
     : users_(storage_adapter) {
-  a_user_id_ = MakeInt32Scalar(user_id);
+  a_user_id_ = MakeInt64Scalar(user_id);
   a_city_ = MakeFixedTextScalar<64>(city);
   a_name_ = MakeFixedTextScalar<64>(name);
   a_address_ = MakeFixedTextScalar<128>(address);

@@ -5,16 +5,16 @@ namespace slog {
 namespace movr {
 
 AddVehicleTxn::AddVehicleTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-  const int vehicle_id, const std::string& city, const std::string& type,
-  const int owner_id, const std::string& owner_city,
+  const uint64_t vehicle_id, const std::string& city, const std::string& type,
+  const uint64_t owner_id, const std::string& owner_city,
   const int creation_time, const std::string& status,
   const std::string& current_location, const std::string& ext)
     : vehicles_ (storage_adapter),
       users_(storage_adapter) {
-  a_vehicle_id_ = MakeInt32Scalar(vehicle_id);
+  a_vehicle_id_ = MakeInt64Scalar(vehicle_id);
   a_home_city_ = MakeFixedTextScalar<64>(city);
   a_type_ = MakeFixedTextScalar<64>(type);
-  a_owner_id_ = MakeInt32Scalar(owner_id);
+  a_owner_id_ = MakeInt64Scalar(owner_id);
   a_owner_city_ = MakeFixedTextScalar<32>(owner_city);
   a_creation_time_ = MakeInt32Scalar(creation_time);
   a_status_ = MakeFixedTextScalar<16>(status);

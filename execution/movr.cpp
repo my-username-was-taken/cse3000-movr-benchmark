@@ -32,15 +32,16 @@ void MovrExecution::Execute(Transaction& txn) {
       return;
     }
     std::string city = args[1];
-    std::vector<int> vehicle_ids;
+    std::vector<uint64_t> vehicle_ids;
     for (size_t i = 2; i < args.size(); i++) {
-      vehicle_ids.push_back(stoi(args[i]));
+      vehicle_ids.push_back(stoll(args[i]));
     }
 
     movr::ViewVehiclesTxn view_vehicles(txn_adapter, vehicle_ids, city);
     if (!view_vehicles.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("ViewVehicles Txn - " + view_vehicles.error());
+      LOG(ERROR) << "ViewVehicles failed: " << view_vehicles.error();
       return;
     }
   } else if (txn_name == "user_signup") {
@@ -49,7 +50,7 @@ void MovrExecution::Execute(Transaction& txn) {
       txn.set_abort_reason("UserSignup Txn - Invalid number of arguments");
       return;
     }
-    int user_id = stoi(args[1]);
+    int user_id = stoll(args[1]);
     std::string city = args[2];
     std::string name = args[3];
     std::string address = args[4];
@@ -59,6 +60,7 @@ void MovrExecution::Execute(Transaction& txn) {
     if (!user_signup.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("UserSignup Txn - " + user_signup.error());
+      LOG(ERROR) << "UserSignup failed: " << user_signup.error();
       return;
     }
   } else if (txn_name == "add_vehicle") {
@@ -67,10 +69,10 @@ void MovrExecution::Execute(Transaction& txn) {
       txn.set_abort_reason("AddVehicle Txn - Invalid number of arguments");
       return;
     }
-    int vehicle_id = stoi(args[1]);
+    int vehicle_id = stoll(args[1]);
     std::string home_city = args[2];
     std::string type = args[3];
-    int owner_id = stoi(args[4]);
+    int owner_id = stoll(args[4]);
     std::string owner_city = args[5];
     int creation_time = stoi(args[6]);
     std::string status = args[7];
@@ -82,6 +84,7 @@ void MovrExecution::Execute(Transaction& txn) {
     if (!add_vehicle.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("AddVehicle Txn - " + add_vehicle.error());
+      LOG(ERROR) << "AddVehicle failed: " << add_vehicle.error();
       return;
     }
   } else if (txn_name == "start_ride") {
@@ -90,12 +93,12 @@ void MovrExecution::Execute(Transaction& txn) {
       txn.set_abort_reason("StartRide Txn - Invalid number of arguments");
       return;
     }
-    int user_id = stoi(args[1]);
+    int user_id = stoll(args[1]);
     std::string user_city = args[2];
     std::string code = args[3];
-    int vehicle_id = stoi(args[4]);
+    int vehicle_id = stoll(args[4]);
     std::string vehicle_city = args[5];
-    int ride_id = stoi(args[6]);
+    int ride_id = stoll(args[6]);
     std::string home_city = args[7];
     std::string start_address = args[8];
     int start_time = stoi(args[9]);
@@ -105,6 +108,7 @@ void MovrExecution::Execute(Transaction& txn) {
     if (!start_ride.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("StartRide Txn - " + start_ride.error());
+      LOG(ERROR) << "StartRide failed: " << start_ride.error();
       return;
     }
   } else if (txn_name == "update_location") {
@@ -114,7 +118,7 @@ void MovrExecution::Execute(Transaction& txn) {
       return;
     }
     std::string city = args[1];
-    int ride_id = stoi(args[2]);
+    int ride_id = stoll(args[2]);
     int timestamp = stoi(args[3]);
     double lat = stod(args[4]);
     double lon = stod(args[5]);
@@ -123,6 +127,7 @@ void MovrExecution::Execute(Transaction& txn) {
     if (!update_location.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("StockLevel Txn - " + update_location.error());
+      LOG(ERROR) << "UpdateLocation failed: " << update_location.error();
       return;
     }
   } else if (txn_name == "end_ride") {
@@ -131,9 +136,9 @@ void MovrExecution::Execute(Transaction& txn) {
       txn.set_abort_reason("EndRide Txn - Invalid number of arguments");
       return;
     }
-    int ride_id = stoi(args[1]);
+    int ride_id = stoll(args[1]);
     std::string home_city = args[2];
-    int vehicle_id = stoi(args[3]);
+    int vehicle_id = stoll(args[3]);
     std::string vehicle_city = args[4];
     std::string user_city = args[5];
     std::string end_address = args[6];
@@ -145,6 +150,7 @@ void MovrExecution::Execute(Transaction& txn) {
     if (!end_ride.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("EndRide Txn - " + end_ride.error());
+      LOG(ERROR) << "EndRide failed: " << end_ride.error();
       return;
     }
   } else {

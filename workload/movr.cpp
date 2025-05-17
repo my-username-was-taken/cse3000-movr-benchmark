@@ -208,10 +208,7 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   pro.is_multi_home = false;
 
   // Determine if this transaction should be multi-home
-  bool is_multi_home = false;
-  if (!sh_only_ && multi_home_dist_(rg_)) {
-      is_multi_home = multi_home_dist_(rg_);
-  }
+  bool is_multi_home = !sh_only_ && multi_home_dist_(rg_);
   pro.is_multi_home = is_multi_home;
   if (is_multi_home) {
       multi_home_count++;

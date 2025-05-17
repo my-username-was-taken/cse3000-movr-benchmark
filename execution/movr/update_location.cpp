@@ -5,11 +5,11 @@ namespace slog {
 namespace movr {
 
 UpdateLocationTxn::UpdateLocationTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-  const std::string& city, const int ride_id, const int timestamp,
+  const std::string& city, const uint64_t ride_id, const int timestamp,
   const double lat, const double lon)
     : location_histories_ (storage_adapter) {
   a_city_ = MakeFixedTextScalar<64>(city);
-  a_ride_id_ = MakeInt32Scalar(ride_id);
+  a_ride_id_ = MakeInt64Scalar(ride_id);
   a_timestamp_ = MakeInt32Scalar(timestamp);
   a_lat_ = MakeInt32Scalar(lat);
   a_lon_ = MakeInt32Scalar(lon);

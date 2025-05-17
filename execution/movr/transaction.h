@@ -41,7 +41,7 @@ class MovrTransaction {
 class ViewVehiclesTxn : public MovrTransaction {
     public:
      ViewVehiclesTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::vector<int> ids, const std::string city);
+        const std::vector<uint64_t> ids, const std::string city);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -50,12 +50,12 @@ class ViewVehiclesTxn : public MovrTransaction {
      Table<VehiclesSchema> vehicles_;
    
      // Arguments
-     std::vector<Int32ScalarPtr> a_ids_;
+     std::vector<Int64ScalarPtr> a_ids_;
      FixedTextScalarPtr a_city_;
      
    
      // Read results
-     std::vector<Int32ScalarPtr> vehicle_id_results;
+     std::vector<Int64ScalarPtr> vehicle_id_results;
      std::vector<FixedTextScalarPtr> city_results;
      std::vector<FixedTextScalarPtr> status_results;
 };
@@ -63,7 +63,7 @@ class ViewVehiclesTxn : public MovrTransaction {
 class UserSignupTxn : public MovrTransaction {
     public:
      UserSignupTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const int user_id, const std::string& city, const std::string& name,
+        const uint64_t user_id, const std::string& city, const std::string& name,
         const std::string& address, const std::string& credit_card);
      bool Read() final;
      void Compute() final;
@@ -73,7 +73,7 @@ class UserSignupTxn : public MovrTransaction {
      Table<UsersSchema> users_;
    
      // Arguments
-     Int32ScalarPtr a_user_id_;
+     Int64ScalarPtr a_user_id_;
      FixedTextScalarPtr a_city_;
      FixedTextScalarPtr a_name_;
      FixedTextScalarPtr a_address_;
@@ -83,8 +83,8 @@ class UserSignupTxn : public MovrTransaction {
 class AddVehicleTxn : public MovrTransaction {
     public:
      AddVehicleTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const int vehicle_id, const std::string& city, const std::string& type,
-        const int owner_id, const std::string& owner_city,
+        const uint64_t vehicle_id, const std::string& city, const std::string& type,
+        const uint64_t owner_id, const std::string& owner_city,
         const int creation_time, const std::string& status,
         const std::string& current_location, const std::string& ext);
      bool Read() final;
@@ -96,10 +96,10 @@ class AddVehicleTxn : public MovrTransaction {
      Table<UsersSchema> users_;
    
      // Arguments
-     Int32ScalarPtr a_vehicle_id_;
+     Int64ScalarPtr a_vehicle_id_;
      FixedTextScalarPtr a_home_city_;
      FixedTextScalarPtr a_type_;
-     Int32ScalarPtr a_owner_id_;
+     Int64ScalarPtr a_owner_id_;
      FixedTextScalarPtr a_owner_city_;
      Int32ScalarPtr a_creation_time_;
      FixedTextScalarPtr a_status_;
@@ -110,8 +110,8 @@ class AddVehicleTxn : public MovrTransaction {
 class StartRideTxn : public MovrTransaction {
     public:
      StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const int user_id, const std::string& user_city, const std::string& code, const int vehicle_id,
-        const std::string& vehicle_city, const int ride_id, const std::string& city,
+        const uint64_t user_id, const std::string& user_city, const std::string& code, const uint64_t vehicle_id,
+        const std::string& vehicle_city, const uint64_t ride_id, const std::string& city,
         const std::string& start_address, const int start_time);
      bool Read() final;
      void Compute() final;
@@ -124,12 +124,12 @@ class StartRideTxn : public MovrTransaction {
      Table<UserPromoCodesSchema> user_promo_codes_;
    
      // Arguments
-     Int32ScalarPtr a_user_id_;
+     Int64ScalarPtr a_user_id_;
      FixedTextScalarPtr a_user_city_;
      FixedTextScalarPtr a_code_;
-     Int32ScalarPtr a_vehicle_id_;
+     Int64ScalarPtr a_vehicle_id_;
      FixedTextScalarPtr a_vehicle_city_;
-     Int32ScalarPtr a_ride_id_;
+     Int64ScalarPtr a_ride_id_;
      FixedTextScalarPtr a_home_city_;
      FixedTextScalarPtr a_start_address_;
      Int32ScalarPtr a_start_time_;
@@ -141,7 +141,7 @@ class StartRideTxn : public MovrTransaction {
 class UpdateLocationTxn : public MovrTransaction {
     public:
      UpdateLocationTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const std::string& city, const int ride_id, const int timestamp,
+        const std::string& city, const uint64_t ride_id, const int timestamp,
         const double lat, const double lon);
      bool Read() final;
      void Compute() final;
@@ -152,7 +152,7 @@ class UpdateLocationTxn : public MovrTransaction {
    
      // Arguments
      FixedTextScalarPtr a_city_;
-     Int32ScalarPtr a_ride_id_;
+     Int64ScalarPtr a_ride_id_;
      Int32ScalarPtr a_timestamp_;
      Int32ScalarPtr a_lat_;
      Int32ScalarPtr a_lon_;
@@ -161,7 +161,7 @@ class UpdateLocationTxn : public MovrTransaction {
    class EndRideTxn : public MovrTransaction {
     public:
      EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-        const int ride_id, const std::string& city, const int vehicle_id,
+        const uint64_t ride_id, const std::string& city, const uint64_t vehicle_id,
         const std::string& vehicle_city, const std::string& user_city,
         const std::string& end_address, const int end_time, const double revenue);
      bool Read() final;
@@ -173,9 +173,9 @@ class UpdateLocationTxn : public MovrTransaction {
      Table<RidesSchema> rides_;
    
      // Arguments
-     Int32ScalarPtr a_ride_id_;
+     Int64ScalarPtr a_ride_id_;
      FixedTextScalarPtr a_home_city_;
-     Int32ScalarPtr a_vehicle_id_;
+     Int64ScalarPtr a_vehicle_id_;
      FixedTextScalarPtr a_vehicle_city_;
      FixedTextScalarPtr a_user_city_;
      FixedTextScalarPtr a_end_address_;

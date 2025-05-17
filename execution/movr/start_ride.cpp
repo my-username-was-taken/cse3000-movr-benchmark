@@ -5,19 +5,19 @@ namespace slog {
 namespace movr {
 
 StartRideTxn::StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
-  const int user_id, const std::string& user_city, const std::string& code, const int vehicle_id,
-  const std::string& vehicle_city, const int ride_id, const std::string& city,
+  const uint64_t user_id, const std::string& user_city, const std::string& code, const uint64_t vehicle_id,
+  const std::string& vehicle_city, const uint64_t ride_id, const std::string& city,
   const std::string& start_address, const int start_time)
     : vehicles_ (storage_adapter),
       rides_ (storage_adapter),
       users_ (storage_adapter),
       user_promo_codes_(storage_adapter) {
-  a_user_id_ = MakeInt32Scalar(user_id);
+  a_user_id_ = MakeInt64Scalar(user_id);
   a_user_city_ = MakeFixedTextScalar<64>(user_city);
   a_code_ = MakeFixedTextScalar<32>(code);
-  a_vehicle_id_ = MakeInt32Scalar(vehicle_id);
+  a_vehicle_id_ = MakeInt64Scalar(vehicle_id);
   a_vehicle_city_ = MakeFixedTextScalar<64>(vehicle_city);
-  a_ride_id_ = MakeInt32Scalar(ride_id);
+  a_ride_id_ = MakeInt64Scalar(ride_id);
   a_home_city_ = MakeFixedTextScalar<64>(city);
   a_start_address_ = MakeFixedTextScalar<64>(start_address);
   a_start_time_ = MakeInt32Scalar(start_time);
