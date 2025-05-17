@@ -85,7 +85,7 @@ vector<string> GetPartitionCities(int partition, const ConfigurationPtr& config)
   int num_partitions = config->num_partitions();
   for (int i = 0; i < config->proto_config().movr_partitioning().cities(); i++) {
     if (i % num_partitions == partition) {
-      cities.push_back("city_" + std::to_string(i));
+      cities.push_back(DataGenerator::EnsureFixedLength<64>("city_" + std::to_string(i)));
     }
   }
   return cities;
@@ -197,7 +197,8 @@ std::string MovrWorkload::SelectRemoteCity() {
   }
   
   int selected_region = zipf_sample(rg_, zipf_coef_, remote_regions, 1)[0];
-  return "city_" + std::to_string(selected_region % config_->proto_config().movr_partitioning().cities());
+  std::string result = "city_" + std::to_string(selected_region % config_->proto_config().movr_partitioning().cities());
+  return DataGenerator::EnsureFixedLength<64>(result);
 }
 
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
@@ -275,15 +276,26 @@ void MovrWorkload::LogStatistics() {
 // Simple read transaction: Find vehicles near a location in the specified city.
 // This transaction is typically single-home, focused on the 'city'.
 void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
-  auto* procedure = txn.mutable_code()->add_procedures();
-  procedure->add_args("view_vehicles");
-  procedure->add_args(city);
-
+  auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   std::uniform_int_distribution<uint64_t> vehicle_dist(1, kMaxVehiclesPerCity);
+  std::vector<uint64_t> vehicle_ids;
+  vehicle_ids.reserve(movr::kVehicleViewLimit);
+
   for (int i = 0; i < movr::kVehicleViewLimit; i++) {
     uint64_t local_id = vehicle_dist(rg_);
     uint64_t global_id = GenerateGlobalId(GetCityIndex(city), local_id);
-    procedure->add_args(std::to_string(global_id));
+    vehicle_ids.push_back(global_id);
+  }
+
+  movr::ViewVehiclesTxn view_vehicles_txn(txn_adapter, vehicle_ids, city);
+  view_vehicles_txn.Read();
+  txn_adapter->Finialize();
+
+  auto* procedure = txn.mutable_code()->add_procedures();
+  procedure->add_args("view_vehicles");
+  procedure->add_args(city);
+  for (uint64_t id : vehicle_ids) {
+    procedure->add_args(std::to_string(id));
   }
 }
 
@@ -419,7 +431,6 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
   uint64_t vehicle_local_id = std::uniform_int_distribution<>(1, kMaxVehiclesPerCity)(rg_);
   
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(home_city), ride_local_id);
-  uint64_t user_id = GenerateGlobalId(GetCityIndex(user_city), user_local_id);
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(vehicle_city), vehicle_local_id);
 
   auto* procedure = txn.mutable_code()->add_procedures();
@@ -428,8 +439,6 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
   procedure->add_args(home_city);
   procedure->add_args(std::to_string(vehicle_id));
   procedure->add_args(vehicle_city);
-  // procedure->add_args(std::to_string(user_id)); // ???
-  procedure->add_args(user_city);
   procedure->add_args(DataGenerator::GenerateAddress(rg_));
   procedure->add_args(std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
   procedure->add_args(DataGenerator::GenerateRevenue(rg_));

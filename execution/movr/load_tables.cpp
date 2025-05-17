@@ -292,7 +292,7 @@ void LoadTables(const StorageAdapterPtr& storage_adapter, int cities, int num_re
   std::vector<std::string> partition_cities;
   for (int i = 0; i < cities; i++) {
     if (i % num_partitions == partition) {
-      partition_cities.push_back("city_" + std::to_string(i));
+      partition_cities.push_back(DataGenerator::EnsureFixedLength<64>("city_" + std::to_string(i)));
     }
   }
 

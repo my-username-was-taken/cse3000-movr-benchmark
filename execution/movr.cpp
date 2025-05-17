@@ -140,13 +140,12 @@ void MovrExecution::Execute(Transaction& txn) {
     std::string home_city = args[2];
     int vehicle_id = stoll(args[3]);
     std::string vehicle_city = args[4];
-    std::string user_city = args[5];
-    std::string end_address = args[6];
-    int end_time = stoi(args[7]);
-    double revenue = stod(args[8]);
+    std::string end_address = args[5];
+    int end_time = stoi(args[6]);
+    double revenue = stod(args[7]);
 
     movr::EndRideTxn end_ride(txn_adapter, ride_id, home_city, vehicle_id,
-      vehicle_city, user_city, end_address, end_time, revenue);
+      vehicle_city, end_address, end_time, revenue);
     if (!end_ride.Execute()) {
       txn.set_status(TransactionStatus::ABORTED);
       txn.set_abort_reason("EndRide Txn - " + end_ride.error());
