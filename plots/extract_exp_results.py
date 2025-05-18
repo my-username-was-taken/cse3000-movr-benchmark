@@ -47,14 +47,21 @@ METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'co
 MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per current exp setup
 
 # Constants for the hourly cost of deploying all the servers on m4.2xlarge VMs (each region has 4 VMs). Price as of 28.3.25
-#              euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
-vm_cost = 4 * (0.444+0.464+0.468+0.400+0.400+0.400+0.516+0.492)
-exp_duration = None
-# TODO: Extract the duration from the log file and adjust the vm_cost appropriately. (Or extend the data transfer cost to 1 hour [might be even better])
-
+servers_per_region = 4
+#                        euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
+aws_regional_vm_costs = [0.444,0.464,0.468,0.400,0.400,0.400,0.516,0.492]
+vm_cost = servers_per_region * sum(aws_regional_vm_costs)
 
 # The cost of transferring 1GB of data out from the source region (the row). Price as of 28.3.25
-if env == 'local' or env == 'st':
+if env == 'local':
+    data_transfer_cost_matrix = [ # In the single computer setup, there is no cross-regional data transfer, so no cost either.
+        # Possibly the whole cost part of the script could just be removed
+        [0,0],
+        [0,0]
+    ]
+    st_regions = ["us-west-1", "us-west-2"]
+    data_transfer_cost_df = pd.DataFrame(data_transfer_cost_matrix, columns=st_regions, index=st_regions)
+elif env == 'st':
     data_transfer_cost_matrix = [ # Here we just pretend that we have data transfer costs and make them uniform for all source, destination pairs
         [0,0.02], # 131.180.125.57
         [0.02,0]  # 131.180.125.40
@@ -153,6 +160,14 @@ for system in system_dirs:
                 with open(join(x_val, 'raw_logs', file), "r", encoding="utf-8") as f:
                     log_files[system.split('/')[-1]][x_val.split('/')[-1]]['ips_file'] = json.loads(f.read())
         server_ips = get_server_ips_from_conf(log_files[system.split('/')[-1]][x_val.split('/')[-1]]['conf_file'])
+        # For non-AWS environments, adjust the (fixed) VM cost based on server count
+        # Assume an ST machine has the cost of an average AWS VM
+        if env == 'st':
+            avg_vm_cost = (vm_cost / servers_per_region) / len(aws_regional_vm_costs)
+            vm_cost = len(server_ips) * avg_vm_cost
+        # For single computer experiments, just count use the average cost of a single AWS VM
+        elif env == 'local':
+            vm_cost = (vm_cost / servers_per_region) / len(aws_regional_vm_costs)
         # Load all the network traffic data
         log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'] = {}
         for ip in server_ips:
@@ -240,7 +255,6 @@ for system in system_dirs:
 
 # Get the byte transfers
 # Here we will need to consider the duration of the experiemnt
-# TODO: Figure out how to make an extrapolation that is an objective estimate (because of start & end anomalies)
 byte_transfers = {}
 total_costs = {}
 for system in system_dirs:
@@ -311,7 +325,7 @@ for system in system_dirs:
                 for j in range(len(list(regions_used))):
                     total_bytes_transfered += bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]]
                     total_data_transfer_cost += data_transfer_cost_matrix[i][j] * bytes_transfered_df.loc[list(regions_used)[i]][list(regions_used)[j]] / 1_000_000_000
-        total_hourly_cost = (duration/3600 * vm_cost) + total_data_transfer_cost
+        total_hourly_cost = vm_cost + (total_data_transfer_cost/duration) * 3600
         byte_transfers[system.split('/')[-1]][x_val.split('/')[-1]] = total_bytes_transfered
         total_costs[system.split('/')[-1]][x_val.split('/')[-1]] = total_hourly_cost
 

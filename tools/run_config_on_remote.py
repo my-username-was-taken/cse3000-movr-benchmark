@@ -11,13 +11,15 @@ VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 
 VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
-parser.add_argument('-s',  '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
+parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
 parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
+parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
+parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
 
 args = parser.parse_args()
 scenario = args.scenario
@@ -27,6 +29,8 @@ duration = args.duration
 dry_run = args.dry_run
 user = args.user
 machine = args.machine
+benchmark_container = args.benchmark_container
+server_container = args.server_container
 
 print(f"Running scenario: '{scenario}' and workload: '{workload}'")
 
@@ -54,7 +58,25 @@ if workload == 'tpcc':
     if scenario == 'baseline':
         benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the baseline scenario
         clients = 3000
-        x_vals = [0, 20, 40, 60, 80, 100]
+        x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10]
+    if scenario == 'skew':
+        benchmark_params = "\"mix=44:44:4:4:4,skew={}\"" # For the baseline scenario
+        clients = 3000
+        x_vals = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    elif scenario == 'scalability':
+        benchmark_params = "\"mix=44:44:4:4:4\""
+        clients = None
+        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+    elif scenario == 'network':
+        benchmark_params = "\"mix=44:44:4:4:4\""
+        clients = 3000
+        x_vals = [0, 10, 50, 100, 250, 500, 1000]
+    elif scenario == 'packet_loss':
+        benchmark_params = "\"mix=44:44:4:4:4\""
+        clients = 3000
+        x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+    elif scenario == 'sunflower':
+        raise Exception("The sunflower scenario is not yet implemented")
 else:
     if scenario == 'baseline':
         benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
@@ -95,13 +117,23 @@ def run_subprocess(cmd, dry_run=False):
     else:
         return sp.run(cmd, shell=True, capture_output=True, text=True)
 
-def get_ips_from_conf(conf_path):
+def get_server_ips_from_conf(conf_path):
     with open(conf_path, "r") as f:
         conf_data = f.readlines()
     ips_used = set()
     for line in conf_data:
         if '    addresses: ' in line:
             ips_used.add(line.split('    addresses: "')[1].split('"')[0])
+    ips_used = list(ips_used)
+    return ips_used
+
+def get_client_ips_from_conf(conf_path):
+    with open(conf_path, "r") as f:
+        conf_data = f.readlines()
+    ips_used = set()
+    for line in conf_data:
+        if '    client_addresses: ' in line:
+            ips_used.add(line.split('    client_addresses: "')[1].split('"')[0])
     ips_used = list(ips_used)
     return ips_used
 
@@ -136,6 +168,7 @@ def start_net_monitor(user, interfaces):
         result = sp.run(cmd, shell=True)
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"Launch network monitoring command in ip '{ip}' failed with exit code {result.returncode}!")
+    print("Started network monitoring on all server ips")
 
 def stop_and_collect_monitor(user, interfaces, cur_log_dir):
     for ip in interfaces.keys():
@@ -162,7 +195,7 @@ def check_table_loading_finished(ips, workload, conf_path):
             print(f"Checking readiness on server on IP {ip}. It should have {target_warehouses_per_region} warehouses .....")
             try:
                 ssh_target = f"{user}@{ip}" if user else ip
-                server_container_cmd = 'docker container logs slog 2>&1'
+                server_container_cmd = f'docker container logs {server_container} 2>&1'
                 ssh_cmd = f"ssh {ssh_target} '{server_container_cmd}'"
                 result = run_subprocess(ssh_cmd, dry_run)
                 warehouses_ready = [l for l in result.stdout.split('\n') if 'Loading orders in warehouse' in l]
@@ -174,7 +207,8 @@ def check_table_loading_finished(ips, workload, conf_path):
     else:
         return True
 
-ips_used = get_ips_from_conf(conf_path=conf)
+ips_used = get_server_ips_from_conf(conf_path=conf)
+client_ips_used = get_client_ips_from_conf(conf_path=conf)
 print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
 
@@ -183,19 +217,19 @@ if workload == 'tpcc':
         time.sleep(10)
     print("All TPC-C tables loaded")
 
-os.makedirs(f'data/{scenario}', exist_ok=True)
+os.makedirs(f'data/{workload}/{scenario}', exist_ok=True)
 # For now, we hard code this for the baseline exp (varying MH from 0 to 100) and just for Detock
 tags = []
 for system in systems_to_test:
     print("#####################")
     print(f"Testing system: {system}")
-    os.makedirs(f'data/{scenario}/{system}', exist_ok=True)
+    os.makedirs(f'data/{workload}/{scenario}/{system}', exist_ok=True)
     # Run the benchmark for all x_vals and collect all results
     for x_val in x_vals:
         print("---------------------")
         print(f"Running experiment with x_val: {x_val}")
         tag = None
-        cur_benchmark_params = benchmark_params.format(x_val) # Works for: baseline, skew, scalability, network, packet_loss
+        cur_benchmark_params = benchmark_params.format(x_val, x_val) # Works for: baseline, skew, scalability, network, packet_loss
         cur_clients = clients if clients is not None else x_val
         cur_benchmark_cmd = single_benchmark_cmd.format(image=image, conf=conf, user=user, clients=cur_clients, duration=duration, benchmark_params=cur_benchmark_params, short_benchmark_log=short_benchmark_log)
         print(f"\n>>> Running: {cur_benchmark_cmd}")
@@ -249,21 +283,34 @@ for system in systems_to_test:
             # Remove emulated network conditions first
             simulate_network.remove_netem(ips=interfaces, user=user)
             print(f"Network settings on all servers back to normal!")
-        collect_benchmark_container_cmd = f"docker container logs benchmark 2>&1"
-        # Collect logs from the benchmark container (for throughput)
-        result = run_subprocess(collect_benchmark_container_cmd, dry_run) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
-        with open(f"{cur_log_dir}/benchmark_container.log", 'w') as f:
-            if not dry_run:
-                for line in result.stdout.split('\n'):
-                    f.write(f"{line}\n")
-        if hasattr(result, "returncode") and result.returncode != 0:
-            print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
-            break
         # Collect the metrics from all clients (TODO: add iftop metrics too)
         result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), dry_run) #sp.run(collect_client_cmd.format(conf=conf, tag=tag), shell=True, capture_output=True, text=True)
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"collect_client command failed with exit code {result.returncode}!")
             break
+        collect_benchmark_container_cmd = f"docker container logs {benchmark_container} 2>&1"
+        # Collect logs from all the benchmark container (for throughput)
+        client_count = 0
+        for client in client_ips_used:
+            client_folder = f'{client_count}-0'
+            ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
+            result = run_subprocess(ssh_cmd, dry_run)
+            if hasattr(result, "returncode") and result.returncode != 0:
+                print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
+                break
+            with open(f"data/{tag}/client/{client_folder}/benchmark_container.log", 'w') as f:
+                if not dry_run:
+                    for line in result.stdout.split('\n'):
+                        f.write(f"{line}\n")
+            client_count += 1
+        # result = run_subprocess(collect_benchmark_container_cmd, dry_run) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
+        # with open(f"{cur_log_dir}/benchmark_container.log", 'w') as f:
+        #     if not dry_run:
+        #         for line in result.stdout.split('\n'):
+        #             f.write(f"{line}\n")
+        # if hasattr(result, "returncode") and result.returncode != 0:
+        #     print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
+        #     break
         # Stop and collect network monitoring script
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
@@ -274,9 +321,9 @@ for system in systems_to_test:
             ips_file = 'aws/ips.json'
         shutil.copyfile(ips_file, os.path.join(cur_log_dir, 'ips.json'))
         # Rename folder accordingly
-        shutil.move(f'data/{tag}', f'data/{scenario}/{system}/{x_val}')
+        shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
 
 print("#####################")
-print(f"\n All {scenario} experiments done. You can now copy logs with:")
-print(f"scp -r {machine}:{detock_dir}/data/{scenario} plots/raw_data/{workload}")
+print(f"\n All {scenario} on {workload} experiments done. You can now copy logs with:")
+print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario} plots/raw_data/{workload}")
 print("============================================")
