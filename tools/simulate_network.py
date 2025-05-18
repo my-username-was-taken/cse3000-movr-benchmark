@@ -66,6 +66,7 @@ def netem_status(ips=None, user=None):
     :param ips: Dict of IP addresses and their interfaces to check netem settings remotely.
     :param user: SSH username to use for remote access.
     """
+    status_outputs = []
     if ips:
         print("Checking current netem status on remote machines...")
         for ip in list(ips.keys()):
@@ -74,9 +75,12 @@ def netem_status(ips=None, user=None):
             ssh_cmd = f"ssh {ssh_target} '{netem_cmd}'"
             result = sp.run(ssh_cmd, shell=True, capture_output=True, text=True)
             print(f"Netem status at {ip}: {result.stdout}")
+            status_outputs.append(result.stdout)
     else:
         interface = sp.run('iftop 2>&1', shell=True, capture_output=True, text=True).stdout.split('\n')[0].split('interface: ')[1]
         print(f"Checking current netem status on local machine {interface}...")
         netem_cmd = f"tc qdisc show dev {interface}"
         result = sp.run(netem_cmd.split(), check=True, capture_output=True, text=True)
         print(f"Netem status at on local node: {result.stdout}")
+        status_outputs.append(result.stdout)
+    return status_outputs

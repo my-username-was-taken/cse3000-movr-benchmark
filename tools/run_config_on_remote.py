@@ -212,6 +212,9 @@ client_ips_used = get_client_ips_from_conf(conf_path=conf)
 print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
 
+# Check that all network emulation settings are switched off
+simulate_network.remove_netem(ips=interfaces, user=user)
+
 if workload == 'tpcc':
     while not check_table_loading_finished(ips_used, workload, conf):
         time.sleep(10)
