@@ -21,7 +21,19 @@ EndRideTxn::EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
 }
 
 bool EndRideTxn::Read() {
-  return true;
+  bool ok = true;
+  if (auto res = vehicles_.Select({a_ride_id_, a_home_city_},
+        {VehiclesSchema::Column::STATUS}); !res.empty()) {
+    auto status = UncheckedCast<FixedTextScalar>(res[0]);
+    if (status->to_string() !=  DataGenerator::EnsureFixedLength<64>("in_use")) {
+      SetError("Ride is not active");
+      ok = false;
+    }
+  } else {
+    SetError("Ride does not exist");
+    ok = false;
+  }
+  return ok;
 }
 
 void EndRideTxn::Compute() {

@@ -27,8 +27,9 @@ StartRideTxn::StartRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapte
 bool StartRideTxn::Read() {
   bool ok = true;
   if (auto res = user_promo_codes_.Select({a_user_city_, a_user_id_, a_code_},
-    {UserPromoCodesSchema::Column::CODE}); !res.empty()) {
+    {UserPromoCodesSchema::Column::CODE, UserPromoCodesSchema::Column::USAGE_COUNT}); !res.empty()) {
     code_result = UncheckedCast<FixedTextScalar>(res[0]);
+    usage_count_result = UncheckedCast<Int64Scalar>(res[1]);
   } else {
     SetError("Promo code does not exist");
     ok = false;
@@ -42,6 +43,13 @@ void StartRideTxn::Compute() {
 
 bool StartRideTxn::Write() {
   bool ok = true;
+
+  if (!user_promo_codes_.Update({a_user_city_, a_user_id_, a_code_},
+        {UserPromoCodesSchema::Column::USAGE_COUNT},
+        {MakeInt64Scalar(usage_count_result->value + 1)})) {
+    SetError("Cannot update promo code usage");
+    ok = false;
+  }
 
   if (!vehicles_.Update({a_vehicle_id_, a_vehicle_city_}, {VehiclesSchema::Column::STATUS},
     {MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("in_use"))})) {

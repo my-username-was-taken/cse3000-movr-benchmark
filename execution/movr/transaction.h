@@ -136,6 +136,7 @@ class StartRideTxn : public MovrTransaction {
    
      // Read results 
      FixedTextScalarPtr code_result = MakeFixedTextScalar();
+     Int64ScalarPtr usage_count_result = MakeInt64Scalar();
 };
 
 class UpdateLocationTxn : public MovrTransaction {

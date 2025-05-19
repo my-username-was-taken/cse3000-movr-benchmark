@@ -8,9 +8,9 @@ ViewVehiclesTxn::ViewVehiclesTxn(const std::shared_ptr<StorageAdapter>& storage_
   const std::vector<uint64_t> ids, const std::string city)
     : vehicles_ (storage_adapter) {
 
+  a_city_ = MakeFixedTextScalar<64>(city);
   for (int i = 0; i < ids.size(); i++) {
     a_ids_.push_back(MakeInt64Scalar(ids[i]));
-    a_city_ = MakeFixedTextScalar<64>(city);
   }
 }
 
@@ -23,7 +23,7 @@ bool ViewVehiclesTxn::Read() {
     if (!res.empty()) {
       vehicle_id_results.push_back(UncheckedCast<Int64Scalar>(res[0]));
       city_results.push_back(UncheckedCast<FixedTextScalar>(res[1]));
-      city_results.push_back(UncheckedCast<FixedTextScalar>(res[2]));
+      status_results.push_back(UncheckedCast<FixedTextScalar>(res[2]));
     } else {
       SetError("Vehicle does not exist");
       ok = false;

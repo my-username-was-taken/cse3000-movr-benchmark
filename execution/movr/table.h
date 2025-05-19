@@ -416,8 +416,7 @@ SCHEMA(VehicleLocationHistoriesSchema,
               RIDE_ID,
               TIMESTAMP,
               LAT,
-              LONG,
-              BOUNDS),
+              LONG),
         ARRAY(FixedTextType<64>::Get(),    // CITY
               Int64Type::Get(),            // RIDE_ID
               Int64Type::Get(),            // TIMESTAMP
