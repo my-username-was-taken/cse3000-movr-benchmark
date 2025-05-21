@@ -2,7 +2,10 @@
     "name": "Detock Benchmark",
     "build": {
         "dockerfile": "./Dockerfile",
-        "context": ".."
+        "context": "..",
+        "args": {
+            "INCLUDE_TOOLS": "true"
+        }
     },
     "customizations": {
         "vscodium": {

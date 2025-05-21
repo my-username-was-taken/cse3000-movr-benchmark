@@ -32,13 +32,13 @@ namespace {
 constexpr char PARTITION[] = "partition"; // Use specific partition, -1 for random
 constexpr char HOMES[] = "homes";         // Max number of regions accessed in a multi-home txn
 constexpr char MH_ZIPF[] = "mh_zipf";     // Zipf coefficient for selecting remote regions
-constexpr char TXN_MIX[] = "mix";         // Colon-separated percentages for MovR txn types
+constexpr char TXN_MIX[] = "txn_mix";     // Colon-separated percentages for MovR txn types
 constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
 
 // MovR specific parameters         
-constexpr char MULTI_HOME_PCT[] = "multi_home_pct"; // Percentage of transactions that are multi-home (0-100)
-constexpr char CONTENTION_FACTOR[] = "contention";  // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
-constexpr char REGION_REQUEST_MIX[] = "region_mix"; // Colon-separated percentages for request origins per region
+constexpr char MULTI_HOME_PCT[] = "mh_pct";         // Percentage of transactions that are multi-home (0-100)
+constexpr char SKEW[] = "skew";                     // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
+constexpr char REGION_REQUEST_MIX[] = "reg_mix";    // Colon-separated percentages for request origins per region
 
 // Default values for MovR parameters
 const RawParamMap DEFAULT_PARAMS =
@@ -48,7 +48,7 @@ const RawParamMap DEFAULT_PARAMS =
   {TXN_MIX, "40:5:5:30:15:5"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
   {SH_ONLY, "0"},
   {MULTI_HOME_PCT, "10"},      // Default 10% multi-home transactions
-  {CONTENTION_FACTOR, "0.0"},  // Default uniform access (no contention)
+  {SKEW, "0.0"},               // Default uniform access (no contention)
   {REGION_REQUEST_MIX, ""}};   // Default empty (implies uniform distribution or based on config)
 
 // ID generation constants from data loader
@@ -108,7 +108,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   // Initialise parameters
   zipf_coef_ = params_.GetDouble(MH_ZIPF);
   multi_home_pct_ = params_.GetInt32(MULTI_HOME_PCT);
-  contention_factor_ = params_.GetDouble(CONTENTION_FACTOR);
+  skew_ = params_.GetDouble(SKEW);
   sh_only_ = params_.GetInt32(SH_ONLY) == 1;
 
   // Setup region information and distance ranking
@@ -151,7 +151,7 @@ void MovrWorkload::InitializeTxnMix() {
     mix_weights.push_back(val);
     total += val;
   }
-  CHECK_EQ(total, 100) << "Transaction mix must sum to 100%";
+  CHECK_EQ(total, 100) << "Txn mix must sum to 100% (actual: " << total << ")";
   select_txn_dist_ = std::discrete_distribution<>(mix_weights.begin(), mix_weights.end());
 }
 

@@ -62,7 +62,7 @@ class MovrWorkload : public Workload {
   // Parsed parameters
   int zipf_coef_;
   int multi_home_pct_;
-  double contention_factor_;
+  double skew_;
   bool sh_only_;
   vector<std::string> cities_;
   vector<int> txn_mix_pct_;
