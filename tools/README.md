@@ -9,7 +9,7 @@ Note: If you are running these experiments on the ST machines: ssh into one of t
 0. If you haven't already done so, create your Python venv `python3.8 -m venv build_detock && source build_detock/bin/activate` and install the necessary packages `pip install -r tools/requirements.txt`
 1. Activate the environment `cd Detock/ && source build_detock/bin/activate`
 2. Spin up your cluster.
-    1. Make sure your `.conf` file has the correct partitioning.
+    1. Make sure your `.conf` file has the correct partitioning. This is different for each DB system that you test.
     2. Please use the ports assigned to you so your experiments don't interfere with those of other people.
     3. Run the final command. E.g., (for an ST cluster setup) `python3 tools/admin.py start --image omraz/seq_eval:latest examples/tu_cluster.conf -u omraz -e GLOG_v=1`
 3. Check the status for any errors `python3 tools/admin.py status --image omraz/seq_eval:latest examples/tu_cluster.conf -u omraz` Should look something like this: 

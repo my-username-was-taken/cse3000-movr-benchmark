@@ -41,9 +41,9 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
         'Cost ($)'
     ]
     subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
-    databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Caerus'] #, 'Atomic Multicast']
-    line_styles = ['-', '--', '-.', ':', '-'] #, '--']
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple'] #, 'tab:brown']
+    databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Caerus', 'ddr_only']
+    line_styles = ['-', '--', '-.', ':', '-', '--']
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown']
 
     # Configure Matplotlib global font size
     plt.rcParams.update({
