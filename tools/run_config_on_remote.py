@@ -9,6 +9,7 @@ import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
 VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
+VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
@@ -20,6 +21,7 @@ parser.add_argument('-u',  '--user', default="omraz", help='Username when loggin
 parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
 parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
 parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
+parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
 
 args = parser.parse_args()
 scenario = args.scenario
@@ -31,6 +33,7 @@ user = args.user
 machine = args.machine
 benchmark_container = args.benchmark_container
 server_container = args.server_container
+database = args.database
 
 print(f"Running scenario: '{scenario}' and workload: '{workload}'")
 
@@ -40,7 +43,7 @@ interfaces = {}
 
 #venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
 detock_dir = os.path.expanduser("~/Detock")
-systems_to_test = ['Detock']
+systems_to_test = [database]
 image = "omraz/seq_eval:latest"
 #tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
@@ -213,6 +216,7 @@ print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
 
 # Check that all network emulation settings are switched off
+print("It's ok if the following removals fail. It's only a safeguard in case there were unremoved network settings from before.")
 simulate_network.remove_netem(ips=interfaces, user=user)
 
 if workload == 'tpcc':

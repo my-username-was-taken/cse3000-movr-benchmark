@@ -22,7 +22,7 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
@@ -137,7 +137,11 @@ throughputs = {}
 start_timestamps = {}
 end_timestamps = {}
 system_dirs = [join(BASE_DIR_PATH, dir) for dir in os.listdir(BASE_DIR_PATH) if isdir(join(BASE_DIR_PATH, dir))]
+
+# Load CSV files into pandas DataFrames
+csv_files = {}
 for system in system_dirs:
+    csv_files[system.split('/')[-1]] = {}
     log_files[system.split('/')[-1]] = {}
     tags[system.split('/')[-1]] = {}
     throughputs[system.split('/')[-1]] = {}
@@ -145,11 +149,41 @@ for system in system_dirs:
     end_timestamps[system.split('/')[-1]] = {}
     x_vals = [join(system, dir) for dir in os.listdir(system)]
     for x_val in x_vals:
+        csv_files[system.split('/')[-1]][x_val.split('/')[-1]] = {}
+        clients = [join(x_val, 'client', obj) for obj in os.listdir(join(x_val, 'client')) if isdir(join(x_val, 'client', obj))]
+        for client in clients:
+            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]] = {}
+            # Read in all 4 extected files
+            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['metadata'] = pd.read_csv(join(client, 'metadata.csv'))
+            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['summary'] = pd.read_csv(join(client, 'summary.csv'))
+            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['transactions'] = pd.read_csv(join(client, 'transactions.csv'))
+            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['txn_events'] = pd.read_csv(join(client, 'txn_events.csv'))
+            if 'benchmark_container.log' in os.listdir(client):
+                with open(join(x_val, 'raw_logs', 'benchmark_container.log'), "r", encoding="utf-8") as f:
+                    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['benchmark_container'] = f.read().split('\n')
+                # TODO: Continue fixing from here!!!!!!!!!!!
+                for line in csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['benchmark_container']:
+                    if 'Avg. TPS: ' in line:
+                        throughputs[system.split('/')[-1]][x_val.split('/')[-1]] = int(line.split('Avg. TPS: ')[1])
+                    # Get the timestamp between the actual start and end of the experiment
+                    elif 'Start sending transactions with' in line:
+                        start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+                    elif 'Results were written to' in line:
+                        end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+            #if 'iftop_eg.csv' in os.listdir(client):
+            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
+            #if 'net_traffic.csv' in os.listdir(client):
+            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
+print("All CSV files loaded")
+
+for system in system_dirs:
+    x_vals = [join(system, dir) for dir in os.listdir(system)]
+    for x_val in x_vals:
         log_files[system.split('/')[-1]][x_val.split('/')[-1]] = {}
         with open(join(x_val, 'raw_logs', 'benchmark_cmd.log'), "r", encoding="utf-8") as f:
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_cmd'] = f.read().split('\n')
-        with open(join(x_val, 'raw_logs', 'benchmark_container.log'), "r", encoding="utf-8") as f:
-            log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container'] = f.read().split('\n')
+        #with open(join(x_val, 'raw_logs', 'benchmark_container.log'), "r", encoding="utf-8") as f:
+        #    log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container'] = f.read().split('\n')
         log_file_names = os.listdir(join(x_val, 'raw_logs'))
         # Get the '.conf' file (for getting all the IPs involved)
         for file in log_file_names:
@@ -182,14 +216,14 @@ for system in system_dirs:
                 duration = int(line.split(' --duration ')[1].split(' ')[0])
         tags[system.split('/')[-1]][x_val.split('/')[-1]] = tag
         # Extract throughput from container log
-        for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container']:
+        '''for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['benchmark_container']:
             if 'Avg. TPS: ' in line:
                 throughputs[system.split('/')[-1]][x_val.split('/')[-1]] = int(line.split('Avg. TPS: ')[1])
             # Get the timestamp between the actual start and end of the experiment
             elif 'Start sending transactions with' in line:
                 start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
             elif 'Results were written to' in line:
-                end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+                end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)'''
         # Get the data transfers relavant to the experiment period
         for ip in log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'].keys():
             byte_log = log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip]
@@ -199,27 +233,6 @@ for system in system_dirs:
             filtered = byte_log[(timestamps > lower_bound) & (timestamps < upper_bound)]
             log_files[system.split('/')[-1]][x_val.split('/')[-1]]['net_traffic_logs'][ip] = filtered
 print(f"All log files loaded")
-
-# Load CSV files into pandas DataFrames
-csv_files = {}
-for system in system_dirs:
-    csv_files[system.split('/')[-1]] = {}
-    x_vals = [join(system, dir) for dir in os.listdir(system)]
-    for x_val in x_vals:
-        csv_files[system.split('/')[-1]][x_val.split('/')[-1]] = {}
-        clients = [join(x_val, 'client', obj) for obj in os.listdir(join(x_val, 'client')) if isdir(join(x_val, 'client', obj))]
-        for client in clients:
-            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]] = {}
-            # Read in all 4 extected files
-            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['metadata'] = pd.read_csv(join(client, 'metadata.csv'))
-            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['summary'] = pd.read_csv(join(client, 'summary.csv'))
-            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['transactions'] = pd.read_csv(join(client, 'transactions.csv'))
-            csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['txn_events'] = pd.read_csv(join(client, 'txn_events.csv'))
-            #if 'iftop_eg.csv' in os.listdir(client):
-            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
-            #if 'net_traffic.csv' in os.listdir(client):
-            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
-print("All CSV files loaded")
 
 # Get the latencies (p50, p90, p95, p99)
 percentiles = [50, 90, 95, 99]
