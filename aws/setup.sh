@@ -47,6 +47,9 @@ sudo apt install net-tools
 sudo apt install dstat -y
 sudo apt install cmake build-essential pkg-config -y
 
+# If you want to use the default iftop
+#sudo apt install iftop
+
 # Compile custom iftop
 cd iftop
 chmod +x bootstrap 
