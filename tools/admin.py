@@ -28,16 +28,16 @@ LOG = logging.getLogger("admin")
 
 SSH = 'ssh "-o StrictHostKeyChecking no"'
 
-USER = "omraz"
-CONTAINER_DATA_DIR = "/home/omraz/data"
-HOST_DATA_DIR = "/home/omraz/data"
+USER = "wmarcu"
+CONTAINER_DATA_DIR = "/home/wmarcu/data"
+HOST_DATA_DIR = "/home/wmarcu/data"
 
-SLOG_IMG = "ctring/slog"
-SLOG_CONTAINER_NAME = "slog"
-SLOG_BENCHMMARK_CONTAINER_NAME = "benchmark"
-SLOG_CLIENT_CONTAINER_NAME = "slog_client"
+SLOG_IMG = "wmarcu/slog:latest"
+SLOG_CONTAINER_NAME = "wmarcu_slog"
+SLOG_BENCHMMARK_CONTAINER_NAME = "wmarcu_benchmark"
+SLOG_CLIENT_CONTAINER_NAME = "wmarcu_slog_client"
 SLOG_DATA_MOUNT = docker.types.Mount(target=CONTAINER_DATA_DIR, source=HOST_DATA_DIR, type="bind")
-BENCHMARK_CONTAINER_NAME = "benchmark"
+BENCHMARK_CONTAINER_NAME = "wmarcu_benchmark"
 
 RemoteProcess = collections.namedtuple(
     "RemoteProcess",
@@ -615,7 +615,7 @@ class BenchmarkCommand(AdminCommand):
         parser.add_argument("--txns", type=int, default=10, required=True, help="Number of transactions generated per benchmark machine")
         parser.add_argument("--duration", type=int, default=0, help="How long the benchmark is run in seconds")
         parser.add_argument("--tag", help="Tag of this benchmark run. Auto-generated if not provided")
-        parser.add_argument("--workload", "-wl", choices=["basic", "cockroach", "remastering", "tpcc"], default="basic", help="Name of the workload to run benchmark with")
+        parser.add_argument("--workload", "-wl", choices=["basic", "cockroach", "remastering", "tpcc", "movr"], default="basic", help="Name of the workload to run benchmark with")
         parser.add_argument("-od", "--out_dir", default="", help="Output directory for final results")
         parser.add_argument("-dd", "--data_dir", default="", help="Directory for initial data")
         parser.add_argument("--params", default="", help="Parameters of the workload")
@@ -711,6 +711,12 @@ class BenchmarkCommand(AdminCommand):
         if args.cleanup:
             return
 
+        # We need to generate a seed for each client container
+        def generate_seed(addr: str, seed: int) -> int:
+            for c in addr:
+                seed ^= ord(c)
+            return seed
+
         def benchmark_runner(enumerated_proc):
             i, proc = enumerated_proc
             client, addr, _, reg, rep, *_ = proc
@@ -729,7 +735,7 @@ class BenchmarkCommand(AdminCommand):
                 f"--txns {args.txns} "
                 f"--generators {args.generators} "
                 f"--sample {args.sample} "
-                f"--seed {args.seed} "
+                f"--seed {generate_seed(addr, args.seed)} "
                 f"--txn_profiles={args.txn_profiles} "
                 f"--rate {args.rate} "
                 f"--clients {args.clients} "

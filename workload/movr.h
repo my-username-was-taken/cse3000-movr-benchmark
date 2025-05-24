@@ -46,10 +46,12 @@ class MovrWorkload : public Workload {
 
   void InitializeTxnMix();
   void InitializeRegionSelection();
+  void InitializeCityIndex();
   void LogStatistics();
 
   // Helper methods for city selection
   std::string SelectHomeCity();
+  std::vector<std::string> SelectRemoteCities();
   std::string SelectRemoteCity();
 
   // Configuration and state
@@ -62,6 +64,7 @@ class MovrWorkload : public Workload {
   // Parsed parameters
   int zipf_coef_;
   int multi_home_pct_;
+  int max_homes_;
   double skew_;
   bool sh_only_;
   vector<std::string> cities_;
@@ -71,6 +74,7 @@ class MovrWorkload : public Workload {
   vector<double> region_request_pct_; // Use double for distribution
   std::discrete_distribution<> select_origin_region_dist_;
   std::bernoulli_distribution multi_home_dist_;
+  std::vector<std::vector<std::vector<std::string>>> city_index_;
   
   TxnId client_txn_id_counter_;
   std::vector<int> txn_mix_;

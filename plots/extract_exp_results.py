@@ -16,7 +16,7 @@ The script will populate the CSVs in 'plots/data' and generate a graph in 'plots
 '''
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
-VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
+VALID_WORKLOADS = ['ycsbt', 'tpcc', 'movr'] # TODO: Add your own benchmark to this list
 LATENCY_PERCENTILES = [50,95,99]
 VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 

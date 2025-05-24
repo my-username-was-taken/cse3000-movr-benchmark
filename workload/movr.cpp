@@ -45,7 +45,7 @@ const RawParamMap DEFAULT_PARAMS =
   {{PARTITION, "-1"},
   {HOMES, "2"},
   {MH_ZIPF, "0"},
-  {TXN_MIX, "40:5:5:30:15:5"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
+  {TXN_MIX, "30:5:5:15:30:15"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
   {SH_ONLY, "0"},
   {MULTI_HOME_PCT, "10"},      // Default 10% multi-home transactions
   {SKEW, "0.0"},               // Default uniform access (no contention)
@@ -80,6 +80,13 @@ int GetCityIndex(const string& city) {
   return std::stoi(city.substr(5)); // Extract index from "city_N"
 }
 
+int GetRegionFromCity(int city_index, const ConfigurationPtr& config) {
+  int num_partitions = config->num_partitions();
+  int num_regions = GetNumRegions(config);
+
+  return (city_index / num_partitions) % num_regions;
+}
+
 vector<string> GetPartitionCities(int partition, const ConfigurationPtr& config) {
   vector<string> cities;
   int num_partitions = config->num_partitions();
@@ -108,6 +115,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   // Initialise parameters
   zipf_coef_ = params_.GetDouble(MH_ZIPF);
   multi_home_pct_ = params_.GetInt32(MULTI_HOME_PCT);
+  max_homes_ = std::min(params_.GetInt32(HOMES), GetNumRegions(config_));
   skew_ = params_.GetDouble(SKEW);
   sh_only_ = params_.GetInt32(SH_ONLY) == 1;
 
@@ -137,6 +145,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   multi_home_dist_ = bernoulli_distribution(multi_home_pct_ / 100.0);
   InitializeTxnMix();
   InitializeRegionSelection();
+  InitializeCityIndex();
 }
 
 void MovrWorkload::InitializeTxnMix() {
@@ -178,27 +187,94 @@ void MovrWorkload::InitializeRegionSelection() {
   }
 }
 
+void MovrWorkload::InitializeCityIndex() {
+  // Initialize city_index_ similar to warehouse_index_ in TPCC
+  int num_partitions = config_->num_partitions();
+  city_index_.resize(num_partitions);
+  for (int i = 0; i < num_partitions; i++) {
+    city_index_[i].resize(num_regions_);
+  }
+  
+  int num_cities = config_->proto_config().movr_partitioning().cities();
+  for (int i = 0; i < num_cities; i++) {
+    int partition = i % num_partitions;
+    int region = (i / num_partitions) % num_regions_;
+    city_index_[partition][region].push_back(DataGenerator::EnsureFixedLength<64>("city_" + std::to_string(i)));
+  }
+}
+
 // Selects a home city based on the configured region mix
 std::string MovrWorkload::SelectHomeCity() {
   if (cities_.empty()) {
     LOG(FATAL) << "No cities available in partition";
   }
   
+  std::string result;
+
   // Select based on region distribution
   int region_idx = select_origin_region_dist_(rg_);
-  int city_idx = region_idx % cities_.size();
-  return cities_[city_idx];
+  
+  // Find cities in the local partition that belong to the selected region
+  int partition = config_->local_partition();
+  if (city_index_[partition][region_idx].empty()) {
+    // Fallback to any city in the local partition if none in the selected region
+    result = cities_[std::uniform_int_distribution<>(0, cities_.size() - 1)(rg_)];
+  } else {
+    // Select a random city from the chosen region and partition
+    result = city_index_[partition][region_idx][
+      std::uniform_int_distribution<>(0, city_index_[partition][region_idx].size() - 1)(rg_)
+    ];
+  }
+
+  return DataGenerator::EnsureFixedLength<64>(result);
+}
+
+std::vector<std::string> MovrWorkload::SelectRemoteCities() {
+  if (sh_only_ || max_homes_ < 2) {
+    return {};
+  }
+  
+  int partition = config_->local_partition();
+  int num_homes = std::uniform_int_distribution{2, max_homes_}(rg_);
+  
+  // Select remote regions using zipf distribution
+  auto remote_regions = zipf_sample(rg_, zipf_coef_, distance_ranking_, num_homes - 1);
+  
+  std::vector<std::string> remote_cities;
+  for (auto region : remote_regions) {
+    // If no cities in this region and partition, skip
+    if (city_index_[partition][region].empty()) {
+      continue;
+    }
+    
+    // Select a random city from this region and partition
+    auto& cities_in_region = city_index_[partition][region];
+    int random_idx = std::uniform_int_distribution<>(0, cities_in_region.size() - 1)(rg_);
+    
+    remote_cities.push_back(DataGenerator::EnsureFixedLength<64>(cities_in_region[random_idx]));
+  }
+  
+  return remote_cities;
 }
 
 std::string MovrWorkload::SelectRemoteCity() {
-  vector<int> remote_regions;
-  for (int i = 0; i < num_regions_; i++) {
-    if (i != local_region_) remote_regions.push_back(i);
+  auto remote_cities = SelectRemoteCities();
+  if (remote_cities.empty()) {
+    int partition = config_->local_partition();
+
+    // Fallback to a city in a different region if possible
+    for (int r = 0; r < num_regions_; r++) {
+      if (r != local_region_) {
+        if (!city_index_[partition][r].empty()) {
+          return DataGenerator::EnsureFixedLength<64>(city_index_[partition][r][0]);
+        }
+      }
+    }
+    // If no remote cities available, return a local city
+    return DataGenerator::EnsureFixedLength<64>(SelectHomeCity());
   }
   
-  int selected_region = zipf_sample(rg_, zipf_coef_, remote_regions, 1)[0];
-  std::string result = "city_" + std::to_string(selected_region % config_->proto_config().movr_partitioning().cities());
-  return DataGenerator::EnsureFixedLength<64>(result);
+  return DataGenerator::EnsureFixedLength<64>(remote_cities[0]);
 }
 
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
@@ -210,10 +286,7 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
 
   // Determine if this transaction should be multi-home
   bool is_multi_home = !sh_only_ && multi_home_dist_(rg_);
-  pro.is_multi_home = is_multi_home;
-  if (is_multi_home) {
-      multi_home_count++;
-  }
+  //pro.is_multi_home = is_multi_home;
 
   // Select the transaction type
   MovrTxnType txn_type = static_cast<MovrTxnType>(select_txn_dist_(rg_));
@@ -246,6 +319,11 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
       break;
     default:
       LOG(FATAL) << "Invalid MovR txn type selected";
+  }
+
+  // Update multi-home counter if the transaction is actually multi-home
+  if (pro.is_multi_home) {
+      multi_home_count++;
   }
 
   total_txn_count++;
@@ -334,6 +412,13 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
   std::string owner_city = home_city;
   if (is_multi_home) {
       owner_city = SelectRemoteCity();
+
+    // Verify that owner_city is actually in a different region
+    int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+    int owner_region = GetRegionFromCity(GetCityIndex(owner_city), config_);
+    
+    // If regions are the same, this isn't actually multi-home
+    pro.is_multi_home = (home_region != owner_region);
   }
 
   uint64_t vehicle_local_id = ++add_vehicle_count;
@@ -378,12 +463,27 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   uint64_t start_time = std::chrono::system_clock::now().time_since_epoch().count();
 
   if (is_multi_home) {
+    auto remote_cities = SelectRemoteCities();
+    
+    if (!remote_cities.empty()) {
       // 50% chance vehicle is remote, 50% chance user is remote
       if (std::bernoulli_distribution(0.5)(rg_)) { 
-          user_city = SelectRemoteCity();
+        user_city = remote_cities[0];
       } else {
-          vehicle_city = SelectRemoteCity();
+        vehicle_city = remote_cities[0];
       }
+      
+      // Verify that we're actually accessing different regions
+      int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+      int user_region = GetRegionFromCity(GetCityIndex(user_city), config_);
+      int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
+      
+      // Only multi-home if at least one entity is in a different region
+      pro.is_multi_home = (home_region != user_region) || (home_region != vehicle_region);
+    } else {
+      // No remote cities available, not multi-home
+      pro.is_multi_home = false;
+    }
   }
 
   // Generate IDs within valid ranges
@@ -449,9 +549,21 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
   std::string vehicle_city = home_city;
 
   if (is_multi_home) {
-    // 50% chance vehicle is from remote city
-    if (std::bernoulli_distribution(0.5)(rg_)) { 
-        vehicle_city = SelectRemoteCity();
+    // Get remote cities from different regions
+    auto remote_cities = SelectRemoteCities();
+    
+    if (!remote_cities.empty()) {
+      vehicle_city = remote_cities[0];
+      
+      // Verify that we're actually accessing different regions
+      int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+      int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
+      
+      // Only multi-home if vehicle is in a different region
+      pro.is_multi_home = (home_region != vehicle_region);
+    } else {
+      // No remote cities available, not multi-home
+      pro.is_multi_home = false;
     }
   }
 

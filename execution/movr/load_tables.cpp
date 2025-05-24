@@ -14,18 +14,12 @@
 namespace slog {
 namespace movr {
 
-namespace {
-const size_t kRandStrPoolSize = 1000000;
-const std::string kCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ");
-}  // namespace
-
 class PartitionedMovrDataLoader {
  public:
   PartitionedMovrDataLoader(const StorageAdapterPtr& storage_adapter, std::vector<std::string> partition_cities, int num_users,
     int num_vehicles, int num_rides, int num_histories, int num_codes, int num_user_codes, int num_regions,
-    int num_partitions, int seed)
-      : rg_(seed),
-      str_gen_(seed),
+    int num_partitions, int partition)
+      : rg_(partition),
       storage_adapter_(storage_adapter),
       partition_cities_(partition_cities),
       num_users_(num_users),
@@ -34,9 +28,16 @@ class PartitionedMovrDataLoader {
       num_codes_(num_codes),
       num_user_codes_(num_user_codes),
       num_histories_(num_histories),
-      num_partitions_(num_partitions) {
+      num_partitions_(num_partitions),
+      partition_(partition) {
 
       }
+
+  bool BelongsToCurrentPartition(uint64_t global_id) const {
+    const int partition_bits = 16;
+    uint64_t partition_from_id = (global_id >> (64 - partition_bits)) % num_partitions_;
+    return partition_from_id == static_cast<uint64_t>(partition_);
+  }
 
   void Load() {
     LoadUsers();
@@ -242,7 +243,6 @@ class PartitionedMovrDataLoader {
 
   private:
   std::mt19937 rg_;
-  RandomStringGenerator str_gen_;
 
   StorageAdapterPtr storage_adapter_;
   std::vector<std::string> partition_cities_;
@@ -253,6 +253,7 @@ class PartitionedMovrDataLoader {
   int num_user_codes_;
   int num_histories_;
   int num_partitions_;
+  int partition_;
 
   /**
   * Generates a globally unique 64-bit ID by combining a city index and local record ID.

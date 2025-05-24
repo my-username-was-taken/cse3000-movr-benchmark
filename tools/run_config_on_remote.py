@@ -8,16 +8,16 @@ import argparse
 import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
-VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
+VALID_WORKLOADS = ['ycsbt', 'tpcc', 'movr'] # TODO: Add your own benchmark to this list
 VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
-parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
+parser.add_argument('-c',  '--conf', default='examples/movr/movr-2-regions.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
-parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
+parser.add_argument('-u',  '--user', default="wmarcu", help='Username when logging into a remote machine')
 parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
 parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
 parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
@@ -44,7 +44,7 @@ interfaces = {}
 #venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = [database]
-image = "omraz/seq_eval:latest"
+image = "wmarcu/detock:latest"
 #tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
@@ -106,10 +106,13 @@ else:
 
 single_ycsbt_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 single_tpcc_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl tpcc --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
+single_movr_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl movr --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 if workload == 'ycsbt':
     single_benchmark_cmd = single_ycsbt_benchmark_cmd
 elif workload == 'tpcc':
     single_benchmark_cmd = single_tpcc_benchmark_cmd
+elif workload == 'movr':
+    single_benchmark_cmd = single_movr_benchmark_cmd
 
 collect_client_cmd = "python3 tools/admin.py collect_client --config {conf} --out-dir data --tag {tag}"
 
