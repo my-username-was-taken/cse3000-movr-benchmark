@@ -30,6 +30,13 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
 
     # Extract data
     xaxis_points = data['x_var']
+    # For some experiments, we have to adjust the x_values
+    if workload == 'tpcc' and plot == 'baseline':
+        #xaxis_points = [0, 4, 8, 15, 20, 25, 29]
+        xaxis_points = [0, 4, 8, 15, 20, 25, 29, 32, 34, 36, 38, 39]
+    elif workload == 'tpcc' and plot == 'skew':
+        xaxis_points = [250 - point for point in xaxis_points]
+
     #metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
     metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
     y_labels = [
@@ -41,7 +48,7 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
         'Cost ($)'
     ]
     subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
-    databases = ['Calvin', 'SLOG', 'Detock', 'Mencius', 'Caerus', 'ddr_only']
+    databases = ['Calvin', 'SLOG', 'Detock', 'janus', 'Caerus', 'ddr_only']
     line_styles = ['-', '--', '-.', ':', '-', '--']
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown']
 
@@ -104,6 +111,7 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
 
     # Add legend and adjust layout
     handles, labels = axes[-1].get_legend_handles_labels()
+    labels = [l[:1].capitalize()+l[1:] for l in labels]
     fig.legend(handles, labels, loc='upper center', ncol=len(databases), bbox_to_anchor=(0.5, 1.1))
     plt.tight_layout(rect=[0, 0, 1, 1])  # Further reduce whitespace
 
