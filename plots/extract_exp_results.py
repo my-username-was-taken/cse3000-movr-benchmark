@@ -22,7 +22,7 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
@@ -177,9 +177,9 @@ for system in system_dirs:
         raw_log_files = os.listdir(join(x_val, 'raw_logs'))
         benchmark_container_files = [file for file in raw_log_files if 'benchmark_container_' in file]
         for container in benchmark_container_files:
-            client_ip = client.split('benchmark_container_')[1].split('.')[0]
-            with open(join(x_val, 'raw_logs', client), "r", encoding="utf-8") as f:
-                log_files[system.split('/')[-1]][x_val.split('/')[-1]][client_ip] = f.read()
+            client_ip = container.split('benchmark_container_')[1].split('.')[0]
+            with open(join(x_val, 'raw_logs', container), "r", encoding="utf-8") as f:
+                log_files[system.split('/')[-1]][x_val.split('/')[-1]][client_ip] = f.read().split('\n')
             for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]][client_ip]:
                 if 'Avg. TPS: ' in line:
                     throughputs[system.split('/')[-1]][x_val.split('/')[-1]] += int(line.split('Avg. TPS: ')[1])
