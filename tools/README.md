@@ -12,7 +12,7 @@ Note: If you are running these experiments on the ST machines: ssh into one of t
     1. Make sure your `.conf` file has the correct partitioning. This is different for each DB system that you test.
     2. Make sure you select the correct binary. This is different for some of the DB systems.
     3. Please use the ports assigned to you so your experiments don't interfere with those of other people.
-    4. Run the final command. E.g., (for an ST cluster setup) `python3 tools/admin.py start --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz -e GLOG_v=1 -b slog`
+    4. Run the final command. E.g., (for an ST cluster setup) `python3 tools/admin.py start --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz -e GLOG_v=1 --bin slog`
 3. Check the status for any errors `python3 tools/admin.py status --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz` Should look something like this: 
 ![Successful status](status_command_output.png)
 4. Run a single experiment. E.g., `python3 tools/admin.py benchmark --image omraz/seq_eval:latest examples/tu_cluster.conf -u omraz --txns 2000000 --seed 1 --clients 3000 --duration 60 -wl basic --param "mh=50,mp=50" 2>&1 | tee benchmark_cmd.log`
