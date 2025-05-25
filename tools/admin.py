@@ -264,7 +264,7 @@ class StartCommand(AdminCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument("-b" "--bin", default="slog", help="Name of the binary file to run")
+        parser.add_argument("--bin", default="slog", help="Name of the binary file to run")
         parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
             "use -e GLOG_v=1 to turn on verbose logging at level 1.")
 
