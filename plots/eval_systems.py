@@ -30,6 +30,13 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
 
     # Extract data
     xaxis_points = data['x_var']
+    # For some experiments, we have to adjust the x_values
+    if workload == 'tpcc' and plot == 'baseline':
+        #xaxis_points = [0, 4, 8, 15, 20, 25, 29]
+        xaxis_points = [0, 4, 8, 15, 20, 25, 29, 32, 34, 36, 38, 39]
+    elif workload == 'tpcc' and plot == 'skew':
+        xaxis_points = [250 - point for point in xaxis_points]
+
     #metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
     metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
     y_labels = [

@@ -198,7 +198,7 @@ class AdminCommand(Command):
         #print(self.config.regions)
         #print(self.config.regions[0].addresses)
         for reg, reg_info in enumerate(self.config.regions):
-            print("new region")
+            print("New region")
             print(reg_info)
             pub_addresses = public_addresses(reg_info)
             priv_addresses = private_addresses(reg_info)
@@ -264,7 +264,7 @@ class StartCommand(AdminCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument("--bin", default="slog", help="Name of the binary file to run")
+        parser.add_argument("-b" "--bin", default="slog", help="Name of the binary file to run")
         parser.add_argument("-e", nargs="*", help="Environment variables to pass to the container. For example, "
             "use -e GLOG_v=1 to turn on verbose logging at level 1.")
 
