@@ -31,7 +31,7 @@ enum class MovrTxnType {
 class MovrWorkload : public Workload {
  public:
   MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const std::string& params_str,
-               std::pair<int, int> id_slot, const uint32_t seed = std::random_device()());
+               std::pair<int, int> id_slot, const int duration, const uint32_t seed = std::random_device()());
 
   std::pair<Transaction*, TransactionProfile> NextTransaction();
 
@@ -53,6 +53,12 @@ class MovrWorkload : public Workload {
   std::string SelectHomeCity();
   std::vector<std::string> SelectRemoteCities();
   std::string SelectRemoteCity();
+  void UpdateSunflowerRegionWeights();
+
+  // Distributions for generating ids
+  std::discrete_distribution<uint64_t> user_id_dist_;
+  std::discrete_distribution<uint64_t> vehicle_id_dist_;
+  std::discrete_distribution<uint64_t> ride_id_dist_;
 
   // Configuration and state
   ConfigurationPtr config_;
@@ -67,9 +73,14 @@ class MovrWorkload : public Workload {
   int max_homes_;
   double skew_;
   bool sh_only_;
+  double sunflower_max_pct_;
+  double sunflower_falloff_;
+  int sunflower_cycles_;
   vector<std::string> cities_;
+  double duration_;
   vector<int> txn_mix_pct_;
   std::discrete_distribution<> select_txn_dist_;
+  std::chrono::steady_clock::time_point start_time_;
   int num_regions_;
   vector<double> region_request_pct_; // Use double for distribution
   std::discrete_distribution<> select_origin_region_dist_;

@@ -72,7 +72,7 @@ vector<unique_ptr<ModuleRunner>> InitializeGenerators() {
     } else if (FLAGS_wl == "tpcc") {
       workload = make_unique<TPCCWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), seed + i);
     } else if (FLAGS_wl == "movr") {
-      workload = make_unique<MovrWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), seed + i);
+      workload = make_unique<MovrWorkload>(config, FLAGS_region, FLAGS_replica, FLAGS_params, std::make_pair(i + 1, FLAGS_generators), FLAGS_duration, seed + i);
     } else {
       LOG(FATAL) << "Unknown workload: " << FLAGS_wl;
     }

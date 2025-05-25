@@ -36,9 +36,12 @@ constexpr char TXN_MIX[] = "txn_mix";     // Colon-separated percentages for Mov
 constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
 
 // MovR specific parameters         
-constexpr char MULTI_HOME_PCT[] = "mh_pct";         // Percentage of transactions that are multi-home (0-100)
-constexpr char SKEW[] = "skew";                     // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
-constexpr char REGION_REQUEST_MIX[] = "reg_mix";    // Colon-separated percentages for request origins per region
+constexpr char MULTI_HOME_PCT[] = "mh_pct";               // Percentage of transactions that are multi-home (0-100)
+constexpr char SKEW[] = "skew";                           // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
+constexpr char REGION_REQUEST_MIX[] = "reg_mix";          // Colon-separated percentages for request origins per region
+constexpr char SUNFLOWER_MAX[] = "sunflower-max";         // Max % of txn from peak region (e.g. 50)
+constexpr char SUNFLOWER_FALLOFF[] = "sunflower-falloff"; // Falloff (0.0 to 1.0)
+constexpr char SUNFLOWER_CYCLES[] = "sunflower-cycles"; // Falloff (0.0 to 1.0)
 
 // Default values for MovR parameters
 const RawParamMap DEFAULT_PARAMS =
@@ -47,9 +50,12 @@ const RawParamMap DEFAULT_PARAMS =
   {MH_ZIPF, "0"},
   {TXN_MIX, "30:5:5:15:30:15"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
   {SH_ONLY, "0"},
-  {MULTI_HOME_PCT, "10"},      // Default 10% multi-home transactions
-  {SKEW, "0.0"},               // Default uniform access (no contention)
-  {REGION_REQUEST_MIX, ""}};   // Default empty (implies uniform distribution or based on config)
+  {MULTI_HOME_PCT, "10"},       // Default 10% multi-home transactions
+  {SKEW, "0.0"},                // Default uniform access ( 0 = no contention)
+  {REGION_REQUEST_MIX, ""},
+  {SUNFLOWER_MAX, "40"},        // Default transactions % originating from peak region
+  {SUNFLOWER_FALLOFF, "0.0"},
+  {SUNFLOWER_CYCLES, "1"}};     // Default number of cycles
 
 // ID generation constants from data loader
 constexpr int kPartitionBits = 16;
@@ -101,7 +107,7 @@ vector<string> GetPartitionCities(int partition, const ConfigurationPtr& config)
 } // namespace
 
 MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, ReplicaId replica, const string& params_str,
-                           std::pair<int, int> id_slot, const uint32_t seed)
+                           std::pair<int, int> id_slot, const int duration, const uint32_t seed)
     : Workload(DEFAULT_PARAMS, params_str),
       config_(config),
       local_region_(region),
@@ -109,7 +115,8 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
       distance_ranking_(config->distance_ranking_from(region)),
       rg_(seed),
       client_txn_id_counter_(0),
-      cities_(GetPartitionCities(config->local_partition(), config)) {
+      cities_(GetPartitionCities(config->local_partition(), config)),
+      duration_(static_cast<double>(duration)) {
   name_ = "movr";
 
   // Initialise parameters
@@ -118,8 +125,17 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   max_homes_ = std::min(params_.GetInt32(HOMES), GetNumRegions(config_));
   skew_ = params_.GetDouble(SKEW);
   sh_only_ = params_.GetInt32(SH_ONLY) == 1;
+  sunflower_max_pct_ = params_.GetDouble(SUNFLOWER_MAX);
+  sunflower_falloff_ = params_.GetDouble(SUNFLOWER_FALLOFF);
+  sunflower_cycles_ = params_.GetInt32(SUNFLOWER_CYCLES);
+
+  // Initialize zipf distributions for skewed access
+  user_id_dist_ = slog::zipf_distribution(skew_, kMaxUsersPerCity);
+  vehicle_id_dist_ = slog::zipf_distribution(skew_, kMaxVehiclesPerCity);
+  ride_id_dist_ = slog::zipf_distribution(skew_, kMaxRidesPerCity);
 
   // Setup region information and distance ranking
+  start_time_ = std::chrono::steady_clock::now();
   num_regions_ = GetNumRegions(config_);
   if (distance_ranking_.empty()) {
     for (int i = 0; i < num_regions_; i++) {
@@ -277,6 +293,37 @@ std::string MovrWorkload::SelectRemoteCity() {
   return DataGenerator::EnsureFixedLength<64>(remote_cities[0]);
 }
 
+void MovrWorkload::UpdateSunflowerRegionWeights() {
+  if (duration_ <= 0) {
+    return;  // avoid division by zero
+  }
+
+  // Get elapsed time in seconds
+  double elapsed_sec = std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time_).count();
+  double progress = fmod(elapsed_sec / duration_, 1.0);
+  double sun_pos = fmod(progress * sunflower_cycles_ * num_regions_, static_cast<double>(num_regions_));
+
+  // Assign weights
+  std::vector<double> region_weights(num_regions_);
+  double sum_weights = 0.0;
+  for (int i = 0; i < num_regions_; ++i) {
+    double distance = std::abs(sun_pos - i);
+    if (distance > num_regions_ / 2.0) {
+      distance = num_regions_ - distance;  // Wraparound for cyclic sun
+    }
+    double weight = sunflower_max_pct_ * std::pow(1.0 - sunflower_falloff_, distance);
+    region_weights[i] = weight;
+    sum_weights += weight;
+  }
+
+  // Normalize to make total = 100%
+  for (auto& w : region_weights) {
+    w = w * 100.0 / sum_weights;
+  }
+
+  select_origin_region_dist_ = std::discrete_distribution<>(region_weights.begin(), region_weights.end());
+}
+
 std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   Transaction* txn = new Transaction();
   TransactionProfile pro;
@@ -284,9 +331,10 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   pro.client_txn_id = client_txn_id_counter_;
   pro.is_multi_home = false;
 
+  UpdateSunflowerRegionWeights();
+
   // Determine if this transaction should be multi-home
   bool is_multi_home = !sh_only_ && multi_home_dist_(rg_);
-  //pro.is_multi_home = is_multi_home;
 
   // Select the transaction type
   MovrTxnType txn_type = static_cast<MovrTxnType>(select_txn_dist_(rg_));
@@ -355,12 +403,11 @@ void MovrWorkload::LogStatistics() {
 // This transaction is typically single-home, focused on the 'city'.
 void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
-  std::uniform_int_distribution<uint64_t> vehicle_dist(1, kMaxVehiclesPerCity);
   std::vector<uint64_t> vehicle_ids;
   vehicle_ids.reserve(movr::kVehicleViewLimit);
 
   for (int i = 0; i < movr::kVehicleViewLimit; i++) {
-    uint64_t local_id = vehicle_dist(rg_);
+    uint64_t local_id = vehicle_id_dist_(rg_);
     uint64_t global_id = GenerateGlobalId(GetCityIndex(city), local_id);
     vehicle_ids.push_back(global_id);
   }
@@ -424,7 +471,7 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
   uint64_t vehicle_local_id = ++add_vehicle_count;
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(home_city), vehicle_local_id);
   std::string type = DataGenerator::GenerateRandomVehicleType(rg_);
-  uint64_t owner_local_id = std::uniform_int_distribution<>(1, kMaxUsersPerCity)(rg_);
+  uint64_t owner_local_id = user_id_dist_(rg_);
   uint64_t owner_id = GenerateGlobalId(GetCityIndex(owner_city), owner_local_id);
   uint64_t creation_time = std::chrono::system_clock::now().time_since_epoch().count();
   std::string status = DataGenerator::EnsureFixedLength<64>("available");
@@ -487,8 +534,8 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   }
 
   // Generate IDs within valid ranges
-  uint64_t user_local_id = std::uniform_int_distribution<>(1, kMaxUsersPerCity)(rg_);
-  uint64_t vehicle_local_id = std::uniform_int_distribution<>(1, kMaxVehiclesPerCity)(rg_);
+  uint64_t user_local_id = user_id_dist_(rg_);
+  uint64_t vehicle_local_id = vehicle_id_dist_(rg_);
   uint64_t ride_local_id = ++start_ride_count;
   
   uint64_t user_id = GenerateGlobalId(GetCityIndex(user_city), user_local_id);
@@ -518,7 +565,7 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
 // Typically single-home, writing to the city where the ride is happening.
 void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
-  uint64_t ride_local_id = std::uniform_int_distribution<>(1, kMaxRidesPerCity)(rg_);
+  uint64_t ride_local_id = ride_id_dist_(rg_);
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(city), ride_local_id);
   uint64_t timestamp = std::chrono::system_clock::now().time_since_epoch().count();
   const auto loc = DataGenerator::GenerateRandomLatLong(rg_);
@@ -567,9 +614,8 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
     }
   }
 
-  uint64_t ride_local_id = std::uniform_int_distribution<>(1, kMaxRidesPerCity)(rg_);
-  uint64_t user_local_id = std::uniform_int_distribution<>(1, kMaxUsersPerCity)(rg_);
-  uint64_t vehicle_local_id = std::uniform_int_distribution<>(1, kMaxVehiclesPerCity)(rg_);
+  uint64_t ride_local_id = ride_id_dist_(rg_);
+  uint64_t vehicle_local_id = vehicle_id_dist_(rg_);
   
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(home_city), ride_local_id);
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(vehicle_city), vehicle_local_id);
