@@ -69,7 +69,7 @@ if workload == 'tpcc':
     elif scenario == 'scalability':
         benchmark_params = "\"mix=44:44:4:4:4\""
         clients = None
-        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+        x_vals = [1, 10, 100, 1000, 10_000, 100_000, 1_000_000]
     elif scenario == 'network':
         benchmark_params = "\"mix=44:44:4:4:4\""
         clients = 3000
@@ -291,7 +291,7 @@ for system in systems_to_test:
             simulate_network.remove_netem(ips=interfaces, user=user)
             print(f"Network settings on all servers back to normal!")
         # Collect the metrics from all clients (TODO: add iftop metrics too)
-        result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), dry_run) #sp.run(collect_client_cmd.format(conf=conf, tag=tag), shell=True, capture_output=True, text=True)
+        result = run_subprocess(collect_client_cmd.format(conf=conf, tag=tag), dry_run)
         if hasattr(result, "returncode") and result.returncode != 0:
             print(f"collect_client command failed with exit code {result.returncode}!")
             break
@@ -299,7 +299,18 @@ for system in systems_to_test:
         # Collect logs from all the benchmark container (for throughput)
         client_count = 0
         for client in client_ips_used:
-            client_folder = f'{client_count}-0'
+            log_file_name = f"data/{tag}/raw_logs/benchmark_container_{client}.log"
+            ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
+            result = run_subprocess(ssh_cmd, dry_run)
+            if hasattr(result, "returncode") and result.returncode != 0:
+                print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
+                break
+            with open(log_file_name, 'w') as f:
+                if not dry_run:
+                    for line in result.stdout.split('\n'):
+                        f.write(f"{line}\n")
+            ### OLD VERSION: Stored container logs in client subfolders, but may end up in the wrong subdirectory
+            '''client_folder = f'{client_count}-0'
             ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
             result = run_subprocess(ssh_cmd, dry_run)
             if hasattr(result, "returncode") and result.returncode != 0:
@@ -309,16 +320,7 @@ for system in systems_to_test:
                 if not dry_run:
                     for line in result.stdout.split('\n'):
                         f.write(f"{line}\n")
-            client_count += 1
-        # result = run_subprocess(collect_benchmark_container_cmd, dry_run) #sp.run(collect_benchmark_container_cmd, shell=True, capture_output=True, text=True)
-        # with open(f"{cur_log_dir}/benchmark_container.log", 'w') as f:
-        #     if not dry_run:
-        #         for line in result.stdout.split('\n'):
-        #             f.write(f"{line}\n")
-        # if hasattr(result, "returncode") and result.returncode != 0:
-        #     print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
-        #     break
-        # Stop and collect network monitoring script
+            client_count += 1'''
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
         shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))

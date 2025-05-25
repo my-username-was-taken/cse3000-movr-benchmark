@@ -23,7 +23,7 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
 parser.add_argument('-s', '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
-parser.add_argument('-w', '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
 args = parser.parse_args()
@@ -173,10 +173,25 @@ for system in system_dirs:
                         start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
                     elif 'Results were written to' in line:
                         end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
-            #if 'iftop_eg.csv' in os.listdir(client):
-            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
-            #if 'net_traffic.csv' in os.listdir(client):
-            #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
+        # For newer versions of the script we move the benchmark container logs back into the 'raw_logs' subdirectory
+        raw_log_files = os.listdir(join(x_val, 'raw_logs'))
+        benchmark_container_files = [file for file in raw_log_files if 'benchmark_container_' in file]
+        for container in benchmark_container_files:
+            client_ip = client.split('benchmark_container_')[1].split('.')[0]
+            with open(join(x_val, 'raw_logs', client), "r", encoding="utf-8") as f:
+                log_files[system.split('/')[-1]][x_val.split('/')[-1]][client_ip] = f.read()
+            for line in log_files[system.split('/')[-1]][x_val.split('/')[-1]][client_ip]:
+                if 'Avg. TPS: ' in line:
+                    throughputs[system.split('/')[-1]][x_val.split('/')[-1]] += int(line.split('Avg. TPS: ')[1])
+                # Get the timestamp between the actual start and end of the experiment. We only need a rough extimate from one of the clients, so the can just overwrite each other
+                elif 'Start sending transactions with' in line:
+                    start_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+                elif 'Results were written to' in line:
+                    end_timestamps[system.split('/')[-1]][x_val.split('/')[-1]] = extract_timestamp(line)
+        #if 'iftop_eg.csv' in os.listdir(client):
+        #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'iftop_eg.csv'))
+        #if 'net_traffic.csv' in os.listdir(client):
+        #    csv_files[system.split('/')[-1]][x_val.split('/')[-1]][client.split('/')[-1]]['byte_transfers'] = pd.read_csv(join(client, 'net_traffic.csv'))
 print("All CSV files loaded")
 
 for system in system_dirs:
@@ -365,14 +380,16 @@ for x_val in x_vals:
         new_row['x_var'] = float(x_val)
     for system in system_dirs:
         sys_name = system.split('/')[-1]
-        new_row[f'{sys_name}_throughput'] = throughputs[system.split('/')[-1]][x_val.split('/')[-1]]
-        new_row[f'{sys_name}_p50'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p50']
-        new_row[f'{sys_name}_p90'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p90']
-        new_row[f'{sys_name}_p95'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p95']
-        new_row[f'{sys_name}_p99'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p99']
-        new_row[f'{sys_name}_aborts'] = abort_rates[system.split('/')[-1]][x_val.split('/')[-1]]
-        new_row[f'{sys_name}_bytes'] = byte_transfers[system.split('/')[-1]][x_val.split('/')[-1]]
-        new_row[f'{sys_name}_cost'] = total_costs[system.split('/')[-1]][x_val.split('/')[-1]]
+        # In case there is an inconsistency in x_values measures
+        if x_val.split('/')[-1] in throughputs[system.split('/')[-1]].keys():
+            new_row[f'{sys_name}_throughput'] = throughputs[system.split('/')[-1]][x_val.split('/')[-1]]
+            new_row[f'{sys_name}_p50'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p50']
+            new_row[f'{sys_name}_p90'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p90']
+            new_row[f'{sys_name}_p95'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p95']
+            new_row[f'{sys_name}_p99'] = latencies[system.split('/')[-1]][x_val.split('/')[-1]]['p99']
+            new_row[f'{sys_name}_aborts'] = abort_rates[system.split('/')[-1]][x_val.split('/')[-1]]
+            new_row[f'{sys_name}_bytes'] = byte_transfers[system.split('/')[-1]][x_val.split('/')[-1]]
+            new_row[f'{sys_name}_cost'] = total_costs[system.split('/')[-1]][x_val.split('/')[-1]]
     # Append the row
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
