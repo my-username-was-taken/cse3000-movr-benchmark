@@ -61,7 +61,7 @@ if workload == 'tpcc':
     if scenario == 'baseline':
         benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the baseline scenario
         clients = 3000
-        x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10]
+        x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20]
     if scenario == 'skew':
         benchmark_params = "\"mix=44:44:4:4:4,skew={}\"" # For the baseline scenario
         clients = 3000
@@ -299,7 +299,7 @@ for system in systems_to_test:
         # Collect logs from all the benchmark container (for throughput)
         client_count = 0
         for client in client_ips_used:
-            log_file_name = f"data/{tag}/raw_logs/benchmark_container_{client}.log"
+            log_file_name = f"data/{tag}/raw_logs/benchmark_container_{client.replace('.', '_')}.log"
             ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
             result = run_subprocess(ssh_cmd, dry_run)
             if hasattr(result, "returncode") and result.returncode != 0:
