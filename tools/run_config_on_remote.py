@@ -12,8 +12,8 @@ VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
 VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
-parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
-parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
+parser.add_argument('-w',  '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
@@ -333,6 +333,9 @@ for system in systems_to_test:
         shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
 
 print("#####################")
-print(f"\n All {scenario} on {workload} experiments done. You can now copy logs with:")
+print(f"\n All {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")
+shutil.make_archive(f"{detock_dir}/data/{workload}/{scenario}", 'zip', f"{detock_dir}/data/{workload}/{scenario}")
+print("You can now copy logs with one of:")
 print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario} plots/raw_data/{workload}")
+print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario}.zip plots/raw_data/{workload}")
 print("============================================")
