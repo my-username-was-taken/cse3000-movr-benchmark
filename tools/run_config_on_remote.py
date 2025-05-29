@@ -92,7 +92,7 @@ else:
     elif scenario == 'scalability':
         benchmark_params = "\"mh=50,mp=50\""
         clients = None
-        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+        x_vals = [1, 10, 100, 1000, 10_000, 100_000, 1_000_000]
     elif scenario == 'network':
         benchmark_params = "\"mh=50,mp=50\""
         clients = 3000
@@ -148,8 +148,10 @@ def get_network_interfaces(ips_used):
             ssh_target = f"{user}@{ip}" if user else ip
             ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
             result = run_subprocess(ssh_cmd, dry_run)
-            print(f"Result is: {result}")
-            interfaces[ip] = result.stdout.split('\n')[0].split('interface: ')[1]
+            #print(f"Result is: {result}")
+            cur_interface = result.stdout.split('\n')[0].split('interface: ')[1]
+            print(f"IP {ip} uses interface {cur_interface}")
+            interfaces[ip] = cur_interface
         except:
             print(f"Unable to find interface for IP: {ip}")
 
@@ -216,8 +218,12 @@ print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
 
 # Check that all network emulation settings are switched off
+print("-------------------------------------------------------------------")
+print("Removing any leftover network settings from previous experiments .....")
 print("It's ok if the following removals fail. It's only a safeguard in case there were unremoved network settings from before.")
+print()
 simulate_network.remove_netem(ips=interfaces, user=user)
+print("-------------------------------------------------------------------")
 
 if workload == 'tpcc':
     while not check_table_loading_finished(ips_used, workload, conf):

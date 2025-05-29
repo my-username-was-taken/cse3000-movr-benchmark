@@ -29,7 +29,7 @@ We will test on the following systems:
 ## Running a whole scenario (with multiple x-values)
 
 1. Spin up the cluster as above if you heaven't already done so.
-2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -s baseline -w ycsbt -c examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
+2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py  -m [machine] -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -m st5 -s baseline -w ycsbt -c examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
 3. Collect results from remote machine. E.g., `scp -r st5:/home/omraz/Detock/data/packet_loss plots/raw_data/ycsbt`. Your log files should end up in `plots/raw_data/{workload}/{scenario}`
 4. Process the resutls (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsbt`
 
