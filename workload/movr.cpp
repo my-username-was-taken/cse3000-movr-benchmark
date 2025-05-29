@@ -12,6 +12,7 @@
 #include "execution/movr/constants.h"
 #include "execution/movr/transaction.h"
 #include "execution/movr/data_generator.h"
+#include "movr.h"
 
 using std::bernoulli_distribution;
 using std::iota;
@@ -37,6 +38,7 @@ constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
 
 // MovR specific parameters         
 constexpr char MULTI_HOME_PCT[] = "mh_pct";               // Percentage of transactions that are multi-home (0-100)
+constexpr char MULTI_PARTITION_PCT[] = "mp_pct";          // Percentage of transactions that are multi-partition (0-100)
 constexpr char SKEW[] = "skew";                           // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
 constexpr char REGION_REQUEST_MIX[] = "reg_mix";          // Colon-separated percentages for request origins per region
 constexpr char SUNFLOWER_MAX[] = "sunflower-max";         // Max % of txn from peak region (e.g. 50)
@@ -50,7 +52,8 @@ const RawParamMap DEFAULT_PARAMS =
   {MH_ZIPF, "0"},
   {TXN_MIX, "30:5:5:15:30:15"}, // Example Mix: ViewVehicles: 40%, UserSignup: 5%, AddVehicle: 5%, StartRide: 30%, UpdateLocation: 15%, EndRide: 5%
   {SH_ONLY, "0"},
-  {MULTI_HOME_PCT, "10"},       // Default 10% multi-home transactions
+  {MULTI_HOME_PCT, "10"},       // Default percentage of multi-home transactions
+  {MULTI_PARTITION_PCT, "10"},  // Default percentage of multi-partition transactions
   {SKEW, "0.0"},                // Default uniform access ( 0 = no contention)
   {REGION_REQUEST_MIX, ""},
   {SUNFLOWER_MAX, "40"},        // Default transactions % originating from peak region
@@ -72,6 +75,7 @@ int update_location_count = 0;
 int end_ride_count = 0;
 int total_txn_count = 0;
 int multi_home_count = 0;
+int multi_partition_count = 0;
 
 // Helper: Get number of regions (copied from TPCC)
 int GetNumRegions(const ConfigurationPtr& config) {
@@ -91,6 +95,11 @@ int GetRegionFromCity(int city_index, const ConfigurationPtr& config) {
   int num_regions = GetNumRegions(config);
 
   return (city_index / num_partitions) % num_regions;
+}
+
+int GetPartitionFromCity(int city_index, const ConfigurationPtr& config) {
+  int num_partitions = config->num_partitions();
+  return city_index % num_partitions;
 }
 
 vector<string> GetPartitionCities(int partition, const ConfigurationPtr& config) {
@@ -122,6 +131,7 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
   // Initialise parameters
   zipf_coef_ = params_.GetDouble(MH_ZIPF);
   multi_home_pct_ = params_.GetInt32(MULTI_HOME_PCT);
+  multi_partition_pct_ = params_.GetInt32(MULTI_PARTITION_PCT);
   max_homes_ = std::min(params_.GetInt32(HOMES), GetNumRegions(config_));
   skew_ = params_.GetDouble(SKEW);
   sh_only_ = params_.GetInt32(SH_ONLY) == 1;
@@ -159,9 +169,11 @@ MovrWorkload::MovrWorkload(const ConfigurationPtr& config, RegionId region, Repl
 
   // Validate and initialize distributions
   multi_home_dist_ = bernoulli_distribution(multi_home_pct_ / 100.0);
+  multi_partition_dist_ = std::bernoulli_distribution(multi_partition_pct_ / 100.0);
   InitializeTxnMix();
   InitializeRegionSelection();
   InitializeCityIndex();
+  PrintCityDistribution();
 }
 
 void MovrWorkload::InitializeTxnMix() {
@@ -243,6 +255,76 @@ std::string MovrWorkload::SelectHomeCity() {
   }
 
   return DataGenerator::EnsureFixedLength<64>(result);
+}
+
+std::string MovrWorkload::SelectMultiHomeMultiPartitionCity(const std::string& home_city) {
+  int home_city_idx = GetCityIndex(home_city);
+  int home_region = GetRegionFromCity(home_city_idx, config_);
+  int home_partition = GetPartitionFromCity(home_city_idx, config_);
+  
+  // Find all cities in different regions and different partitions
+  std::vector<std::string> candidate_cities;
+  for (int p = 0; p < config_->num_partitions(); p++) {
+    if (p == home_partition) continue;
+    
+    for (int r = 0; r < num_regions_; r++) {
+      if (r == home_region) continue;
+      
+      for (const auto& city : city_index_[p][r]) {
+        candidate_cities.push_back(city);
+      }
+    }
+  }
+  
+  if (candidate_cities.empty()) {
+    return home_city;
+  }
+  
+  return candidate_cities[std::uniform_int_distribution<>(0, candidate_cities.size() - 1)(rg_)];
+}
+
+std::string MovrWorkload::SelectMultiHomeCity(const std::string& home_city) {
+  int home_city_idx = GetCityIndex(home_city);
+  int home_region = GetRegionFromCity(home_city_idx, config_);
+  int home_partition = GetPartitionFromCity(home_city_idx, config_);
+  
+  // Find all cities in same partition but different regions
+  std::vector<std::string> candidate_cities;
+  for (int r = 0; r < num_regions_; r++) {
+    if (r == home_region) continue;
+    
+    for (const auto& city : city_index_[home_partition][r]) {
+      candidate_cities.push_back(city);
+    }
+  }
+  
+  if (candidate_cities.empty()) {
+    return home_city;
+  }
+  
+  return candidate_cities[std::uniform_int_distribution<>(0, candidate_cities.size() - 1)(rg_)];
+}
+
+std::string MovrWorkload::SelectMultiPartitionCity(const std::string& home_city) {
+  int home_city_idx = GetCityIndex(home_city);
+  int home_region = GetRegionFromCity(home_city_idx, config_);
+  int home_partition = GetPartitionFromCity(home_city_idx, config_);
+  
+  // Find all cities in same region but different partitions
+  std::vector<std::string> candidate_cities;
+  for (int p = 0; p < config_->num_partitions(); p++) {
+    if (p == home_partition) continue;
+    
+    for (const auto& city : city_index_[p][home_region]) {
+      candidate_cities.push_back(city);
+    }
+  }
+  
+  if (candidate_cities.empty()) {
+    return home_city;
+  }
+  
+  return candidate_cities[std::uniform_int_distribution<>(0, candidate_cities.size() - 1)(rg_)];
 }
 
 std::vector<std::string> MovrWorkload::SelectRemoteCities() {
@@ -330,11 +412,13 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
 
   pro.client_txn_id = client_txn_id_counter_;
   pro.is_multi_home = false;
+  pro.is_multi_partition = false;
 
   UpdateSunflowerRegionWeights();
 
-  // Determine if this transaction should be multi-home
+  // Determine if this transaction should be multi-home or multi_partition
   bool is_multi_home = !sh_only_ && multi_home_dist_(rg_);
+  bool is_multi_partition = multi_partition_dist_(rg_);
 
   // Select the transaction type
   MovrTxnType txn_type = static_cast<MovrTxnType>(select_txn_dist_(rg_));
@@ -350,11 +434,11 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
       user_signup_count++;
       break;
     case MovrTxnType::ADD_VEHICLE:
-      GenerateAddVehicleTxn(*txn, pro, home_city, is_multi_home);
+      GenerateAddVehicleTxn(*txn, pro, home_city, is_multi_home, is_multi_partition);
       add_vehicle_count++;
       break;
     case MovrTxnType::START_RIDE:
-      GenerateStartRideTxn(*txn, pro, home_city, is_multi_home);
+      GenerateStartRideTxn(*txn, pro, home_city, is_multi_home, is_multi_partition);
       start_ride_count++;
       break;
     case MovrTxnType::UPDATE_LOCATION:
@@ -362,7 +446,7 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
       update_location_count++;
       break;
     case MovrTxnType::END_RIDE:
-      GenerateEndRideTxn(*txn, pro, home_city, is_multi_home);
+      GenerateEndRideTxn(*txn, pro, home_city, is_multi_home, is_multi_partition);
       end_ride_count++;
       break;
     default:
@@ -372,6 +456,11 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
   // Update multi-home counter if the transaction is actually multi-home
   if (pro.is_multi_home) {
       multi_home_count++;
+  }
+
+  // Update multi-partition counter if the transaction is actually multi-partition
+  if (pro.is_multi_partition) {
+    multi_partition_count++;
   }
 
   total_txn_count++;
@@ -393,7 +482,19 @@ void MovrWorkload::LogStatistics() {
               << " StartRide: " << start_ride_count
               << " UpdateLoc: " << update_location_count
               << " EndRide: " << end_ride_count
-              << " MH%: " << (100.0 * multi_home_count / total_txn_count);
+              << " MH%: " << (100.0 * multi_home_count / total_txn_count)
+              << " MP%: " << (100.0 * multi_partition_count / total_txn_count);
+  }
+}
+
+void MovrWorkload::PrintCityDistribution() {
+  for (int p = 0; p < config_->num_partitions(); p++) {
+    for (int r = 0; r < num_regions_; r++) {
+      LOG(INFO) << "Partition " << p << ", Region " << r << " cities:";
+      for (const auto& city : city_index_[p][r]) {
+        LOG(INFO) << "  " << city;
+      }
+    }
   }
 }
 
@@ -452,21 +553,29 @@ void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile& p
 
 // Write transaction: Add a new vehicle owned by a user.
 // Can be multi-home if the owner (user) is in a different city than the vehicle's home city.
+// Can be multi-partition if the owner is in a different partition but same region.
 void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
-  bool is_multi_home) {
+  bool is_multi_home, bool is_multi_partition) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
-
   std::string owner_city = home_city;
-  if (is_multi_home) {
-      owner_city = SelectRemoteCity();
 
-    // Verify that owner_city is actually in a different region
-    int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
-    int owner_region = GetRegionFromCity(GetCityIndex(owner_city), config_);
-    
-    // If regions are the same, this isn't actually multi-home
-    pro.is_multi_home = (home_region != owner_region);
+  if (is_multi_home && is_multi_partition) {
+    owner_city = SelectMultiHomeMultiPartitionCity(home_city);
+  } else if (is_multi_home) {
+    owner_city = SelectMultiHomeCity(home_city);
+  } else if (is_multi_partition) {
+    owner_city = SelectMultiPartitionCity(home_city);
   }
+
+  // Verify that owner_city is actually in a different region
+  int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+  int owner_region = GetRegionFromCity(GetCityIndex(owner_city), config_);
+  pro.is_multi_home = (home_region != owner_region);
+
+  // Check if partitions are different
+  int home_partition = GetPartitionFromCity(GetCityIndex(home_city), config_);
+  int owner_partition = GetPartitionFromCity(GetCityIndex(owner_city), config_);    
+  pro.is_multi_partition = (home_partition != owner_partition);
 
   uint64_t vehicle_local_id = ++add_vehicle_count;
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(home_city), vehicle_local_id);
@@ -501,7 +610,7 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
 // Reads user info, vehicle status. Writes new ride record, updates vehicle status.
 // Can be multi-home if the user is in a different city than the vehicle.
 void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
-  bool is_multi_home) {
+  bool is_multi_home, bool is_multi_partition) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   std::string user_city = home_city;
   std::string vehicle_city = home_city; // Link to actual vehicle city
@@ -509,29 +618,37 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   std::string start_address = DataGenerator::GenerateAddress(rg_);
   uint64_t start_time = std::chrono::system_clock::now().time_since_epoch().count();
 
-  if (is_multi_home) {
-    auto remote_cities = SelectRemoteCities();
-    
-    if (!remote_cities.empty()) {
-      // 50% chance vehicle is remote, 50% chance user is remote
-      if (std::bernoulli_distribution(0.5)(rg_)) { 
-        user_city = remote_cities[0];
+  if (is_multi_home && is_multi_partition) {
+    if (std::bernoulli_distribution(0.5)(rg_)) { // 50% chance to change city for the user or the vehicle
+        user_city = SelectMultiHomeMultiPartitionCity(home_city);
       } else {
-        vehicle_city = remote_cities[0];
-      }
-      
-      // Verify that we're actually accessing different regions
-      int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
-      int user_region = GetRegionFromCity(GetCityIndex(user_city), config_);
-      int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
-      
-      // Only multi-home if at least one entity is in a different region
-      pro.is_multi_home = (home_region != user_region) || (home_region != vehicle_region);
-    } else {
-      // No remote cities available, not multi-home
-      pro.is_multi_home = false;
+        vehicle_city = SelectMultiHomeMultiPartitionCity(home_city);
+    }
+  } else if (is_multi_home) {
+    if (std::bernoulli_distribution(0.5)(rg_)) { // 50% chance to change city for the user or the vehicle
+        user_city = SelectMultiHomeCity(home_city);
+      } else {
+        vehicle_city = SelectMultiHomeCity(home_city);
+    }
+  } else if (is_multi_partition) {
+    if (std::bernoulli_distribution(0.5)(rg_)) { // 50% chance to change city for the user or the vehicle
+        user_city = SelectMultiPartitionCity(home_city);
+      } else {
+        vehicle_city = SelectMultiPartitionCity(home_city);
     }
   }
+
+  // Verify that we're actually accessing different regions
+  int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+  int user_region = GetRegionFromCity(GetCityIndex(user_city), config_);
+  int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
+  pro.is_multi_home = (home_region != user_region) || (home_region != vehicle_region);
+
+  // Check if partitions are different
+  int home_partition = GetPartitionFromCity(GetCityIndex(home_city), config_);
+  int user_partition = GetPartitionFromCity(GetCityIndex(user_city), config_);
+  int vehicle_partition = GetPartitionFromCity(GetCityIndex(vehicle_city), config_);
+  pro.is_multi_partition = (home_partition != user_partition) || (home_partition != vehicle_partition);
 
   // Generate IDs within valid ranges
   uint64_t user_local_id = user_id_dist_(rg_);
@@ -590,29 +707,28 @@ void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfil
 // Reads ride info, vehicle info. Updates ride record, updates vehicle status.
 // Can be multi-home if the ride spanned cities or user/vehicle are in different cities.
 void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city,
-  bool is_multi_home) {
+  bool is_multi_home, bool is_multi_partition) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
   std::string user_city = home_city;
   std::string vehicle_city = home_city;
 
-  if (is_multi_home) {
-    // Get remote cities from different regions
-    auto remote_cities = SelectRemoteCities();
-    
-    if (!remote_cities.empty()) {
-      vehicle_city = remote_cities[0];
-      
-      // Verify that we're actually accessing different regions
-      int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
-      int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
-      
-      // Only multi-home if vehicle is in a different region
-      pro.is_multi_home = (home_region != vehicle_region);
-    } else {
-      // No remote cities available, not multi-home
-      pro.is_multi_home = false;
-    }
+  if (is_multi_home && is_multi_partition) {
+    vehicle_city = SelectMultiHomeMultiPartitionCity(home_city);
+  } else if (is_multi_home) {
+    vehicle_city = SelectMultiHomeCity(home_city);
+  } else if (is_multi_partition) {
+    vehicle_city = SelectMultiPartitionCity(home_city);
   }
+
+  // Verify that we're actually accessing different regions
+  int home_region = GetRegionFromCity(GetCityIndex(home_city), config_);
+  int vehicle_region = GetRegionFromCity(GetCityIndex(vehicle_city), config_);
+  pro.is_multi_home = (home_region != vehicle_region);
+
+  // Check if partitions are different
+  int home_partition = GetPartitionFromCity(GetCityIndex(home_city), config_);
+  int vehicle_partition = GetPartitionFromCity(GetCityIndex(vehicle_city), config_);    
+  pro.is_multi_partition = (home_partition != vehicle_partition);
 
   uint64_t ride_local_id = ride_id_dist_(rg_);
   uint64_t vehicle_local_id = vehicle_id_dist_(rg_);

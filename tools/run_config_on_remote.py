@@ -44,7 +44,7 @@ interfaces = {}
 #venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = [database]
-image = "wmarcu/detock:latest"
+image = "wmarcu/detock-movr:latest"
 #tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
@@ -302,7 +302,7 @@ for system in systems_to_test:
         # Collect logs from all the benchmark container (for throughput)
         client_count = 0
         for client in client_ips_used:
-            log_file_name = f"data/{tag}/raw_logs/benchmark_container_{client}.log"
+            log_file_name = f"data/{tag}/raw_logs/benchmark_container_{client.replace('.', '_')}.log"
             ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
             result = run_subprocess(ssh_cmd, dry_run)
             if hasattr(result, "returncode") and result.returncode != 0:
@@ -336,6 +336,9 @@ for system in systems_to_test:
         shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
 
 print("#####################")
-print(f"\n All {scenario} on {workload} experiments done. You can now copy logs with:")
+print(f"\n All {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")
+shutil.make_archive(f"{detock_dir}/data/{workload}/{scenario}", 'zip', f"{detock_dir}/data/{workload}/{scenario}")
+print("You can now copy logs with one of:")
 print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario} plots/raw_data/{workload}")
+print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario}.zip plots/raw_data/{workload}")
 print("============================================")

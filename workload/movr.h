@@ -39,20 +39,28 @@ class MovrWorkload : public Workload {
   // Helper methods for generating specific transaction types
   void GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile& pro, const std::string& city);
   void GenerateUserSignupTxn(Transaction& txn, TransactionProfile& pro, const std::string& city);
-  void GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home);
-  void GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home);
+  void GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home, bool is_multi_partition);
+  void GenerateStartRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home, bool is_multi_partition);
   void GenerateUpdateLocationTxn(Transaction& txn, TransactionProfile& pro, const std::string& city);
-  void GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home);
+  void GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro, const std::string& home_city, bool is_multi_home, bool is_multi_partition);
 
   void InitializeTxnMix();
   void InitializeRegionSelection();
   void InitializeCityIndex();
   void LogStatistics();
+  void PrintCityDistribution();
 
   // Helper methods for city selection
   std::string SelectHomeCity();
+  std::string SelectMultiHomeMultiPartitionCity(const std::string& home_city);
+  std::string SelectMultiHomeCity(const std::string& home_city);
+  std::string SelectMultiPartitionCity(const std::string& home_city);
+
+
   std::vector<std::string> SelectRemoteCities();
   std::string SelectRemoteCity();
+  std::vector<std::string> SelectPartitionCities(const std::string& home_city);
+  std::string SelectPartitionCity(const std::string& home_city);
   void UpdateSunflowerRegionWeights();
 
   // Distributions for generating ids
@@ -70,6 +78,7 @@ class MovrWorkload : public Workload {
   // Parsed parameters
   int zipf_coef_;
   int multi_home_pct_;
+  int multi_partition_pct_;
   int max_homes_;
   double skew_;
   bool sh_only_;
@@ -85,6 +94,7 @@ class MovrWorkload : public Workload {
   vector<double> region_request_pct_; // Use double for distribution
   std::discrete_distribution<> select_origin_region_dist_;
   std::bernoulli_distribution multi_home_dist_;
+  std::bernoulli_distribution multi_partition_dist_;
   std::vector<std::vector<std::vector<std::string>>> city_index_;
   
   TxnId client_txn_id_counter_;

@@ -32,7 +32,7 @@ USER = "wmarcu"
 CONTAINER_DATA_DIR = "/home/wmarcu/data"
 HOST_DATA_DIR = "/home/wmarcu/data"
 
-SLOG_IMG = "wmarcu/slog:latest"
+SLOG_IMG = "wmarcu/detock-movr:latest"
 SLOG_CONTAINER_NAME = "wmarcu_slog"
 SLOG_BENCHMMARK_CONTAINER_NAME = "wmarcu_benchmark"
 SLOG_CLIENT_CONTAINER_NAME = "wmarcu_slog_client"
