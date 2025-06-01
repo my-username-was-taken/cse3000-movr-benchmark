@@ -8,7 +8,7 @@ import argparse
 # TODO: Change to use p50, p95, and p99 latencies
 LATENCY_PERCENTILE = 'p95'
 
-def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99]):
+def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]):
 
     # For the resource demads and cost, we use a different script
     if plot == 'baseline':
@@ -127,7 +127,7 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
     parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
-    parser.add_argument("-w",  "--workload", default="ycsbt", choices=["ycsbt", "tpcc"], help="The workload that was evaluated.")
+    parser.add_argument("-w",  "--workload", default="ycsb", choices=["ycsb", "tpcc"], help="The workload that was evaluated.")
     parser.add_argument("-lp", "--latency_percentiles", default="50;95;99", help="The latency percentiles to plot")
     args = parser.parse_args()
 

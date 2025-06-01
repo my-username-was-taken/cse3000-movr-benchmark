@@ -16,14 +16,14 @@ The script will populate the CSVs in 'plots/data' and generate a graph in 'plots
 '''
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
-VALID_WORKLOADS = ['ycsbt', 'tpcc'] # TODO: Add your own benchmark to this list
+VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
 LATENCY_PERCENTILES = [50,95,99]
 VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
 parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
-parser.add_argument('-w', '--workload', default='ycsbt', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-w', '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
 
 args = parser.parse_args()
