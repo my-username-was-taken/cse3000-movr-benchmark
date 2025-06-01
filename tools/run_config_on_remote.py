@@ -195,7 +195,12 @@ def check_table_loading_finished(ips, workload, conf_path):
         for line in conf_data:
             if 'regions: {' in line:
                 no_regions += 1
+            elif 'num_partitions: ' in line:
+                num_partitions = int(line.split('num_partitions: ')[1])
         target_warehouses_per_region = int(total_warehouses / no_regions)
+        # Special case for Calvin, since we only have 1 region in that case
+        if database == 'calvin':
+            target_warehouses_per_region = int(total_warehouses / num_partitions)
         for ip in ips:
             print(f"Checking readiness on server on IP {ip}. It should have {target_warehouses_per_region} warehouses .....")
             try:
