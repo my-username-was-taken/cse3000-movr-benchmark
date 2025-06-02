@@ -37,13 +37,13 @@ constexpr char TXN_MIX[] = "txn_mix";     // Colon-separated percentages for Mov
 constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
 
 // MovR specific parameters         
-constexpr char MULTI_HOME_PCT[] = "mh_pct";               // Percentage of transactions that are multi-home (0-100)
-constexpr char MULTI_PARTITION_PCT[] = "mp_pct";          // Percentage of transactions that are multi-partition (0-100)
+constexpr char MULTI_HOME_PCT[] = "mh";                   // Percentage of transactions that are multi-home (0-100)
+constexpr char MULTI_PARTITION_PCT[] = "mp";              // Percentage of transactions that are multi-partition (0-100)
 constexpr char SKEW[] = "skew";                           // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
 constexpr char REGION_REQUEST_MIX[] = "reg_mix";          // Colon-separated percentages for request origins per region
 constexpr char SUNFLOWER_MAX[] = "sunflower-max";         // Max % of txn from peak region (e.g. 50)
 constexpr char SUNFLOWER_FALLOFF[] = "sunflower-falloff"; // Falloff (0.0 to 1.0)
-constexpr char SUNFLOWER_CYCLES[] = "sunflower-cycles"; // Falloff (0.0 to 1.0)
+constexpr char SUNFLOWER_CYCLES[] = "sunflower-cycles";   // Number of times the 'sun' orbits each region during the experiment
 
 // Default values for MovR parameters
 const RawParamMap DEFAULT_PARAMS =
@@ -82,6 +82,25 @@ int GetNumRegions(const ConfigurationPtr& config) {
   return config->num_regions() == 1 ? config->num_replicas(config->local_region()) : config->num_regions();
 }
 
+/**
+  * Generates a globally unique 64-bit ID by combining a city index and local record ID.
+  * 
+  * The ID is structured as:
+  * [ City/Partition Identifier ][ Local Record ID ]
+  *   MSB ----------------------- LSB
+  * 
+  * @param city_index    The index of the city/partition (uses upper bits)
+  * @param local_id      The local record ID (uses lower bits)
+  * @param partition_bits Number of bits to reserve for city/partition (default: 16)
+  *                      - Determines max cities: 2^partition_bits
+  *                      - Determines max records per city: 2^(64-partition_bits)
+  * @return uint64_t     The generated globally unique ID
+  * 
+  * Example with default 16 partition bits:
+  *   - City index 5 (0x0005) and local ID 123456 (0x0001E240)
+  *   - Generated ID: 0x000500000001E240
+  *   - Structure: [16-bit city][48-bit local ID]
+  */
 uint64_t GenerateGlobalId(int city_index, uint64_t local_id) {
   return (static_cast<uint64_t>(city_index) << (64 - kPartitionBits)) | (local_id & ((1ULL << (64 - kPartitionBits)) - 1));
 }
@@ -327,53 +346,6 @@ std::string MovrWorkload::SelectMultiPartitionCity(const std::string& home_city)
   return candidate_cities[std::uniform_int_distribution<>(0, candidate_cities.size() - 1)(rg_)];
 }
 
-std::vector<std::string> MovrWorkload::SelectRemoteCities() {
-  if (sh_only_ || max_homes_ < 2) {
-    return {};
-  }
-  
-  int partition = config_->local_partition();
-  int num_homes = std::uniform_int_distribution{2, max_homes_}(rg_);
-  
-  // Select remote regions using zipf distribution
-  auto remote_regions = zipf_sample(rg_, zipf_coef_, distance_ranking_, num_homes - 1);
-  
-  std::vector<std::string> remote_cities;
-  for (auto region : remote_regions) {
-    // If no cities in this region and partition, skip
-    if (city_index_[partition][region].empty()) {
-      continue;
-    }
-    
-    // Select a random city from this region and partition
-    auto& cities_in_region = city_index_[partition][region];
-    int random_idx = std::uniform_int_distribution<>(0, cities_in_region.size() - 1)(rg_);
-    
-    remote_cities.push_back(DataGenerator::EnsureFixedLength<64>(cities_in_region[random_idx]));
-  }
-  
-  return remote_cities;
-}
-
-std::string MovrWorkload::SelectRemoteCity() {
-  auto remote_cities = SelectRemoteCities();
-  if (remote_cities.empty()) {
-    int partition = config_->local_partition();
-
-    // Fallback to a city in a different region if possible
-    for (int r = 0; r < num_regions_; r++) {
-      if (r != local_region_) {
-        if (!city_index_[partition][r].empty()) {
-          return DataGenerator::EnsureFixedLength<64>(city_index_[partition][r][0]);
-        }
-      }
-    }
-    // If no remote cities available, return a local city
-    return DataGenerator::EnsureFixedLength<64>(SelectHomeCity());
-  }
-  
-  return DataGenerator::EnsureFixedLength<64>(remote_cities[0]);
-}
 
 void MovrWorkload::UpdateSunflowerRegionWeights() {
   if (duration_ <= 0) {
@@ -416,13 +388,20 @@ std::pair<Transaction*, TransactionProfile> MovrWorkload::NextTransaction() {
 
   UpdateSunflowerRegionWeights();
 
-  // Determine if this transaction should be multi-home or multi_partition
-  bool is_multi_home = !sh_only_ && multi_home_dist_(rg_);
-  bool is_multi_partition = multi_partition_dist_(rg_);
+  bool is_multi_home = false;
+  bool is_multi_partition =false;
 
   // Select the transaction type
   MovrTxnType txn_type = static_cast<MovrTxnType>(select_txn_dist_(rg_));
   string home_city = SelectHomeCity();
+
+  // Determine if this transaction is eligible to be multi-home or multi_partition
+  if (txn_type == MovrTxnType::ADD_VEHICLE || 
+    txn_type == MovrTxnType::START_RIDE || 
+    txn_type == MovrTxnType::END_RIDE) {
+      is_multi_home = !sh_only_ && multi_home_dist_(rg_);
+      is_multi_partition = multi_partition_dist_(rg_);
+  }
 
   switch (txn_type) {
     case MovrTxnType::VIEW_VEHICLES:

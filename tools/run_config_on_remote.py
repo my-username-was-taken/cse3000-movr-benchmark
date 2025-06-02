@@ -14,7 +14,7 @@ VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
-parser.add_argument('-c',  '--conf', default='examples/movr/movr-2-regions.conf', help='.conf file used for experiment')
+parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="wmarcu", help='Username when logging into a remote machine')
@@ -76,6 +76,29 @@ if workload == 'tpcc':
         x_vals = [0, 10, 50, 100, 250, 500, 1000]
     elif scenario == 'packet_loss':
         benchmark_params = "\"mix=44:44:4:4:4\""
+        clients = 3000
+        x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+    elif scenario == 'sunflower':
+        raise Exception("The sunflower scenario is not yet implemented")
+elif workload == 'movr':
+    if scenario == 'baseline':
+        benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
+        clients = 3000
+        x_vals = [0, 20, 40, 60, 80, 100]
+    elif scenario == 'skew':
+        benchmark_params = "\"mh=50,mp=50,skew={}\""
+        clients = 3000
+        x_vals = [0, 0.00001, 0.0001, 0.001, 0.01, 0.1]
+    elif scenario == 'scalability':
+        benchmark_params = "\"mh=50,mp=50\""
+        clients = None
+        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+    elif scenario == 'network':
+        benchmark_params = "\"mh=50,mp=50\""
+        clients = 3000
+        x_vals = [0, 10, 50, 100, 250, 500, 1000]
+    elif scenario == 'packet_loss':
+        benchmark_params = "\"mh=50,mp=50\""
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
     elif scenario == 'sunflower':
@@ -151,8 +174,10 @@ def get_network_interfaces(ips_used):
             ssh_target = f"{user}@{ip}" if user else ip
             ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
             result = run_subprocess(ssh_cmd, dry_run)
-            print(f"Result is: {result}")
-            interfaces[ip] = result.stdout.split('\n')[0].split('interface: ')[1]
+            #print(f"Result is: {result}")
+            cur_interface = result.stdout.split('\n')[0].split('interface: ')[1]
+            print(f"IP {ip} uses interface {cur_interface}")
+            interfaces[ip] = cur_interface
         except:
             print(f"Unable to find interface for IP: {ip}")
 
@@ -327,7 +352,7 @@ for system in systems_to_test:
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
         shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))
-        if machine == 'st5':
+        if machine == 'st1':
             ips_file = 'examples/st_ips.json'
         else:
             ips_file = 'aws/ips.json'

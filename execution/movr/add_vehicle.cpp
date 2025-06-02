@@ -24,13 +24,7 @@ AddVehicleTxn::AddVehicleTxn(const std::shared_ptr<StorageAdapter>& storage_adap
 
 bool AddVehicleTxn::Read() {
   bool ok = true;
-  if (auto res = users_.Select({a_owner_id_, a_owner_city_}, {UsersSchema::Column::ID}); !res.empty()) {
-    auto owner_city = UncheckedCast<FixedTextScalar>(res[1]);
-    if (owner_city->to_string() != a_home_city_->to_string()) {
-      SetError("Owner city doesn't match vehicle home city");
-      ok = false;
-    }
-  } else {
+  if (users_.Select({a_owner_id_, a_owner_city_}, {UsersSchema::Column::ID}).empty()) {
     SetError("Vehicle owner does not exist");
     ok = false;
   }
