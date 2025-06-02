@@ -1,14 +1,24 @@
 import matplotlib.pyplot as plt
+from matplotlib import colors as mcolors
 import pandas as pd
 import numpy as np
 import os
 import argparse
 
-# Extracted data will contain p50, p90, p95, p99
-# TODO: Change to use p50, p95, and p99 latencies
+# Extracted data will contain p50, p90, p95, p99. For the plots we will use p50 p95 p99
 LATENCY_PERCENTILE = 'p95'
 
-def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99]):
+def darken_color(color, factor):
+    """Darkens a color toward black. Factor ∈ [0, 1], where 1 = original color, 0 = black."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
+
+def lighten_color(color, factor):
+    """Lightens a color toward white. Factor ∈ [0, 1], where 1 = original color, 0 = white."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(1 - (1 - c) * factor for c in rgb)
+
+def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]):
 
     # For the resource demads and cost, we use a different script
     if plot == 'baseline':
@@ -76,17 +86,17 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
                         label=db,
                         color=color,
                         linestyle=style
-                        # TODO: Find a way to distinguish between the the 3 percentiles (e.g., via darkness of the color)
                     )
             else:
-                for percentile in latency_percentiles:
+                cur_colors = [lighten_color(color=color, factor=0.5), mcolors.to_rgb(color), darken_color(color=color, factor=0.5)]
+                for percentile, cur_color in zip(latency_percentiles, cur_colors):
                     column_name = f'{db}_p{percentile}'
                     if column_name in data.columns:  # Plot only if the column exists in the CSV
                         ax.plot(
                             xaxis_points,
                             data[column_name],
                             label=db,
-                            color=color,
+                            color=cur_color,
                             linestyle=style
                         )
 
@@ -127,7 +137,7 @@ def make_plot(plot='baseline', workload='ycsbt', latency_percentiles=[50, 95, 99
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
     parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
-    parser.add_argument("-w",  "--workload", default="ycsbt", choices=["ycsbt", "tpcc"], help="The workload that was evaluated.")
+    parser.add_argument("-w",  "--workload", default="ycsb", choices=["ycsb", "tpcc"], help="The workload that was evaluated.")
     parser.add_argument("-lp", "--latency_percentiles", default="50;95;99", help="The latency percentiles to plot")
     args = parser.parse_args()
 

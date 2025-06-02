@@ -8,12 +8,12 @@ import argparse
 import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
-VALID_WORKLOADS = ['ycsbt', 'tpcc', 'movr'] # TODO: Add your own benchmark to this list
+VALID_WORKLOADS = ['ycsb', 'tpcc', 'movr'] # TODO: Add your own benchmark to this list
 VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
-parser.add_argument('-s',  '--scenario', default='scalability', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
-parser.add_argument('-w',  '--workload', default='tpcc', choices=VALID_WORKLOADS, help='Workload to run (default: ycsbt)')
+parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
+parser.add_argument('-w',  '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
@@ -50,7 +50,7 @@ short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
 
-if workload == 'ycsbt':
+if workload == 'ycsb':
     multi_partition_settings = 'mp=50,'
 elif workload == 'tpcc':
     multi_partition_settings = ''
@@ -61,7 +61,7 @@ if workload == 'tpcc':
     if scenario == 'baseline':
         benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the baseline scenario
         clients = 3000
-        x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10]
+        x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20]
     if scenario == 'skew':
         benchmark_params = "\"mix=44:44:4:4:4,skew={}\"" # For the baseline scenario
         clients = 3000
@@ -107,7 +107,7 @@ else:
     if scenario == 'baseline':
         benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
         clients = 3000
-        x_vals = [0, 20, 40, 60, 80, 100]
+        x_vals = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     elif scenario == 'skew':
         benchmark_params = "\"mh=50,mp=50,hot={}\""
         clients = 3000
@@ -115,7 +115,7 @@ else:
     elif scenario == 'scalability':
         benchmark_params = "\"mh=50,mp=50\""
         clients = None
-        x_vals = [1, 10, 100, 1000, 10000, 1000000]
+        x_vals = [1, 10, 100, 1000, 10_000, 100_000, 1_000_000]
     elif scenario == 'network':
         benchmark_params = "\"mh=50,mp=50\""
         clients = 3000
@@ -127,11 +127,12 @@ else:
     elif scenario == 'sunflower':
         raise Exception("The sunflower scenario is not yet implemented")
 
-single_ycsbt_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
+single_ycsb_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl basic --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 single_tpcc_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl tpcc --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
 single_movr_benchmark_cmd = "python3 tools/admin.py benchmark --image {image} {conf} -u {user} --txns 2000000 --seed 1 --clients {clients} --duration {duration} -wl movr --param {benchmark_params} 2>&1 | tee {short_benchmark_log}"
-if workload == 'ycsbt':
-    single_benchmark_cmd = single_ycsbt_benchmark_cmd
+
+if workload == 'ycsb':
+    single_benchmark_cmd = single_ycsb_benchmark_cmd
 elif workload == 'tpcc':
     single_benchmark_cmd = single_tpcc_benchmark_cmd
 elif workload == 'movr':
@@ -221,7 +222,12 @@ def check_table_loading_finished(ips, workload, conf_path):
         for line in conf_data:
             if 'regions: {' in line:
                 no_regions += 1
+            elif 'num_partitions: ' in line:
+                num_partitions = int(line.split('num_partitions: ')[1])
         target_warehouses_per_region = int(total_warehouses / no_regions)
+        # Special case for Calvin, since we only have 1 region in that case
+        if database == 'calvin':
+            target_warehouses_per_region = int(total_warehouses / num_partitions)
         for ip in ips:
             print(f"Checking readiness on server on IP {ip}. It should have {target_warehouses_per_region} warehouses .....")
             try:
@@ -244,8 +250,13 @@ print(f"The IPs used in this experiment are: {ips_used}")
 get_network_interfaces(ips_used=ips_used)
 
 # Check that all network emulation settings are switched off
+print("-------------------------------------------------------------------")
+print("Removing any leftover network settings from previous experiments .....")
 print("It's ok if the following removals fail. It's only a safeguard in case there were unremoved network settings from before.")
+print()
 simulate_network.remove_netem(ips=interfaces, user=user)
+print("-------------------------------------------------------------------")
+print()
 
 if workload == 'tpcc':
     while not check_table_loading_finished(ips_used, workload, conf):
@@ -361,7 +372,7 @@ for system in systems_to_test:
         shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
 
 print("#####################")
-print(f"\n All {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")
+print(f"\nAll {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")
 shutil.make_archive(f"{detock_dir}/data/{workload}/{scenario}", 'zip', f"{detock_dir}/data/{workload}/{scenario}")
 print("You can now copy logs with one of:")
 print(f"scp -r {machine}:{detock_dir}/data/{workload}/{scenario} plots/raw_data/{workload}")

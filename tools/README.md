@@ -6,30 +6,32 @@ Disclaimer: These instructions have only been tested in an ST cluster setup. For
 
 Note: If you are running these experiments on the ST machines: ssh into one of them, and run the commands from inside it.
 
-0. If you haven't already done so, create your Python venv `python3.8 -m venv build_detock && source build_detock/bin/activate` and install the necessary packages `pip install -r tools/requirements.txt`
+0. If you haven't already done so, create your Python venv `python3.8 -m venv build_detock && source build_detock/bin/activate`, upgrade pip `pip install --upgrade pip` and install the necessary packages `pip install -r tools/requirements.txt`
 1. Activate the environment `cd Detock/ && source build_detock/bin/activate`
 2. Spin up your cluster.
     1. Make sure your `.conf` file has the correct partitioning. This is different for each DB system that you test.
     2. Make sure you select the correct binary. This is different for some of the DB systems.
     3. Please use the ports assigned to you so your experiments don't interfere with those of other people.
-    4. Run the final command. E.g., (for an ST cluster setup) `python3 tools/admin.py start --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz -e GLOG_v=1 --bin slog`
-3. Check the status for any errors `python3 tools/admin.py status --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz` Should look something like this: 
+    4. Run the final command. E.g., (for an ST cluster setup) `python3 tools/admin.py start --image omraz/seq_eval:latest examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz -e GLOG_v=1 --bin slog`
+3. Check the status for any errors `python3 tools/admin.py status --image omraz/seq_eval:latest examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz` Should look something like this: 
 ![Successful status](status_command_output.png)
-4. Run a single experiment. E.g., `python3 tools/admin.py benchmark --image omraz/seq_eval:latest examples/tu_cluster.conf -u omraz --txns 2000000 --seed 1 --clients 3000 --duration 60 -wl basic --param "mh=50,mp=50" 2>&1 | tee benchmark_cmd.log`
-5. Once you are done with your experiments, stop the cluster. E.g., `python3 tools/admin.py stop --image omraz/seq_eval:latest examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf -u omraz`
+4. Run a single experiment. E.g., `python3 tools/admin.py benchmark --image omraz/seq_eval:latest examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz --txns 2000000 --seed 1 --clients 3000 --duration 60 -wl basic --param "mh=50,mp=50" 2>&1 | tee benchmark_cmd.log`
+5. Once you are done with your experiments, stop the cluster. E.g., `python3 tools/admin.py stop --image omraz/seq_eval:latest examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz`
 
-Currently (24/05/25), the following systems run:
+We will test on the following systems:
 
-1. Detock (standard): Use e.g. `examples/ycsbt/tu_cluster_ycsb_ddr_ts.conf`, binary is `slog`
-2. Detock (deterministic deadlock resolution only): Use e.g. `examples/ycsbt/tu_cluster_ycsb_ddr_only.conf`, binary is `slog`
-3. Janus: Use e.g., `examples/ycsbt/tu_cluster_ycsb_janus.conf`, binary is `janus`
+1. Detock (standard): Use e.g. `examples/ycsb/tu_cluster_ycsb_ddr_ts.conf`, binary is `slog`
+2. Detock (deterministic deadlock resolution only): Use e.g. `examples/ycsb/tu_cluster_ycsb_ddr_only.conf`, binary is `slog`
+3. Janus: Use e.g., `examples/ycsb/tu_cluster_ycsb_janus.conf`, binary is `janus`
+4. SLOG: Use e.g., `examples/ycsb/tu_cluster_ycsb_slog.conf`, binary is `slog`
+5. Calvin: Use e.g., `examples/ycsb/tu_cluster_ycsb_calvin.conf`, binary is `slog`
 
 ## Running a whole scenario (with multiple x-values)
 
 1. Spin up the cluster as above if you heaven't already done so.
-2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py -s [scenario] -w [workload] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -s baseline -w ycsbt -u omraz -db janus`
-3. Collect results from remote machine. E.g., `scp -r st5:/home/omraz/Detock/data/packet_loss plots/raw_data/ycsbt`. Your log files should end up in `plots/raw_data/{workload}/{scenario}`
-4. Process the resutls (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsbt`
+2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py  -m [machine] -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -m st5 -s baseline -w ycsb -c examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
+3. Collect results from remote machine. E.g., `scp -r st5:/home/omraz/Detock/data/packet_loss plots/raw_data/ycsb`. Your log files should end up in `plots/raw_data/{workload}/{scenario}`
+4. Process the resutls (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsb`
 
 This should produce your plots.
 

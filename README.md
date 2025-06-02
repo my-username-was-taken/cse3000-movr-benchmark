@@ -23,8 +23,7 @@ sudo apt install cmake build-essential pkg-config
 Run the following commands to build the system. The dependencies will be downloaded and built automatically.
 
 ```
-rm -rf build && mkdir build
-cd build
+rm -rf build && mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=release
 make -j$(nproc)
 ```

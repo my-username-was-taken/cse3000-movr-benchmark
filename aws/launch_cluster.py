@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 IPS_FILE = 'aws/ips.json'
-YCSBT_CONF_FILE = 'examples/aws_cluster_ycsbt.conf'
+YCSB_CONF_FILE = 'examples/aws_cluster_ycsb.conf'
 TPCC_CONF_FILE = 'examples/aws_cluster_tpcc.conf'
 
 LOGGING_FILE = 'aws/VM_launch_logging.log'
@@ -343,7 +343,7 @@ def update_conf_file_ips():
         current_region_ip_lines.append('}')
         regions_ip_lines.extend(current_region_ip_lines)
 
-    for conf in [YCSBT_CONF_FILE, TPCC_CONF_FILE]:
+    for conf in [YCSB_CONF_FILE, TPCC_CONF_FILE]:
         # 2. Populate .conf with IPs
         with open(conf) as file:
             conf_lines = [line.rstrip() for line in file]
@@ -369,11 +369,11 @@ def update_conf_file_ips():
                 f.write(f"{line}\n")
 
 
-def spawn_db_service(workload='YCSBT', image='omraz/seq_eval:latest'):
+def spawn_db_service(workload='YCSB', image='omraz/seq_eval:latest'):
     spawn_db_service_cmd = "python3.8 tools/admin.py start --image {} examples/{}.conf -u ubuntu -e GLOG_v=1"
-    if workload == 'YCSBT':
+    if workload == 'YCSB':
         print("Spawning YCSB-T DB service")
-        conf_file = 'aws_cluster_ycsbt'
+        conf_file = 'aws_cluster_ycsb'
         spawn_db_service_cmd = spawn_db_service_cmd.format(image, conf_file)
     elif workload == 'TPCC':
         print("Spawning YCSB-T DB service")
@@ -425,6 +425,6 @@ if __name__ == "__main__":
         test_connectivity_between_regions(region_ips)
     elif args.action == "setup_db":
         update_conf_file_ips()
-        spawn_db_service(workload='YCSBT', image=image)
+        spawn_db_service(workload='YCSB', image=image)
     elif args.action == "stop":
         stop_cluster()
