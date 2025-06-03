@@ -6,36 +6,62 @@ import shutil
 import argparse
 
 import simulate_network
+import run_config_on_remote
+
+'''
+Script to run experiments for ALL systems for a specific scenario.
+It uses the logic of the 'run_config_on_remote.py' script, but also takes care of spining up and tearing down the cluster for each system tested
+'''
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'lat_breakdown']
 VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
-VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
+USED_DATABASES = ['calvin', 'ddr_only', 'ddr_ts', 'janus', 'slog']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
-parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
+parser.add_argument('-cf', '--conf_folder', default='examples/ycsb/lat_breakdown', help='Folder with the conf files for each system. Make sure their name contains the corresponding string in USED_DATABASES')
+#parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
 parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
 parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
 parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
-parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
+#parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
 
 args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
-conf = args.conf
+conf_folder = args.conf_folder
+#conf = args.conf
 duration = args.duration
 dry_run = args.dry_run
 user = args.user
 machine = args.machine
 benchmark_container = args.benchmark_container
 server_container = args.server_container
-database = args.database
+#database = args.database
 
-print(f"Running scenario: '{scenario}' and workload: '{workload}'")
+print(f"Running scenario: '{scenario}' and workload: '{workload}' on the systems {USED_DATABASES}")
+
+#TODO: Continue from here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 BASIC_IFTOP_CMD = 'iftop 2>&1'
 
@@ -61,7 +87,7 @@ if workload == 'tpcc':
         clients = 3000
         x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20]
     if scenario == 'skew':
-        benchmark_params = "\"mix=44:44:4:4:4,skew={}\""
+        benchmark_params = "\"mix=44:44:4:4:4,skew={}\"" # For the baseline scenario
         clients = 3000
         x_vals = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     elif scenario == 'scalability':
@@ -76,10 +102,6 @@ if workload == 'tpcc':
         benchmark_params = "\"mix=44:44:4:4:4\""
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
-    elif scenario == 'lat_breakdown':
-        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the latency breakdown we just run the vanila TPC-C
-        clients = 3000
-        x_vals = [0.01]
     elif scenario == 'sunflower':
         raise Exception("The sunflower scenario is not yet implemented")
 else:
@@ -103,10 +125,6 @@ else:
         benchmark_params = "\"mh=50,mp=50\""
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
-    elif scenario == 'lat_breakdown':
-        benchmark_params = "\"mh={},mp=50\""  # For the latency breakdown we just run the vanila TPC-C
-        clients = 3000
-        x_vals = [50]
     elif scenario == 'sunflower':
         raise Exception("The sunflower scenario is not yet implemented")
 
@@ -327,6 +345,18 @@ for system in systems_to_test:
                 if not dry_run:
                     for line in result.stdout.split('\n'):
                         f.write(f"{line}\n")
+            ### OLD VERSION: Stored container logs in client subfolders, but may end up in the wrong subdirectory
+            '''client_folder = f'{client_count}-0'
+            ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
+            result = run_subprocess(ssh_cmd, dry_run)
+            if hasattr(result, "returncode") and result.returncode != 0:
+                print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
+                break
+            with open(f"data/{tag}/client/{client_folder}/benchmark_container.log", 'w') as f:
+                if not dry_run:
+                    for line in result.stdout.split('\n'):
+                        f.write(f"{line}\n")
+            client_count += 1'''
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
         shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))

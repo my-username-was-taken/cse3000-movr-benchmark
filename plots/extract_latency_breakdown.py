@@ -19,6 +19,14 @@ NANO_TO_MS = 1e-6
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
 VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
 
+def safe_mean_std(df, col):
+    if len(df) == 0:
+        return (np.nan, np.nan)
+    return (
+        round(df[col].mean(), 3),
+        round(df[col].std(), 3)
+    )
+
 # Argument parser
 parser = argparse.ArgumentParser(description="Decompose the latency of transactions into components and plot graph stacked bar chart.")
 parser.add_argument('-df', '--data_folder', default='plots/raw_data/ycsb/lat_breakdown', help='Path to folder with raw data')
@@ -31,6 +39,7 @@ workload = args.workload
 output_folder = args.output_folder
 
 system_dirs = os.listdir(data_folder)
+system_dirs = [system for system in system_dirs if '.' not in system]
 summary_combined = pd.DataFrame(columns=['System', 'Avg Duration (ms)', 'Std Duration (ms)',
                                          'Avg Log Manager (ms)', 'Std Log Manager (ms)',
                                          'Avg Scheduler (ms)', 'Std Scheduler (ms)',
@@ -52,7 +61,7 @@ for system in system_dirs:
     event_groups = events_csv.groupby("txn_id")
     # Prepare list to collect results
     results = []
-    txns_csv = txns_csv.head(100) # For debugging purposes only, use the first 100 txns to speed up the script
+    txns_csv = txns_csv.tail(100) # For debugging purposes only, use the first 100 txns to speed up the script
     for _, txn in txns_csv.iterrows():
         txn_id = txn["txn_id"]
         sent_at = txn["sent_at"]
@@ -96,13 +105,21 @@ for system in system_dirs:
     latency_breakdown_df = pd.DataFrame(results)
     os.makedirs(output_folder, exist_ok=True)
     latency_breakdown_df.to_csv(os.path.join(output_folder, f"latency_breakdown_{system}.csv"), index=False)
-    # Compute averages and standard deviations
+    # Define txn subcategories
+    sp_sh_df = latency_breakdown_df[(~latency_breakdown_df["Is MP"]) & (~latency_breakdown_df["Is MH"])]
+    mp_sh_df = latency_breakdown_df[(latency_breakdown_df["Is MP"]) & (~latency_breakdown_df["Is MH"])]
+    mp_mh_df    = latency_breakdown_df[(latency_breakdown_df["Is MP"]) & (latency_breakdown_df["Is MH"])]
+    # Compute base stats
     summary_stats = latency_breakdown_df[[
         "Duration (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
+    # Compute per-category stats
+    sp_mean, sp_std = safe_mean_std(sp_sh_df, "Duration (ms)")
+    mp_mean, mp_std = safe_mean_std(mp_sh_df, "Duration (ms)")
+    mh_mean, mh_std = safe_mean_std(mp_mh_df, "Duration (ms)")
     # Flatten into one row
     summary_flat = pd.DataFrame([{
         "System": system,
@@ -114,6 +131,13 @@ for system in system_dirs:
         "Std Scheduler (ms)": round(summary_stats.loc['std', 'Scheduler (ms)'], 3),
         "Avg Other (ms)": round(summary_stats.loc['mean', 'Other (ms)'], 3),
         "Std Other (ms)": round(summary_stats.loc['std', 'Other (ms)'], 3),
+        # Add per-category durations
+        "Avg Duration (SP+SH)": sp_mean,
+        "Std Duration (SP+SH)": sp_std,
+        "Avg Duration (MP+SH)": mp_mean,
+        "Std Duration (MP+SH)": mp_std,
+        "Avg Duration (MH)": mh_mean,
+        "Std Duration (MH)": mh_std,
     }])
     # Append row for system to the combined df
     summary_combined = pd.concat([summary_combined, summary_flat], ignore_index=True)
