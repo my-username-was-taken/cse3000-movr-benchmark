@@ -7,7 +7,7 @@ import argparse
 
 import simulate_network
 
-VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'lat_breakdown']
+VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'lat_breakdown', 'vary_hw']
 VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
 VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
 
@@ -15,18 +15,20 @@ parser = argparse.ArgumentParser(description="Run Detock experiment with a given
 parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
+parser.add_argument('-i',  '--img', default='omraz/seq_eval:latest', help='The Docker image of your built Detock system')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
-parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
-parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
-parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
-parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
+parser.add_argument('-u',  '--user', default='omraz', help='Username when logging into a remote machine')
+parser.add_argument('-m',  '--machine', default='st5', help='The machine from which this script is (used to write out the scp command for collecting the results.)')
+parser.add_argument('-b',  '--benchmark_container', default='benchmark', help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
+parser.add_argument('-sc', '--server_container', default='slog', help='The name of the server container')
 parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
 
 args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
 conf = args.conf
+image = args.img
 duration = args.duration
 dry_run = args.dry_run
 user = args.user
@@ -43,7 +45,6 @@ interfaces = {}
 
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = [database]
-image = "omraz/seq_eval:latest"
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
@@ -77,7 +78,11 @@ if workload == 'tpcc':
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
     elif scenario == 'lat_breakdown':
-        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the latency breakdown we just run the vanila TPC-C
+        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the latency breakdown we just run our default YCSB
+        clients = 3000
+        x_vals = [0.01]
+    elif scenario == 'vary_hw':
+        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the varying HW we just run our default YCSB
         clients = 3000
         x_vals = [0.01]
     elif scenario == 'sunflower':
@@ -105,6 +110,10 @@ else:
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
     elif scenario == 'lat_breakdown':
         benchmark_params = "\"mh={},mp=50\""  # For the latency breakdown we just run the vanila TPC-C
+        clients = 3000
+        x_vals = [50]
+    elif scenario == 'vary_hw':
+        benchmark_params = "\"mh={},mp=50\"" # For the varying HW we just run the vanila TPC-C
         clients = 3000
         x_vals = [50]
     elif scenario == 'sunflower':
@@ -154,7 +163,6 @@ def get_network_interfaces(ips_used):
             ssh_target = f"{user}@{ip}" if user else ip
             ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
             result = run_subprocess(ssh_cmd, dry_run)
-            #print(f"Result is: {result}")
             cur_interface = result.stdout.split('\n')[0].split('interface: ')[1]
             print(f"IP {ip} uses interface {cur_interface}")
             interfaces[ip] = cur_interface
@@ -162,7 +170,7 @@ def get_network_interfaces(ips_used):
             print(f"Unable to find interface for IP: {ip}")
 
 def start_net_monitor(user, interfaces):
-    for ip, iface in interfaces.items():  # assuming interfaces is a dict {ip: iface}
+    for ip, iface in interfaces.items():  # assuming interfaces is a dict {ip: interface}
         cmd = (
             f"ssh {user}@{ip} '"
             f"echo \"timestamp_ms,bytes_sent\" > net_traffic.csv; "
@@ -336,7 +344,10 @@ for system in systems_to_test:
             ips_file = 'aws/ips.json'
         shutil.copyfile(ips_file, os.path.join(cur_log_dir, 'ips.json'))
         # Rename folder accordingly
-        shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
+        if scenario == 'lat_breakdown': # For the latency breakdown we anyway just have 1 x_val
+            shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}')
+        else:
+            shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
 
 print("#####################")
 print(f"\nAll {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")

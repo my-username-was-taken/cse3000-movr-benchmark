@@ -29,11 +29,19 @@ We will test on the following systems:
 ## Running a whole scenario (with multiple x-values)
 
 1. Spin up the cluster as above if you heaven't already done so.
-2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py  -m [machine] -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -m st5 -s baseline -w ycsb -c examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
+2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py -i [docker_image] -m [machine] -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -c examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
 3. Collect results from remote machine. E.g., `scp -r st5:/home/omraz/Detock/data/packet_loss plots/raw_data/ycsb`. Your log files should end up in `plots/raw_data/{workload}/{scenario}`
 4. Process the resutls (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsb`
 
 This should produce your plots.
+
+## Running all databases for a given scenario (under development)
+
+The `tools/run_all_systems_on_remote.py` script will handle the spining up and tearing down of the system after each experiment, so you can run all the databases in a scenario with a single command:
+
+`python3 tools/run_all_systems_on_remote.py -i [docker_image] -m [machine] -s [scenario] -w [workload] -cf [conf_file_folder] -u [username]`
+
+For example: `python3 tools/run_all_systems_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -c examples/ycsb -u omraz`
 
 ## Using tmux
 
