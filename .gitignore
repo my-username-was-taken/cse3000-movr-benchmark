@@ -1,5 +1,6 @@
 # VS Code
 .vscode
+.DS_Store
 !.vscode/cmake-variants.json
 
 # Prerequisites
