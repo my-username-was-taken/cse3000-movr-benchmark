@@ -143,7 +143,7 @@ class UpdateLocationTxn : public MovrTransaction {
     public:
      UpdateLocationTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
         const std::string& city, const uint64_t ride_id, const uint64_t timestamp,
-        const double lat, const double lon);
+        const uint64_t lat, const uint64_t lon);
      bool Read() final;
      void Compute() final;
      bool Write() final;
@@ -164,7 +164,7 @@ class UpdateLocationTxn : public MovrTransaction {
      EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
         const uint64_t ride_id, const std::string& city, const uint64_t vehicle_id,
         const std::string& vehicle_city, const std::string& end_address,
-        const uint64_t end_time, const double revenue);
+        const uint64_t end_time, const uint64_t revenue);
      bool Read() final;
      void Compute() final;
      bool Write() final;

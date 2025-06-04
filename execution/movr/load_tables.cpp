@@ -143,7 +143,8 @@ class PartitionedMovrDataLoader {
         auto end_address = DataGenerator::GenerateAddress(rg_);
         auto start_time = std::chrono::system_clock::now().time_since_epoch().count();
         auto end_time = start_time + 3600; // 1 hour later
-        auto revenue = stod(DataGenerator::GenerateRevenue(rg_));
+        auto revenue_str = DataGenerator::GenerateRevenue(rg_);
+        uint64_t revenue = static_cast<uint64_t>(std::stod(revenue_str));
         
         rides.Insert({
           MakeInt64Scalar(global_id),
@@ -176,8 +177,8 @@ class PartitionedMovrDataLoader {
         uint64_t ride_id = GenerateGlobalId(city_idx, ride_rnd(rg_));
         auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
         auto latlon = DataGenerator::GenerateRandomLatLong(rg_);
-        auto lat = stod(latlon.first);
-        auto lon = stod(latlon.second);
+        uint64_t lat = static_cast<uint64_t>(std::stod(latlon.first));
+        uint64_t lon = static_cast<uint64_t>(std::stod(latlon.second));
         
         histories.Insert({
           MakeFixedTextScalar<64>(city),

@@ -68,14 +68,14 @@ constexpr int kMaxRidesPerCity = kDefaultRides / kDefaultCities;
 
 // Counters (for debugging/logging)
 int view_vehicle_count = 0;
-int user_signup_count = 0;
-int add_vehicle_count = 0;
-int start_ride_count = 0;
-int update_location_count = 0;
-int end_ride_count = 0;
-int total_txn_count = 0;
-int multi_home_count = 0;
-int multi_partition_count = 0;
+std::atomic<uint64_t> user_signup_count = 0;
+std::atomic<uint64_t> add_vehicle_count = 0;
+std::atomic<uint64_t> start_ride_count = 0;
+std::atomic<uint64_t> update_location_count = 0;
+std::atomic<uint64_t> end_ride_count = 0;
+std::atomic<uint64_t> total_txn_count = 0;
+std::atomic<uint64_t> multi_home_count = 0;
+std::atomic<uint64_t> multi_partition_count = 0;
 
 // Helper: Get number of regions (copied from TPCC)
 int GetNumRegions(const ConfigurationPtr& config) {
@@ -509,7 +509,8 @@ void MovrWorkload::GenerateViewVehiclesTxn(Transaction& txn, TransactionProfile&
 // This transaction is typically single-home, writing to the 'city' where the user signs up.
 void MovrWorkload::GenerateUserSignupTxn(Transaction& txn, TransactionProfile& pro, const std::string& city) {
   auto txn_adapter = std::make_shared<movr::TxnKeyGenStorageAdapter>(txn);
-  uint64_t local_id = ++user_signup_count; // Simple sequential ID
+  static const uint64_t users_per_city = kDefaultUsers / cities_.size();
+  uint64_t local_id = users_per_city + (++user_signup_count);
   uint64_t global_id = GenerateGlobalId(GetCityIndex(city), local_id);
   std::string name = DataGenerator::GenerateName(rg_);
   std::string address = DataGenerator::GenerateAddress(rg_);
@@ -556,7 +557,8 @@ void MovrWorkload::GenerateAddVehicleTxn(Transaction& txn, TransactionProfile& p
   int owner_partition = GetPartitionFromCity(GetCityIndex(owner_city), config_);    
   pro.is_multi_partition = (home_partition != owner_partition);
 
-  uint64_t vehicle_local_id = ++add_vehicle_count;
+  static const uint64_t vehicles_per_city = kDefaultVehicles / cities_.size();
+  uint64_t vehicle_local_id = vehicles_per_city + (++add_vehicle_count);
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(home_city), vehicle_local_id);
   std::string type = DataGenerator::GenerateRandomVehicleType(rg_);
   uint64_t owner_local_id = user_id_dist_(rg_);
@@ -632,7 +634,8 @@ void MovrWorkload::GenerateStartRideTxn(Transaction& txn, TransactionProfile& pr
   // Generate IDs within valid ranges
   uint64_t user_local_id = user_id_dist_(rg_);
   uint64_t vehicle_local_id = vehicle_id_dist_(rg_);
-  uint64_t ride_local_id = ++start_ride_count;
+  static const uint64_t rides_per_city = kDefaultRides / cities_.size();
+  uint64_t ride_local_id = rides_per_city + (++start_ride_count);
   
   uint64_t user_id = GenerateGlobalId(GetCityIndex(user_city), user_local_id);
   uint64_t vehicle_id = GenerateGlobalId(GetCityIndex(vehicle_city), vehicle_local_id);
@@ -665,8 +668,8 @@ void MovrWorkload::GenerateUpdateLocationTxn(Transaction& txn, TransactionProfil
   uint64_t ride_id = GenerateGlobalId(GetCityIndex(city), ride_local_id);
   uint64_t timestamp = std::chrono::system_clock::now().time_since_epoch().count();
   const auto loc = DataGenerator::GenerateRandomLatLong(rg_);
-  uint64_t lat = stoll(loc.first);
-  uint64_t lon = stoll(loc.second);
+  uint64_t lat = static_cast<uint64_t>(stod(loc.first));
+  uint64_t lon = static_cast<uint64_t>(stod(loc.second));
 
   movr::UpdateLocationTxn update_location_txn(txn_adapter, city, ride_id, timestamp, lat, lon);
   update_location_txn.Read();
@@ -717,10 +720,11 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
 
   std::string end_address = DataGenerator::GenerateAddress(rg_);
   uint64_t end_time = std::chrono::system_clock::now().time_since_epoch().count();
-  std::string revenue = DataGenerator::GenerateRevenue(rg_);
+  std::string revenue_str = DataGenerator::GenerateRevenue(rg_);
+  uint64_t revenue = static_cast<uint64_t>(std::stod(revenue_str));
 
   movr::EndRideTxn end_ride_txn(txn_adapter, ride_id, home_city, vehicle_id, vehicle_city,
-    end_address, end_time, stoll(revenue));
+    end_address, end_time, revenue);
   end_ride_txn.Read();
   end_ride_txn.Write();
   txn_adapter->Finialize();
@@ -733,7 +737,7 @@ void MovrWorkload::GenerateEndRideTxn(Transaction& txn, TransactionProfile& pro,
   procedure->add_args(vehicle_city);
   procedure->add_args(end_address);
   procedure->add_args(std::to_string(end_time));
-  procedure->add_args(revenue);
+  procedure->add_args(revenue_str);
 }
 
 } // namespace slog

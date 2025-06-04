@@ -23,6 +23,8 @@ std::shared_ptr<Sharder> Sharder::MakeSharder(const ConfigurationPtr& config) {
     return std::make_shared<SimpleSharder2>(config);
   } else if (config->proto_config().has_tpcc_partitioning()) {
     return std::make_shared<TPCCSharder>(config);
+  } else if (config->proto_config().has_movr_partitioning()) {
+    return std::make_shared<MovrSharder>(config);
   }
   return std::make_shared<HashSharder>(config);
 }
@@ -93,6 +95,18 @@ TPCCSharder::TPCCSharder(const ConfigurationPtr& config) : Sharder(config) {}
 uint32_t TPCCSharder::compute_partition(const Key& key) const {
   int w_id = *reinterpret_cast<const int*>(key.data());
   return (w_id - 1) % num_partitions_;
+}
+
+/**
+ * MovR Sharder
+ */
+MovrSharder::MovrSharder(const ConfigurationPtr& config) : Sharder(config) {}
+uint32_t MovrSharder::compute_partition(const Key& key) const {
+  uint64_t global_id = *reinterpret_cast<const uint64_t*>(key.data());
+  constexpr int kPartitionBits = 16;
+  uint32_t city_index = static_cast<uint32_t>(global_id >> (64 - kPartitionBits));
+  
+  return city_index % num_partitions_;
 }
 
 }  // namespace slog

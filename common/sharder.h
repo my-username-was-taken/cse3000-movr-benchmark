@@ -56,4 +56,10 @@ class TPCCSharder : public Sharder {
   uint32_t compute_partition(const Key& key) const final;
 };
 
+class MovrSharder : public Sharder {
+ public:
+  MovrSharder(const ConfigurationPtr& config);
+  uint32_t compute_partition(const Key& key) const final;
+};
+
 }  // namespace slog

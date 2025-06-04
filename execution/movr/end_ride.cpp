@@ -8,7 +8,7 @@ namespace movr {
 EndRideTxn::EndRideTxn(const std::shared_ptr<StorageAdapter>& storage_adapter,
   const uint64_t ride_id, const std::string& city, const uint64_t vehicle_id,
   const std::string& vehicle_city, const std::string& end_address,
-  const uint64_t end_time, const double revenue)
+  const uint64_t end_time, const uint64_t revenue)
     : vehicles_ (storage_adapter),
       rides_ (storage_adapter) {
   a_ride_id_ = MakeInt64Scalar(ride_id);

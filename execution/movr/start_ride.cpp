@@ -58,7 +58,7 @@ bool StartRideTxn::Write() {
   }
   
   if (!rides_.Insert({a_ride_id_, a_home_city_, a_vehicle_city_, a_user_id_, a_vehicle_id_,
-    a_start_address_, MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("")), a_start_time_, MakeInt64Scalar(0), MakeInt64Scalar(0.0)})) {
+    a_start_address_, MakeFixedTextScalar<64>(DataGenerator::EnsureFixedLength<64>("")), a_start_time_, MakeInt64Scalar(0), MakeInt64Scalar(0)})) {
     SetError("Cannot insert into rides");
     ok = false;
   }

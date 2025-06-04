@@ -18,9 +18,9 @@ parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="wmarcu", help='Username when logging into a remote machine')
-parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
-parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
-parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
+parser.add_argument('-m',  '--machine', default="st1", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
+parser.add_argument('-b',  '--benchmark_container', default="wmarcu_benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
+parser.add_argument('-sc', '--server_container', default="wmarcu_slog", help='The name of the server container')
 parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
 
 args = parser.parse_args()
@@ -88,7 +88,7 @@ elif workload == 'movr':
     elif scenario == 'skew':
         benchmark_params = "\"mh=50,mp=50,skew={}\""
         clients = 3000
-        x_vals = [0, 0.00001, 0.0001, 0.001, 0.01, 0.1]
+        x_vals = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
     elif scenario == 'scalability':
         benchmark_params = "\"mh=50,mp=50\""
         clients = None
@@ -102,7 +102,9 @@ elif workload == 'movr':
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
     elif scenario == 'sunflower':
-        raise Exception("The sunflower scenario is not yet implemented")
+        benchmark_params = "\"mh=50,mp=50,sunflower-falloff={},sunflower-max=40,sunflower-cycles=1\""
+        clients = 3000
+        x_vals = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 else:
     if scenario == 'baseline':
         benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
