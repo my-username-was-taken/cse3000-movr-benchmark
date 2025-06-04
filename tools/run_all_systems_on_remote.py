@@ -5,7 +5,7 @@ import shutil
 import argparse
 
 import simulate_network
-import run_config_on_remote
+#import run_config_on_remote
 
 '''
 Script to run experiments for ALL systems for a specific scenario.
@@ -55,19 +55,31 @@ def start_database(conf_file, binary):
     start_db_command = f"python3 tools/admin.py start --image {image} {conf_file} -u {user} -e GLOG_v=1 --bin {binary}"
     result = run_subprocess(start_db_command)
     if hasattr(result, "returncode") and result.returncode != 0:
-        print(f"Stopping database command failed with exit code {result.returncode}!")
+        print(f"Starting database command failed with exit code {result.returncode}!")
+    else:
+        print(f"Database with conf file: {conf_file} started!")
 
 def stop_database(conf_file):
     stop_db_command = f"python3 tools/admin.py stop --image {image} {conf_file} -u {user}"
     result = run_subprocess(stop_db_command)
     if hasattr(result, "returncode") and result.returncode != 0:
         print(f"Stopping database command failed with exit code {result.returncode}!")
+    else:
+        print(f"Database with conf file: {conf_file} stoped!")
+
+def run_database_experiment(conf_file, system):
+    run_db_exp_command = f"python3 tools/run_config_on_remote.py -i {image} -m st5 -s {scenario} -w ycsb -c {conf_file} -u {user} -db {system}"
+    result = run_subprocess(run_db_exp_command)
+    if hasattr(result, "returncode") and result.returncode != 0:
+        print(f"Running {system} database experiment command failed with exit code {result.returncode}!")
+    else:
+        print(f"Successful preformed all {scenario} experiments with {system}!")
 
 # Stop and leftover running system from before
 stop_database(conf_file=join(conf_folder, os.listdir(conf_folder)[0])) # For the stopping of the cluster it doesn't matter which '.conf' file we use.
 conf_files = [join(conf_folder, file) for file in os.listdir(conf_folder)]
 for system in USED_DATABASES:
-    print(f"Testing system {system}")
+    print(f"Testing system: {system}")
     cur_conf_file = ''
     for conf_file in conf_files:
         if system in conf_file:
@@ -81,10 +93,10 @@ for system in USED_DATABASES:
         binary = 'slog'
     start_database(conf_file=cur_conf_file, binary=binary)
     # Phase 2: Run the experiments for a single database system in a single scenario
-    # TODO: Intergate old script into this
+    run_database_experiment(conf_file=cur_conf_file, system=system)
     # Phase 3: Stop the database
     stop_database(conf_file=cur_conf_file)
-    
+
 print("#####################")
 print(f"\nAll systems evaluated on {scenario} on {workload}. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")
 shutil.make_archive(f"{detock_dir}/data/{workload}/{scenario}", 'zip', f"{detock_dir}/data/{workload}/{scenario}")
