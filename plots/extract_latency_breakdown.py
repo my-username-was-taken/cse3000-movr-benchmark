@@ -90,7 +90,15 @@ for system in system_dirs:
                     scheduler_ms = (dispatched - enter_sched) * NANO_TO_MS
             except Exception:
                 pass
-        other_ms = max(0, duration_ms - log_manager_ms - scheduler_ms)
+            # Worker: EXIT_WORKER - ENTER_WORKER
+            try:
+                enter_worker = txn_events[txn_events["event"] == "ENTER_WORKER"]["time"].min()
+                exit_worker = txn_events[txn_events["event"] == "EXIT_WORKER"]["time"].max()
+                if pd.notna(enter_worker) and pd.notna(exit_worker):
+                    worker_ms = (exit_worker - enter_worker) * NANO_TO_MS
+            except Exception:
+                pass
+        other_ms = max(0, duration_ms - log_manager_ms - scheduler_ms - worker_ms)
         results.append({
             "Txn_ID": txn_id,
             "Is MP": is_mp,
@@ -100,34 +108,43 @@ for system in system_dirs:
             "Duration (ms)": round(duration_ms, 3),
             "Log manager (ms)": round(log_manager_ms, 3),
             "Scheduler (ms)": round(scheduler_ms, 3),
+            "Worker (ms)": round(worker_ms, 3),
             "Other (ms)": round(other_ms, 3),
         })
     latency_breakdown_df = pd.DataFrame(results)
     os.makedirs(output_folder, exist_ok=True)
     latency_breakdown_df.to_csv(os.path.join(output_folder, f"latency_breakdown_{system}.csv"), index=False)
+    # Define txn subcategories
+    sp_sh_df = latency_breakdown_df[(~latency_breakdown_df["Is MP"]) & (~latency_breakdown_df["Is MH"])]
+    mp_sh_df = latency_breakdown_df[(latency_breakdown_df["Is MP"]) & (~latency_breakdown_df["Is MH"])]
+    mp_mh_df = latency_breakdown_df[(latency_breakdown_df["Is MP"]) & (latency_breakdown_df["Is MH"])]
     # Compute base stats
     summary_stats_all = latency_breakdown_df[[
         "Duration (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
+        "Worker (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_sp_sh = sp_sh_df[[
         "Duration (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
+        "Worker (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_mp_sh = mp_sh_df[[
         "Duration (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
+        "Worker (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_mp_mh = mp_mh_df[[
         "Duration (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
+        "Worker (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
 
@@ -146,49 +163,61 @@ for system in system_dirs:
         "Std Duration (ms)": round(summary_stats_all.loc['std', 'Duration (ms)'], 3), 
         "Avg Log Manager (ms)": round(summary_stats_all.loc['mean', 'Log manager (ms)'], 3),
         "Std Log Manager (ms)": round(summary_stats_all.loc['std', 'Log manager (ms)'], 3),
-        "Percent Log Manager": round(summary_stats_all.loc['mean', 'Log manager (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Log Manager (%)": round(summary_stats_all.loc['mean', 'Log manager (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         "Avg Scheduler (ms)": round(summary_stats_all.loc['mean', 'Scheduler (ms)'], 3),
         "Std Scheduler (ms)": round(summary_stats_all.loc['std', 'Scheduler (ms)'], 3),
-        "Percent Scheduler": round(summary_stats_all.loc['mean', 'Scheduler (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Scheduler (%)": round(summary_stats_all.loc['mean', 'Scheduler (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Avg Worker (ms)": round(summary_stats_all.loc['mean', 'Worker (ms)'], 3),
+        "Std Worker (ms)": round(summary_stats_all.loc['std', 'Worker (ms)'], 3),
+        "Worker (%)": round(summary_stats_all.loc['mean', 'Worker (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         "Avg Other (ms)": round(summary_stats_all.loc['mean', 'Other (ms)'], 3),
         "Std Other (ms)": round(summary_stats_all.loc['std', 'Other (ms)'], 3),
-        "Percent Other": round(summary_stats_all.loc['mean', 'Other (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Other (%)": round(summary_stats_all.loc['mean', 'Other (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         # SP SH Txns
         "SP_SH Avg Duration (ms)": round(summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         "SP_SH Std Duration (ms)": round(summary_stats_sp_sh.loc['std', 'Duration (ms)'], 3), 
         "SP_SH Avg Log Manager (ms)": round(summary_stats_sp_sh.loc['mean', 'Log manager (ms)'], 3),
         "SP_SH Std Log Manager (ms)": round(summary_stats_sp_sh.loc['std', 'Log manager (ms)'], 3),
-        "SP_SH Percent Log Manager": round(summary_stats_sp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Log Manager (%)": round(summary_stats_sp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         "SP_SH Avg Scheduler (ms)": round(summary_stats_sp_sh.loc['mean', 'Scheduler (ms)'], 3),
         "SP_SH Std Scheduler (ms)": round(summary_stats_sp_sh.loc['std', 'Scheduler (ms)'], 3),
-        "SP_SH Percent Scheduler": round(summary_stats_sp_sh.loc['mean', 'Scheduler (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Scheduler (%)": round(summary_stats_sp_sh.loc['mean', 'Scheduler (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Avg Worker (ms)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'], 3),
+        "SP_SH Std Worker (ms)": round(summary_stats_sp_sh.loc['std', 'Worker (ms)'], 3),
+        "SP_SH Worker (%)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         "SP_SH Avg Other (ms)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'], 3),
         "SP_SH Std Other (ms)": round(summary_stats_sp_sh.loc['std', 'Other (ms)'], 3),
-        "SP_SH Percent Other": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Other (%)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         # MP SH Txns
         "MP_SH Avg Duration (ms)": round(summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         "MP_SH Std Duration (ms)": round(summary_stats_mp_sh.loc['std', 'Duration (ms)'], 3), 
         "MP_SH Avg Log Manager (ms)": round(summary_stats_mp_sh.loc['mean', 'Log manager (ms)'], 3),
         "MP_SH Std Log Manager (ms)": round(summary_stats_mp_sh.loc['std', 'Log manager (ms)'], 3),
-        "MP_SH Percent Log Manager": round(summary_stats_mp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Log Manager (%)": round(summary_stats_mp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         "MP_SH Avg Scheduler (ms)": round(summary_stats_mp_sh.loc['mean', 'Scheduler (ms)'], 3),
         "MP_SH Std Scheduler (ms)": round(summary_stats_mp_sh.loc['std', 'Scheduler (ms)'], 3),
-        "MP_SH Percent Scheduler": round(summary_stats_mp_sh.loc['mean', 'Scheduler (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Scheduler (%)": round(summary_stats_mp_sh.loc['mean', 'Scheduler (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Avg Worker (ms)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'], 3),
+        "MP_SH Std Worker (ms)": round(summary_stats_mp_sh.loc['std', 'Worker (ms)'], 3),
+        "MP_SH Worker (%)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         "MP_SH Avg Other (ms)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'], 3),
         "MP_SH Std Other (ms)": round(summary_stats_mp_sh.loc['std', 'Other (ms)'], 3),
-        "MP_SH Percent Other": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Other (%)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         # MP MH Txns
         "MP_MH Avg Duration (ms)": round(summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
         "MP_MH Std Duration (ms)": round(summary_stats_mp_mh.loc['std', 'Duration (ms)'], 3), 
         "MP_MH Avg Log Manager (ms)": round(summary_stats_mp_mh.loc['mean', 'Log manager (ms)'], 3),
         "MP_MH Std Log Manager (ms)": round(summary_stats_mp_mh.loc['std', 'Log manager (ms)'], 3),
-        "MP_MH Percent Log Manager": round(summary_stats_mp_mh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Log Manager (%)": round(summary_stats_mp_mh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
         "MP_MH Avg Scheduler (ms)": round(summary_stats_mp_mh.loc['mean', 'Scheduler (ms)'], 3),
         "MP_MH Std Scheduler (ms)": round(summary_stats_mp_mh.loc['std', 'Scheduler (ms)'], 3),
-        "MP_MH Percent Scheduler": round(summary_stats_mp_mh.loc['mean', 'Scheduler (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Scheduler (%)": round(summary_stats_mp_mh.loc['mean', 'Scheduler (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Avg Worker (ms)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'], 3),
+        "MP_MH Std Worker (ms)": round(summary_stats_mp_mh.loc['std', 'Worker (ms)'], 3),
+        "MP_MH Worker (%)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
         "MP_MH Avg Other (ms)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'], 3),
         "MP_MH Std Other (ms)": round(summary_stats_mp_mh.loc['std', 'Other (ms)'], 3),
-        "MP_MH Percent Other": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Other (%)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
     }])
     # Append row for current system to the combined DataFrame
     summary_combined = pd.concat([summary_combined, summary_flat], ignore_index=True)

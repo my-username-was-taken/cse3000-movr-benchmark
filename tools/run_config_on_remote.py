@@ -9,7 +9,7 @@ import simulate_network
 
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'lat_breakdown', 'vary_hw']
 VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
-VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
+VALID_DATABASES = ['Detock', 'ddr_ts', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
