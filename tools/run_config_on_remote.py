@@ -343,11 +343,14 @@ for system in systems_to_test:
         else:
             ips_file = 'aws/ips.json'
         shutil.copyfile(ips_file, os.path.join(cur_log_dir, 'ips.json'))
-        # Rename folder accordingly
+        # Move and rename the folder accordingly
         if scenario == 'lat_breakdown': # For the latency breakdown we anyway just have 1 x_val
-            shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}')
+            target_folder = f'data/{workload}/{scenario}/{system}'
         else:
-            shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
+            target_folder = f'data/{workload}/{scenario}/{system}/{x_val}'
+        if os.path.exists(target_folder): # We need to do this to make sure 'shutil.move()' doesn't just dump the folder inside the target folder if it already exists
+            shutil.rmtree(target_folder)
+        shutil.move(f'data/{tag}', target_folder)
 
 print("#####################")
 print(f"\nAll {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")

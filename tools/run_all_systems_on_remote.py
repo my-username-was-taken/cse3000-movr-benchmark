@@ -42,8 +42,6 @@ server_container = args.server_container
 
 detock_dir = os.path.expanduser("~/Detock")
 
-print(f"Running scenario: '{scenario}' and workload: '{workload}' on the systems {USED_DATABASES}")
-
 def run_subprocess(cmd, dry_run=False):
     if dry_run:
         print(f"Would have run command: {cmd}")
@@ -65,7 +63,7 @@ def stop_database(conf_file):
     if hasattr(result, "returncode") and result.returncode != 0:
         print(f"Stopping database command failed with exit code {result.returncode}!")
     else:
-        print(f"Database with conf file: {conf_file} stoped!")
+        print(f"Database with conf file: {conf_file} stopped!")
 
 def run_database_experiment(conf_file, system):
     run_db_exp_command = f"python3 tools/run_config_on_remote.py -i {image} -m st5 -s {scenario} -w ycsb -c {conf_file} -u {user} -db {system}"
@@ -77,6 +75,9 @@ def run_database_experiment(conf_file, system):
 
 # Stop and leftover running system from before
 stop_database(conf_file=join(conf_folder, os.listdir(conf_folder)[0])) # For the stopping of the cluster it doesn't matter which '.conf' file we use.
+
+# Main experiment loop
+print(f"Running scenario: '{scenario}' and workload: '{workload}' on the systems {USED_DATABASES}")
 conf_files = [join(conf_folder, file) for file in os.listdir(conf_folder)]
 for system in USED_DATABASES:
     print(f"Testing system: {system}")

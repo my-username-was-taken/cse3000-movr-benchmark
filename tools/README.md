@@ -41,7 +41,7 @@ The `tools/run_all_systems_on_remote.py` script will handle the spining up and t
 
 `python3 tools/run_all_systems_on_remote.py -i [docker_image] -m [machine] -s [scenario] -w [workload] -cf [conf_file_folder] -u [username]`
 
-For example: `python3 tools/run_all_systems_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -cf examples/ycsb/latency_breakdown -u omraz`
+For example: `python3 tools/run_all_systems_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -cf examples/ycsb/lat_breakdown -u omraz`
 
 ## Using tmux
 
