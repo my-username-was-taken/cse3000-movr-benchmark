@@ -35,13 +35,13 @@ We will test on the following systems:
 
 This should produce your plots.
 
-## Running all databases for a given scenario (under development)
+## Running all databases for a given scenario
 
-The `tools/run_all_systems_on_remote.py` script will handle the spining up and tearing down of the system after each experiment, so you can run all the databases in a scenario with a single command:
+The `tools/run_all_systems_on_remote.py` script will handle the spining up and tearing down of the system after each experiment, so you can run all the databases in a scenario with a single command. Make sure you supply the path to a folder with '.conf' files for all databases.
 
 `python3 tools/run_all_systems_on_remote.py -i [docker_image] -m [machine] -s [scenario] -w [workload] -cf [conf_file_folder] -u [username]`
 
-For example: `python3 tools/run_all_systems_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -cf examples/ycsb/lat_breakdown -u omraz`
+For example: `python3 tools/run_all_systems_on_remote.py -i omraz/seq_eval:latest -m st5 -s lat_breakdown -w ycsb -cf examples/ycsb/lat_breakdown -u omraz`
 
 ## Using tmux
 

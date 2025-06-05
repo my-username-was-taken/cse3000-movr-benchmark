@@ -66,7 +66,7 @@ def stop_database(conf_file):
         print(f"Database with conf file: {conf_file} stopped!")
 
 def run_database_experiment(conf_file, system):
-    run_db_exp_command = f"python3 tools/run_config_on_remote.py -i {image} -m st5 -s {scenario} -w ycsb -c {conf_file} -u {user} -db {system}"
+    run_db_exp_command = f"python3 tools/run_config_on_remote.py -i {image} -m st5 -s {scenario} -w {workload} -c {conf_file} -u {user} -db {system}"
     result = run_subprocess(run_db_exp_command)
     if hasattr(result, "returncode") and result.returncode != 0:
         print(f"Running {system} database experiment command failed with exit code {result.returncode}!")

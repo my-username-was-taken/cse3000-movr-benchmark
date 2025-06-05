@@ -25,11 +25,13 @@ parser = argparse.ArgumentParser(description="Extract experiment results and plo
 parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
+parser.add_argument("-sa", "--skip_aborts", default=False, help="Whether or not to plot the aborts (since many workloads don't have any).")
 
 args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
 env = args.environment
+skip_aborts = args.skip_aborts
 
 print(f"Extracting data for scenario: '{scenario}', workload: '{workload}' and environment: '{env}'")
 
@@ -399,6 +401,6 @@ os.makedirs('/'.join(OUT_CSV_PATH.split('/')[:-1]), exist_ok=True)
 df.to_csv(OUT_CSV_PATH, index=False)
 
 # Create new version of plots directly
-eval_systems.make_plot(plot=scenario, workload=workload, latency_percentiles=LATENCY_PERCENTILES)
+eval_systems.make_plot(plot=scenario, workload=workload, latency_percentiles=LATENCY_PERCENTILES, skip_aborts=skip_aborts)
 
 print("Done")
