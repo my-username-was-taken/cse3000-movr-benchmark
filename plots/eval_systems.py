@@ -65,7 +65,7 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
             'Bytes Transferred (MB)',
             'Cost ($)'
         ]
-        subplot_titles = ['Throughput', 'Aborts', 'Bytes', 'Cost']
+        subplot_titles = ['Throughput', 'Latency', 'Bytes', 'Cost']
     
     databases = ['Calvin', 'SLOG', 'Detock', 'janus', 'Caerus', 'ddr_only']
     line_styles = ['-', '--', '-.', ':', '-', '--']

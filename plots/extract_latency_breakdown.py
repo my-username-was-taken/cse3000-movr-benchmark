@@ -45,6 +45,61 @@ summary_combined = pd.DataFrame(columns=['System', 'Avg Duration (ms)', 'Std Dur
                                          'Avg Scheduler (ms)', 'Std Scheduler (ms)',
                                          'Avg Other (ms)', 'Std Other (ms)'])
 
+def extract_component_times(cur_events):
+    server_ms = 0.0
+    forwarder_ms = 0.0
+    log_manager_ms = 0.0
+    scheduler_ms = 0.0
+    worker_ms = 0.0
+    idle_ms = 0.0
+    # Track when stages are entered
+    server_enter_time = None
+    forwarder_enter_time = None
+    log_enter_time = None
+    sched_enter_time = None
+    worker_enter_time = None
+    idle_enter_time = None
+    for _, event_row in cur_events.iterrows():
+        event = event_row["event"]
+        time = event_row["time"]
+        # === Server ===
+        if event == "ENTER_SERVER" or event == "RETURN_TO_SERVER":
+            server_enter_time = time
+        elif (event == "EXIT_SERVER_TO_FORWARDER" or event == "EXIT_SERVER_TO_CLIENT") and server_enter_time is not None:
+            server_ms += (time - server_enter_time) * NANO_TO_MS
+            server_enter_time = None
+        # === Forwarder ===
+        if event == "ENTER_FORWARDER":
+            forwarder_enter_time = time
+        elif (event == "EXIT_FORWARDER_TO_SEQUENCER" or event == "EXIT_FORWARDER_TO_MULTI_HOME_ORDERER") and forwarder_enter_time is not None:
+            forwarder_ms += (time - forwarder_enter_time) * NANO_TO_MS
+            forwarder_enter_time = None
+        # === Log Manager ===
+        if event == "ENTER_LOG_MANAGER_IN_BATCH":
+            log_enter_time = time
+        elif event == "EXIT_LOG_MANAGER" and log_enter_time is not None:
+            log_manager_ms += (time - log_enter_time) * NANO_TO_MS
+            log_enter_time = None
+        # === Scheduler ===
+        elif event == "ENTER_SCHEDULER":
+            sched_enter_time = time
+        elif event == "DISPATCHED_SLOW" and sched_enter_time is not None:
+            scheduler_ms += (time - sched_enter_time) * NANO_TO_MS
+            sched_enter_time = None
+        # === Worker ===
+        elif event == "ENTER_WORKER":
+            worker_enter_time = time
+        elif event == "EXIT_WORKER" and worker_enter_time is not None:
+            worker_ms += (time - worker_enter_time) * NANO_TO_MS
+            worker_enter_time = None
+        # === Idle ===
+        elif event == "EXIT_SERVER_TO_FORWARDER":
+            idle_enter_time = time
+        elif event == "ENTER_WORKER" and idle_enter_time is not None:
+            idle_ms += (time - idle_enter_time) * NANO_TO_MS
+            idle_enter_time = None
+    return server_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms
+
 for system in system_dirs:
     clients = [item for item in os.listdir(join(data_folder, system, "client")) if os.path.isdir(join(data_folder, system, "client", item))]
     txns_csvs = [join(data_folder, system, "client", client, "transactions.csv") for client in clients]
@@ -73,32 +128,8 @@ for system in system_dirs:
         scheduler_ms = 0
         # Get event rows for this txn, if any
         if txn_id in event_groups.groups:
-            txn_events = event_groups.get_group(txn_id)
-            # Log Manager: EXIT_LOG_MANAGER - ENTER_LOG_MANAGER_IN_BATCH
-            try:
-                enter_log = txn_events[txn_events["event"] == "ENTER_LOG_MANAGER_IN_BATCH"]["time"].min()
-                exit_log = txn_events[txn_events["event"] == "EXIT_LOG_MANAGER"]["time"].max()
-                if pd.notna(enter_log) and pd.notna(exit_log):
-                    log_manager_ms = (exit_log - enter_log) * NANO_TO_MS
-            except Exception:
-                pass
-            # Scheduler: DISPATCHED_SLOW - ENTER_SCHEDULER
-            try:
-                enter_sched = txn_events[txn_events["event"] == "ENTER_SCHEDULER"]["time"].min()
-                dispatched = txn_events[txn_events["event"] == "DISPATCHED_SLOW"]["time"].max()
-                if pd.notna(enter_sched) and pd.notna(dispatched):
-                    scheduler_ms = (dispatched - enter_sched) * NANO_TO_MS
-            except Exception:
-                pass
-            # Worker: EXIT_WORKER - ENTER_WORKER
-            try:
-                enter_worker = txn_events[txn_events["event"] == "ENTER_WORKER"]["time"].min()
-                exit_worker = txn_events[txn_events["event"] == "EXIT_WORKER"]["time"].max()
-                if pd.notna(enter_worker) and pd.notna(exit_worker):
-                    worker_ms = (exit_worker - enter_worker) * NANO_TO_MS
-            except Exception:
-                pass
-        other_ms = max(0, duration_ms - log_manager_ms - scheduler_ms - worker_ms)
+            txn_events = event_groups.get_group(txn_id).sort_values("time")
+            server_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms = extract_component_times(txn_events)
         results.append({
             "Txn_ID": txn_id,
             "Is MP": is_mp,
@@ -106,10 +137,12 @@ for system in system_dirs:
             "Start time": sent_at,
             "End time": received_at,
             "Duration (ms)": round(duration_ms, 3),
+            "Server (ms)": round(server_ms, 3),
             "Log manager (ms)": round(log_manager_ms, 3),
             "Scheduler (ms)": round(scheduler_ms, 3),
             "Worker (ms)": round(worker_ms, 3),
-            "Other (ms)": round(other_ms, 3),
+            "Idle (ms)": round(idle_ms, 3),
+            "Other (ms)": round(max(0, duration_ms - log_manager_ms - scheduler_ms - worker_ms), 3),
         })
     latency_breakdown_df = pd.DataFrame(results)
     os.makedirs(output_folder, exist_ok=True)
@@ -121,39 +154,40 @@ for system in system_dirs:
     # Compute base stats
     summary_stats_all = latency_breakdown_df[[
         "Duration (ms)",
+        "Server (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
         "Worker (ms)",
+        "Idle (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_sp_sh = sp_sh_df[[
         "Duration (ms)",
+        "Server (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
         "Worker (ms)",
+        "Idle (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_mp_sh = mp_sh_df[[
         "Duration (ms)",
+        "Server (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
         "Worker (ms)",
+        "Idle (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
     summary_stats_mp_mh = mp_mh_df[[
         "Duration (ms)",
+        "Server (ms)",
         "Log manager (ms)",
         "Scheduler (ms)",
         "Worker (ms)",
+        "Idle (ms)",
         "Other (ms)"
     ]].agg(['mean', 'std'])
-
-    # Compute per-category stats
-    # TODO: Remove once fully obsolete
-    sp_mean, sp_std = safe_mean_std(sp_sh_df, "Duration (ms)")
-    mp_mean, mp_std = safe_mean_std(mp_sh_df, "Duration (ms)")
-    mh_mean, mh_std = safe_mean_std(mp_mh_df, "Duration (ms)")
-    # Compute the relative component contributions to the latency
 
     # Flatten into one row
     summary_flat = pd.DataFrame([{
@@ -161,6 +195,9 @@ for system in system_dirs:
         # All Txns
         "Avg Duration (ms)": round(summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         "Std Duration (ms)": round(summary_stats_all.loc['std', 'Duration (ms)'], 3), 
+        "Avg Server (ms)": round(summary_stats_all.loc['mean', 'Server (ms)'], 3),
+        "Std Server (ms)": round(summary_stats_all.loc['std', 'Server (ms)'], 3),
+        "Server (%)": round(summary_stats_all.loc['mean', 'Server (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         "Avg Log Manager (ms)": round(summary_stats_all.loc['mean', 'Log manager (ms)'], 3),
         "Std Log Manager (ms)": round(summary_stats_all.loc['std', 'Log manager (ms)'], 3),
         "Log Manager (%)": round(summary_stats_all.loc['mean', 'Log manager (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
@@ -170,12 +207,18 @@ for system in system_dirs:
         "Avg Worker (ms)": round(summary_stats_all.loc['mean', 'Worker (ms)'], 3),
         "Std Worker (ms)": round(summary_stats_all.loc['std', 'Worker (ms)'], 3),
         "Worker (%)": round(summary_stats_all.loc['mean', 'Worker (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Avg Idle (ms)": round(summary_stats_all.loc['mean', 'Idle (ms)'], 3),
+        "Std Idle (ms)": round(summary_stats_all.loc['std', 'Idle (ms)'], 3),
+        "Idle (%)": round(summary_stats_all.loc['mean', 'Idle (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         "Avg Other (ms)": round(summary_stats_all.loc['mean', 'Other (ms)'], 3),
         "Std Other (ms)": round(summary_stats_all.loc['std', 'Other (ms)'], 3),
         "Other (%)": round(summary_stats_all.loc['mean', 'Other (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
         # SP SH Txns
         "SP_SH Avg Duration (ms)": round(summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Std Duration (ms)": round(summary_stats_sp_sh.loc['std', 'Duration (ms)'], 3), 
+        "SP_SH Std Duration (ms)": round(summary_stats_sp_sh.loc['std', 'Duration (ms)'], 3),
+        "SP_SH Avg Server (ms)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'], 3),
+        "SP_SH Std Server (ms)": round(summary_stats_sp_sh.loc['std', 'Server (ms)'], 3),
+        "SP_SH Server (%)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         "SP_SH Avg Log Manager (ms)": round(summary_stats_sp_sh.loc['mean', 'Log manager (ms)'], 3),
         "SP_SH Std Log Manager (ms)": round(summary_stats_sp_sh.loc['std', 'Log manager (ms)'], 3),
         "SP_SH Log Manager (%)": round(summary_stats_sp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
@@ -185,12 +228,18 @@ for system in system_dirs:
         "SP_SH Avg Worker (ms)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'], 3),
         "SP_SH Std Worker (ms)": round(summary_stats_sp_sh.loc['std', 'Worker (ms)'], 3),
         "SP_SH Worker (%)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Avg Idle (ms)": round(summary_stats_sp_sh.loc['mean', 'Idle (ms)'], 3),
+        "SP_SH Std Idle (ms)": round(summary_stats_sp_sh.loc['std', 'Idle (ms)'], 3),
+        "SP_SH Idle (%)": round(summary_stats_sp_sh.loc['mean', 'Idle (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         "SP_SH Avg Other (ms)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'], 3),
         "SP_SH Std Other (ms)": round(summary_stats_sp_sh.loc['std', 'Other (ms)'], 3),
         "SP_SH Other (%)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
         # MP SH Txns
         "MP_SH Avg Duration (ms)": round(summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Std Duration (ms)": round(summary_stats_mp_sh.loc['std', 'Duration (ms)'], 3), 
+        "MP_SH Std Duration (ms)": round(summary_stats_mp_sh.loc['std', 'Duration (ms)'], 3),
+        "MP_SH Avg Server (ms)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'], 3),
+        "MP_SH Std Server (ms)": round(summary_stats_mp_sh.loc['std', 'Server (ms)'], 3),
+        "MP_SH Server (%)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         "MP_SH Avg Log Manager (ms)": round(summary_stats_mp_sh.loc['mean', 'Log manager (ms)'], 3),
         "MP_SH Std Log Manager (ms)": round(summary_stats_mp_sh.loc['std', 'Log manager (ms)'], 3),
         "MP_SH Log Manager (%)": round(summary_stats_mp_sh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
@@ -200,12 +249,18 @@ for system in system_dirs:
         "MP_SH Avg Worker (ms)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'], 3),
         "MP_SH Std Worker (ms)": round(summary_stats_mp_sh.loc['std', 'Worker (ms)'], 3),
         "MP_SH Worker (%)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Avg Idle (ms)": round(summary_stats_mp_sh.loc['mean', 'Idle (ms)'], 3),
+        "MP_SH Std Idle (ms)": round(summary_stats_mp_sh.loc['std', 'Idle (ms)'], 3),
+        "MP_SH Idle (%)": round(summary_stats_mp_sh.loc['mean', 'Idle (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         "MP_SH Avg Other (ms)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'], 3),
         "MP_SH Std Other (ms)": round(summary_stats_mp_sh.loc['std', 'Other (ms)'], 3),
         "MP_SH Other (%)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
         # MP MH Txns
         "MP_MH Avg Duration (ms)": round(summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Std Duration (ms)": round(summary_stats_mp_mh.loc['std', 'Duration (ms)'], 3), 
+        "MP_MH Std Duration (ms)": round(summary_stats_mp_mh.loc['std', 'Duration (ms)'], 3),
+        "MP_MH Avg Server (ms)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'], 3),
+        "MP_MH Std Server (ms)": round(summary_stats_mp_mh.loc['std', 'Server (ms)'], 3),
+        "MP_MH Server (%)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
         "MP_MH Avg Log Manager (ms)": round(summary_stats_mp_mh.loc['mean', 'Log manager (ms)'], 3),
         "MP_MH Std Log Manager (ms)": round(summary_stats_mp_mh.loc['std', 'Log manager (ms)'], 3),
         "MP_MH Log Manager (%)": round(summary_stats_mp_mh.loc['mean', 'Log manager (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
@@ -215,6 +270,9 @@ for system in system_dirs:
         "MP_MH Avg Worker (ms)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'], 3),
         "MP_MH Std Worker (ms)": round(summary_stats_mp_mh.loc['std', 'Worker (ms)'], 3),
         "MP_MH Worker (%)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Avg Idle (ms)": round(summary_stats_mp_mh.loc['mean', 'Idle (ms)'], 3),
+        "MP_MH Std Idle (ms)": round(summary_stats_mp_mh.loc['std', 'Idle (ms)'], 3),
+        "MP_MH Idle (%)": round(summary_stats_mp_mh.loc['mean', 'Idle (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
         "MP_MH Avg Other (ms)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'], 3),
         "MP_MH Std Other (ms)": round(summary_stats_mp_mh.loc['std', 'Other (ms)'], 3),
         "MP_MH Other (%)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),

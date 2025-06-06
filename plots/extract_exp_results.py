@@ -22,10 +22,10 @@ VALID_ENVIRONMENTS = ['local', 'st', 'aws']
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Extract experiment results and plot graph for a given scenario.")
-parser.add_argument('-s', '--scenario', default='packet_loss', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
+parser.add_argument('-s', '--scenario', default='baseline', choices=VALID_SCENARIOS, help='Type of experiment scenario to analyze (default: baseline)')
 parser.add_argument('-w', '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-e', '--environment', default='st', choices=VALID_ENVIRONMENTS, help='What type of machine the experiment was run on.')
-parser.add_argument("-sa", "--skip_aborts", default=False, help="Whether or not to plot the aborts (since many workloads don't have any).")
+parser.add_argument("-sa", "--skip_aborts", default=True, help="Whether or not to plot the aborts (since many workloads don't have any).")
 
 args = parser.parse_args()
 scenario = args.scenario
@@ -52,7 +52,7 @@ MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per curr
 servers_per_region = 4
 #                        euw1  euw2  usw1  usw2  use1  use2  apne1 apne2
 aws_regional_vm_costs = [0.444,0.464,0.468,0.400,0.400,0.400,0.516,0.492]
-vm_cost = servers_per_region * sum(aws_regional_vm_costs)
+base_vm_cost = servers_per_region * sum(aws_regional_vm_costs)
 
 # The cost of transferring 1GB of data out from the source region (the row). Price as of 28.3.25
 if env == 'local':
@@ -216,7 +216,7 @@ for system in system_dirs:
         # For non-AWS environments, adjust the (fixed) VM cost based on server count
         # Assume an ST machine has the cost of an average AWS VM
         if env == 'st':
-            avg_vm_cost = (vm_cost / servers_per_region) / len(aws_regional_vm_costs)
+            avg_vm_cost = (base_vm_cost / servers_per_region) / len(aws_regional_vm_costs)
             vm_cost = len(server_ips) * avg_vm_cost
         # For single computer experiments, just count use the average cost of a single AWS VM
         elif env == 'local':
