@@ -80,6 +80,7 @@ stop_database(conf_file=join(conf_folder, os.listdir(conf_folder)[0])) # For the
 print(f"Running scenario: '{scenario}' and workload: '{workload}' on the systems {USED_DATABASES}")
 conf_files = [join(conf_folder, file) for file in os.listdir(conf_folder)]
 for system in USED_DATABASES:
+    print("***************************************************")
     print(f"Testing system: {system}")
     cur_conf_file = ''
     for conf_file in conf_files:
