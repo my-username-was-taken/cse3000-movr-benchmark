@@ -43,6 +43,79 @@ system_dirs = [system for system in system_dirs if '.' not in system]
 summary_combined = pd.DataFrame(columns=['System'])
 
 def extract_component_times(cur_events):
+    NANO_TO_MS = 1e-6
+    # Define state variables
+    current_stage = None
+    stage_start_time = None
+    # Duration accumulators
+    stage_durations = {
+        "server": 0.0,
+        "forwarder": 0.0,
+        "mh_orderer": 0.0,
+        "sequencer": 0.0,
+        "log_manager": 0.0,
+        "scheduler": 0.0,
+        "worker": 0.0,
+        "idle": 0.0
+    }
+    # Define mapping of ENTER/EXIT events to stages
+    stage_enter = {
+        "ENTER_SERVER": "server",
+        "RETURN_TO_SERVER": "server",
+        "ENTER_FORWARDER": "forwarder",
+        "ENTER_MULTI_HOME_ORDERER": "mh_orderer",
+        "ENTER_MULTI_HOME_ORDERER_IN_BATCH": "mh_orderer",
+        "ENTER_SEQUENCER": "sequencer",
+        "ENTER_SEQUENCER_IN_BATCH": "sequencer",
+        "ENTER_LOG_MANAGER_IN_BATCH": "log_manager",
+        "ENTER_LOG_MANAGER_ORDER": "log_manager",
+        "ENTER_SCHEDULER": "scheduler",
+        "ENTER_SCHEDULER_LO": "scheduler",
+        "ENTER_WORKER": "worker",
+    }
+    stage_exit = {
+        "EXIT_SERVER_TO_CLIENT": "server",
+        "EXIT_SERVER_TO_FORWARDER": "server",
+        "EXIT_FORWARDER_TO_SEQUENCER": "forwarder",
+        "EXIT_FORWARDER_TO_MULTI_HOME_ORDERER": "forwarder",
+        "EXIT_MULTI_HOME_ORDERER_IN_BATCH": "mh_orderer",
+        "EXIT_MULTI_HOME_ORDERER": "mh_orderer",
+        "EXIT_SEQUENCER_IN_BATCH": "sequencer",
+        "EXIT_LOG_MANAGER": "log_manager",
+        "DISPATCHED": "scheduler",
+        "DISPATCHED_FAST": "scheduler",
+        "DISPATCHED_SLOW": "scheduler",
+        "EXIT_WORKER": "worker",
+    }
+    for _, event_row in cur_events.iterrows():
+        event = event_row["event"]
+        time = event_row["time"]
+        # If we're currently in a stage and this event marks its exit
+        if current_stage and event in stage_exit and stage_exit[event] == current_stage:
+            duration = (time - stage_start_time) * NANO_TO_MS
+            stage_durations[current_stage] += duration
+            current_stage = None
+            stage_start_time = None
+        # If this event marks entering a stage (and no other stage is active)
+        if event in stage_enter:
+            if current_stage is None:
+                current_stage = stage_enter[event]
+                stage_start_time = time
+        elif event == "RETURN_TO_SERVER" and current_stage is None:
+            current_stage = "idle"
+            stage_start_time = time
+    return (
+        round(stage_durations["server"], 3),
+        round(stage_durations["forwarder"], 3),
+        round(stage_durations["mh_orderer"], 3),
+        round(stage_durations["sequencer"], 3),
+        round(stage_durations["log_manager"], 3),
+        round(stage_durations["scheduler"], 3),
+        round(stage_durations["worker"], 3),
+        round(stage_durations["idle"], 3),
+    )
+
+'''def extract_component_times(cur_events):
     server_ms = 0.0
     forwarder_ms = 0.0
     sequencer_ms = 0.0
@@ -102,7 +175,7 @@ def extract_component_times(cur_events):
         elif event == "ENTER_SERVER" and idle_enter_time is not None:
             idle_ms += (time - idle_enter_time) * NANO_TO_MS
             idle_enter_time = None
-    return server_ms, forwarder_ms, sequencer_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms
+    return server_ms, forwarder_ms, sequencer_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms'''
 
 for system in system_dirs:
     clients = [item for item in os.listdir(join(data_folder, system, "client")) if os.path.isdir(join(data_folder, system, "client", item))]
@@ -131,7 +204,7 @@ for system in system_dirs:
         # Get event rows for this txn, if any
         if txn_id in event_groups.groups:
             txn_events = event_groups.get_group(txn_id).sort_values("time")
-            server_ms, forwarder_ms, sequencer_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms = extract_component_times(txn_events)
+            server_ms, forwarder_ms, mh_orderer_ms, sequencer_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms = extract_component_times(txn_events)
         results.append({
             "Txn_ID": txn_id,
             "Is MP": is_mp,
@@ -141,6 +214,7 @@ for system in system_dirs:
             "Duration (ms)": round(duration_ms, 3),
             "Server (ms)": round(server_ms, 3),
             "Fwd (ms)": round(forwarder_ms, 3),
+            "MH orderer (ms)": round(mh_orderer_ms, 3),
             "Seq (ms)": round(sequencer_ms, 3),
             "Log man (ms)": round(log_manager_ms, 3),
             "Sched (ms)": round(scheduler_ms, 3),
