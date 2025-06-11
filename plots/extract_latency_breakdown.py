@@ -1,5 +1,6 @@
 import os
 from os.path import join, isdir
+import sys
 import numpy as np
 import pandas as pd
 import argparse
@@ -7,10 +8,13 @@ import re
 from datetime import datetime
 import json
 
-import latency_breakdown
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm, Normalize
+from matplotlib.ticker import MaxNLocator
+import seaborn as sns
 
 '''
-Script for decomposing the transactional latency into individual components.
+Script for decomposing the transactional latency into individual components and making a heatmap.
 '''
 
 # Conversion factor: nanoseconds to milliseconds
@@ -19,13 +23,12 @@ NANO_TO_MS = 1e-6
 VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'example']
 VALID_WORKLOADS = ['ycsb', 'tpcc'] # TODO: Add your own benchmark to this list
 
-def safe_mean_std(df, col):
-    if len(df) == 0:
-        return (np.nan, np.nan)
-    return (
-        round(df[col].mean(), 3),
-        round(df[col].std(), 3)
-    )
+SYSNAME_MAP = {
+    'janus': 'Janus',
+    'ddr_ts': 'Detock',
+    'calvin': 'Calvin',
+    'slog': 'SLOG',
+}
 
 # Argument parser
 parser = argparse.ArgumentParser(description="Decompose the latency of transactions into components and plot graph stacked bar chart.")
@@ -40,6 +43,7 @@ output_folder = args.output_folder
 
 system_dirs = os.listdir(data_folder)
 system_dirs = [system for system in system_dirs if '.' not in system]
+system_dirs = [system for system in system_dirs if 'ddr_only' not in system]
 summary_combined = pd.DataFrame(columns=['System'])
 
 def extract_component_times(cur_events):
@@ -116,78 +120,16 @@ def extract_component_times(cur_events):
             current_stage = "idle"
             stage_start_time = time
     return (
-        round(stage_durations["server"], 3),
-        round(stage_durations["forwarder"], 3),
-        round(stage_durations["mh_orderer"], 3),
-        round(stage_durations["sequencer"], 3),
-        round(stage_durations["log_manager"], 3),
-        round(stage_durations["scheduler"], 3),
-        round(stage_durations["lck_man"], 3),
-        round(stage_durations["worker"], 3),
-        round(stage_durations["idle"], 3),
+        stage_durations["server"],
+        stage_durations["forwarder"],
+        stage_durations["mh_orderer"],
+        stage_durations["sequencer"],
+        stage_durations["log_manager"],
+        stage_durations["scheduler"],
+        stage_durations["lck_man"],
+        stage_durations["worker"],
+        stage_durations["idle"],
     )
-
-'''def extract_component_times(cur_events):
-    server_ms = 0.0
-    forwarder_ms = 0.0
-    sequencer_ms = 0.0
-    log_manager_ms = 0.0
-    scheduler_ms = 0.0
-    worker_ms = 0.0
-    idle_ms = 0.0
-    # Track when stages are entered
-    server_enter_time = None
-    forwarder_enter_time = None
-    log_enter_time = None
-    sched_enter_time = None
-    worker_enter_time = None
-    idle_enter_time = None
-    for _, event_row in cur_events.iterrows():
-        event = event_row["event"]
-        time = event_row["time"]
-        # === Server ===
-        if event == "ENTER_SERVER" or event == "RETURN_TO_SERVER":
-            server_enter_time = time
-        elif (event == "EXIT_SERVER_TO_FORWARDER" or event == "EXIT_SERVER_TO_CLIENT") and server_enter_time is not None:
-            server_ms += (time - server_enter_time) * NANO_TO_MS
-            server_enter_time = None
-        # === Forwarder ===
-        if event == "ENTER_FORWARDER":
-            forwarder_enter_time = time
-        elif (event == "EXIT_FORWARDER_TO_SEQUENCER" or event == "EXIT_FORWARDER_TO_MULTI_HOME_ORDERER") and forwarder_enter_time is not None:
-            forwarder_ms += (time - forwarder_enter_time) * NANO_TO_MS
-            forwarder_enter_time = None
-        # === Sequencer ===
-        if event == "ENTER_SEQUENCER" or event == "ENTER_SEQUENCER_IN_BATCH":
-            sequencer_enter_time = time
-        elif event == "EXIT_SEQUENCER_IN_BATCH" and sequencer_enter_time is not None:
-            sequencer_ms += (time - sequencer_enter_time) * NANO_TO_MS
-            sequencer_enter_time = None
-        # === Log Manager ===
-        if event == "ENTER_LOG_MANAGER_IN_BATCH":
-            log_enter_time = time
-        elif event == "EXIT_LOG_MANAGER" and log_enter_time is not None:
-            log_manager_ms += (time - log_enter_time) * NANO_TO_MS
-            log_enter_time = None
-        # === Scheduler ===
-        elif event == "ENTER_SCHEDULER":
-            sched_enter_time = time
-        elif event == "DISPATCHED_SLOW" and sched_enter_time is not None:
-            scheduler_ms += (time - sched_enter_time) * NANO_TO_MS
-            sched_enter_time = None
-        # === Worker ===
-        elif event == "ENTER_WORKER":
-            worker_enter_time = time
-        elif event == "EXIT_WORKER" and worker_enter_time is not None:
-            worker_ms += (time - worker_enter_time) * NANO_TO_MS
-            worker_enter_time = None
-        # === Wait ===
-        elif event == "RETURN_TO_SERVER":
-            idle_enter_time = time
-        elif event == "ENTER_SERVER" and idle_enter_time is not None:
-            idle_ms += (time - idle_enter_time) * NANO_TO_MS
-            idle_enter_time = None
-    return server_ms, forwarder_ms, sequencer_ms, log_manager_ms, scheduler_ms, worker_ms, idle_ms'''
 
 for system in system_dirs:
     clients = [item for item in os.listdir(join(data_folder, system, "client")) if os.path.isdir(join(data_folder, system, "client", item))]
@@ -205,7 +147,7 @@ for system in system_dirs:
     event_groups = events_csv.groupby("txn_id")
     # Prepare list to collect results
     results = []
-    txns_csv = txns_csv.tail(100) # For debugging purposes only, use the first 100 txns to speed up the script
+    #txns_csv = txns_csv.tail(100) # For debugging purposes only, use the first 100 txns to speed up the script
     for _, txn in txns_csv.iterrows():
         txn_id = txn["txn_id"]
         sent_at = txn["sent_at"]
@@ -217,23 +159,26 @@ for system in system_dirs:
         if txn_id in event_groups.groups:
             txn_events = event_groups.get_group(txn_id).sort_values("time")
             server_ms, forwarder_ms, mh_orderer_ms, sequencer_ms, log_manager_ms, scheduler_ms, lck_man_ms, worker_ms, idle_ms = extract_component_times(txn_events)
+            if system == 'janus':
+                lck_man_ms += forwarder_ms
+                forwarder_ms = 0.0
         results.append({
             "Txn_ID": txn_id,
             "Is MP": is_mp,
             "Is MH": is_mh,
             "Start time": sent_at,
             "End time": received_at,
-            "Duration (ms)": round(duration_ms, 3),
-            "Server (ms)": round(server_ms, 3),
-            "Fwd (ms)": round(forwarder_ms, 3),
-            "MH orderer (ms)": round(mh_orderer_ms, 3),
-            "Seq (ms)": round(sequencer_ms, 3),
-            "Log man (ms)": round(log_manager_ms, 3),
-            "Sched (ms)": round(scheduler_ms, 3),
-            "Lck man (ms)": round(lck_man_ms, 3),
-            "Worker (ms)": round(worker_ms, 3),
-            "Wait (ms)": round(idle_ms, 3),
-            "Other (ms)": round(max(0, duration_ms - server_ms - forwarder_ms - mh_orderer_ms - sequencer_ms - log_manager_ms - scheduler_ms - lck_man_ms - worker_ms - idle_ms), 3),
+            "Duration (ms)": round(duration_ms, 5),
+            "Server (ms)": round(server_ms, 5),
+            "Fwd (ms)": round(forwarder_ms, 5),
+            "MH orderer (ms)": round(mh_orderer_ms, 5),
+            "Seq (ms)": round(sequencer_ms, 5),
+            "Log man (ms)": round(log_manager_ms, 5),
+            "Sched (ms)": round(scheduler_ms, 5),
+            "Lck man (ms)": round(lck_man_ms, 5),
+            "Worker (ms)": round(worker_ms, 5),
+            "Wait (ms)": round(idle_ms, 5),
+            "Other (ms)": round(max(0, duration_ms - server_ms - forwarder_ms - mh_orderer_ms - sequencer_ms - log_manager_ms - scheduler_ms - lck_man_ms - worker_ms - idle_ms), 5),
         })
     latency_breakdown_df = pd.DataFrame(results)
     os.makedirs(output_folder, exist_ok=True)
@@ -300,137 +245,137 @@ for system in system_dirs:
     summary_flat = pd.DataFrame([{
         "System": system,
         # All Txns
-        "Avg Duration (ms)": round(summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Std Duration (ms)": round(summary_stats_all.loc['std', 'Duration (ms)'], 3), 
-        "Avg Server (ms)": round(summary_stats_all.loc['mean', 'Server (ms)'], 3),
-        "Std Server (ms)": round(summary_stats_all.loc['std', 'Server (ms)'], 3),
-        "Server (%)": round(summary_stats_all.loc['mean', 'Server (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Fwd (ms)": round(summary_stats_all.loc['mean', 'Fwd (ms)'], 3),
-        "Std Fwd (ms)": round(summary_stats_all.loc['std', 'Fwd (ms)'], 3),
-        "Fwd (%)": round(summary_stats_all.loc['mean', 'Fwd (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Seq (ms)": round(summary_stats_all.loc['mean', 'Seq (ms)'], 3),
-        "Std Seq (ms)": round(summary_stats_all.loc['std', 'Seq (ms)'], 3),
-        "Seq (%)": round(summary_stats_all.loc['mean', 'Seq (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg MH orderer (ms)": round(summary_stats_all.loc['mean', 'MH orderer (ms)'], 3),
-        "Std MH orderer (ms)": round(summary_stats_all.loc['std', 'MH orderer (ms)'], 3),
-        "MH orderer (%)": round(summary_stats_all.loc['mean', 'MH orderer (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Log man (ms)": round(summary_stats_all.loc['mean', 'Log man (ms)'], 3),
-        "Std Log man (ms)": round(summary_stats_all.loc['std', 'Log man (ms)'], 3),
-        "Log man (%)": round(summary_stats_all.loc['mean', 'Log man (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Sched (ms)": round(summary_stats_all.loc['mean', 'Sched (ms)'], 3),
-        "Std Sched (ms)": round(summary_stats_all.loc['std', 'Sched (ms)'], 3),
-        "Sched (%)": round(summary_stats_all.loc['mean', 'Sched (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Lck man (ms)": round(summary_stats_all.loc['mean', 'Lck man (ms)'], 3),
-        "Std Lck man (ms)": round(summary_stats_all.loc['std', 'Lck man (ms)'], 3),
-        "Lck man (%)": round(summary_stats_all.loc['mean', 'Lck man (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Worker (ms)": round(summary_stats_all.loc['mean', 'Worker (ms)'], 3),
-        "Std Worker (ms)": round(summary_stats_all.loc['std', 'Worker (ms)'], 3),
-        "Worker (%)": round(summary_stats_all.loc['mean', 'Worker (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Wait (ms)": round(summary_stats_all.loc['mean', 'Wait (ms)'], 3),
-        "Std Wait (ms)": round(summary_stats_all.loc['std', 'Wait (ms)'], 3),
-        "Wait (%)": round(summary_stats_all.loc['mean', 'Wait (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
-        "Avg Other (ms)": round(summary_stats_all.loc['mean', 'Other (ms)'], 3),
-        "Std Other (ms)": round(summary_stats_all.loc['std', 'Other (ms)'], 3),
-        "Other (%)": round(summary_stats_all.loc['mean', 'Other (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 3),
+        "Avg Duration (ms)": round(summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Std Duration (ms)": round(summary_stats_all.loc['std', 'Duration (ms)'], 5), 
+        "Avg Server (ms)": round(summary_stats_all.loc['mean', 'Server (ms)'], 5),
+        "Std Server (ms)": round(summary_stats_all.loc['std', 'Server (ms)'], 5),
+        "Server (%)": round(summary_stats_all.loc['mean', 'Server (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Fwd (ms)": round(summary_stats_all.loc['mean', 'Fwd (ms)'], 5),
+        "Std Fwd (ms)": round(summary_stats_all.loc['std', 'Fwd (ms)'], 5),
+        "Fwd (%)": round(summary_stats_all.loc['mean', 'Fwd (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Seq (ms)": round(summary_stats_all.loc['mean', 'Seq (ms)'], 5),
+        "Std Seq (ms)": round(summary_stats_all.loc['std', 'Seq (ms)'], 5),
+        "Seq (%)": round(summary_stats_all.loc['mean', 'Seq (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg MH orderer (ms)": round(summary_stats_all.loc['mean', 'MH orderer (ms)'], 5),
+        "Std MH orderer (ms)": round(summary_stats_all.loc['std', 'MH orderer (ms)'], 5),
+        "MH orderer (%)": round(summary_stats_all.loc['mean', 'MH orderer (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Log man (ms)": round(summary_stats_all.loc['mean', 'Log man (ms)'], 5),
+        "Std Log man (ms)": round(summary_stats_all.loc['std', 'Log man (ms)'], 5),
+        "Log man (%)": round(summary_stats_all.loc['mean', 'Log man (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Sched (ms)": round(summary_stats_all.loc['mean', 'Sched (ms)'], 5),
+        "Std Sched (ms)": round(summary_stats_all.loc['std', 'Sched (ms)'], 5),
+        "Sched (%)": round(summary_stats_all.loc['mean', 'Sched (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Lck man (ms)": round(summary_stats_all.loc['mean', 'Lck man (ms)'], 5),
+        "Std Lck man (ms)": round(summary_stats_all.loc['std', 'Lck man (ms)'], 5),
+        "Lck man (%)": round(summary_stats_all.loc['mean', 'Lck man (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Worker (ms)": round(summary_stats_all.loc['mean', 'Worker (ms)'], 5),
+        "Std Worker (ms)": round(summary_stats_all.loc['std', 'Worker (ms)'], 5),
+        "Worker (%)": round(summary_stats_all.loc['mean', 'Worker (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        #"Avg Wait (ms)": round(summary_stats_all.loc['mean', 'Wait (ms)'], 5),
+        #"Std Wait (ms)": round(summary_stats_all.loc['std', 'Wait (ms)'], 5),
+        #"Wait (%)": round(summary_stats_all.loc['mean', 'Wait (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
+        "Avg Other (ms)": round(summary_stats_all.loc['mean', 'Other (ms)'], 5),
+        "Std Other (ms)": round(summary_stats_all.loc['std', 'Other (ms)'], 5),
+        "Other (%)": round(summary_stats_all.loc['mean', 'Other (ms)'] / summary_stats_all.loc['mean', 'Duration (ms)'], 5),
         # SP SH Txns
-        "SP_SH Avg Duration (ms)": round(summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Std Duration (ms)": round(summary_stats_sp_sh.loc['std', 'Duration (ms)'], 3),
-        "SP_SH Avg Server (ms)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'], 3),
-        "SP_SH Std Server (ms)": round(summary_stats_sp_sh.loc['std', 'Server (ms)'], 3),
-        "SP_SH Server (%)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Fwd (ms)": round(summary_stats_sp_sh.loc['mean', 'Fwd (ms)'], 3),
-        "SP_SH Std Fwd (ms)": round(summary_stats_sp_sh.loc['std', 'Fwd (ms)'], 3),
-        "SP_SH Fwd(%)": round(summary_stats_sp_sh.loc['mean', 'Fwd (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Seq (ms)": round(summary_stats_sp_sh.loc['mean', 'Seq (ms)'], 3),
-        "SP_SH Std Seq (ms)": round(summary_stats_sp_sh.loc['std', 'Seq (ms)'], 3),
-        "SP_SH Seq (%)": round(summary_stats_sp_sh.loc['mean', 'Seq (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg MH orderer (ms)": round(summary_stats_sp_sh.loc['mean', 'MH orderer (ms)'], 3),
-        "SP_SH Std MH orderer (ms)": round(summary_stats_sp_sh.loc['std', 'MH orderer (ms)'], 3),
-        "SP_SH MH orderer (%)": round(summary_stats_sp_sh.loc['mean', 'MH orderer (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Log man (ms)": round(summary_stats_sp_sh.loc['mean', 'Log man (ms)'], 3),
-        "SP_SH Std Log man (ms)": round(summary_stats_sp_sh.loc['std', 'Log man (ms)'], 3),
-        "SP_SH Log man (%)": round(summary_stats_sp_sh.loc['mean', 'Log man (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Sched (ms)": round(summary_stats_sp_sh.loc['mean', 'Sched (ms)'], 3),
-        "SP_SH Std Sched (ms)": round(summary_stats_sp_sh.loc['std', 'Sched (ms)'], 3),
-        "SP_SH Sched (%)": round(summary_stats_sp_sh.loc['mean', 'Sched (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Lck man (ms)": round(summary_stats_sp_sh.loc['mean', 'Lck man (ms)'], 3),
-        "SP_SH Std Lck man (ms)": round(summary_stats_sp_sh.loc['std', 'Lck man (ms)'], 3),
-        "SP_SH Lck man (%)": round(summary_stats_sp_sh.loc['mean', 'Lck man (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Worker (ms)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'], 3),
-        "SP_SH Std Worker (ms)": round(summary_stats_sp_sh.loc['std', 'Worker (ms)'], 3),
-        "SP_SH Worker (%)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Wait (ms)": round(summary_stats_sp_sh.loc['mean', 'Wait (ms)'], 3),
-        "SP_SH Std Wait (ms)": round(summary_stats_sp_sh.loc['std', 'Wait (ms)'], 3),
-        "SP_SH Wait (%)": round(summary_stats_sp_sh.loc['mean', 'Wait (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
-        "SP_SH Avg Other (ms)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'], 3),
-        "SP_SH Std Other (ms)": round(summary_stats_sp_sh.loc['std', 'Other (ms)'], 3),
-        "SP_SH Other (%)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 3),
+        "SP_SH Avg Duration (ms)": round(summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Std Duration (ms)": round(summary_stats_sp_sh.loc['std', 'Duration (ms)'], 5),
+        "SP_SH Avg Server (ms)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'], 5),
+        "SP_SH Std Server (ms)": round(summary_stats_sp_sh.loc['std', 'Server (ms)'], 5),
+        "SP_SH Server (%)": round(summary_stats_sp_sh.loc['mean', 'Server (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Fwd (ms)": round(summary_stats_sp_sh.loc['mean', 'Fwd (ms)'], 5),
+        "SP_SH Std Fwd (ms)": round(summary_stats_sp_sh.loc['std', 'Fwd (ms)'], 5),
+        "SP_SH Fwd (%)": round(summary_stats_sp_sh.loc['mean', 'Fwd (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Seq (ms)": round(summary_stats_sp_sh.loc['mean', 'Seq (ms)'], 5),
+        "SP_SH Std Seq (ms)": round(summary_stats_sp_sh.loc['std', 'Seq (ms)'], 5),
+        "SP_SH Seq (%)": round(summary_stats_sp_sh.loc['mean', 'Seq (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg MH orderer (ms)": round(summary_stats_sp_sh.loc['mean', 'MH orderer (ms)'], 5),
+        "SP_SH Std MH orderer (ms)": round(summary_stats_sp_sh.loc['std', 'MH orderer (ms)'], 5),
+        "SP_SH MH orderer (%)": round(summary_stats_sp_sh.loc['mean', 'MH orderer (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Log man (ms)": round(summary_stats_sp_sh.loc['mean', 'Log man (ms)'], 5),
+        "SP_SH Std Log man (ms)": round(summary_stats_sp_sh.loc['std', 'Log man (ms)'], 5),
+        "SP_SH Log man (%)": round(summary_stats_sp_sh.loc['mean', 'Log man (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Sched (ms)": round(summary_stats_sp_sh.loc['mean', 'Sched (ms)'], 5),
+        "SP_SH Std Sched (ms)": round(summary_stats_sp_sh.loc['std', 'Sched (ms)'], 5),
+        "SP_SH Sched (%)": round(summary_stats_sp_sh.loc['mean', 'Sched (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Lck man (ms)": round(summary_stats_sp_sh.loc['mean', 'Lck man (ms)'], 5),
+        "SP_SH Std Lck man (ms)": round(summary_stats_sp_sh.loc['std', 'Lck man (ms)'], 5),
+        "SP_SH Lck man (%)": round(summary_stats_sp_sh.loc['mean', 'Lck man (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Worker (ms)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'], 5),
+        "SP_SH Std Worker (ms)": round(summary_stats_sp_sh.loc['std', 'Worker (ms)'], 5),
+        "SP_SH Worker (%)": round(summary_stats_sp_sh.loc['mean', 'Worker (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        #"SP_SH Avg Wait (ms)": round(summary_stats_sp_sh.loc['mean', 'Wait (ms)'], 5),
+        #"SP_SH Std Wait (ms)": round(summary_stats_sp_sh.loc['std', 'Wait (ms)'], 5),
+        #"SP_SH Wait (%)": round(summary_stats_sp_sh.loc['mean', 'Wait (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
+        "SP_SH Avg Other (ms)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'], 5),
+        "SP_SH Std Other (ms)": round(summary_stats_sp_sh.loc['std', 'Other (ms)'], 5),
+        "SP_SH Other (%)": round(summary_stats_sp_sh.loc['mean', 'Other (ms)'] / summary_stats_sp_sh.loc['mean', 'Duration (ms)'], 5),
         # MP SH Txns
-        "MP_SH Avg Duration (ms)": round(summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Std Duration (ms)": round(summary_stats_mp_sh.loc['std', 'Duration (ms)'], 3),
-        "MP_SH Avg Server (ms)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'], 3),
-        "MP_SH Std Server (ms)": round(summary_stats_mp_sh.loc['std', 'Server (ms)'], 3),
-        "MP_SH Server (%)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Fwd (ms)": round(summary_stats_mp_sh.loc['mean', 'Fwd (ms)'], 3),
-        "MP_SH Std Fwd (ms)": round(summary_stats_mp_sh.loc['std', 'Fwd (ms)'], 3),
-        "MP_SH Fwd (%)": round(summary_stats_mp_sh.loc['mean', 'Fwd (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Seq (ms)": round(summary_stats_mp_sh.loc['mean', 'Seq (ms)'], 3),
-        "MP_SH Std Seq (ms)": round(summary_stats_mp_sh.loc['std', 'Seq (ms)'], 3),
-        "MP_SH Seq (%)": round(summary_stats_mp_sh.loc['mean', 'Seq (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg MH orderer (ms)": round(summary_stats_mp_sh.loc['mean', 'MH orderer (ms)'], 3),
-        "MP_SH Std MH orderer (ms)": round(summary_stats_mp_sh.loc['std', 'MH orderer (ms)'], 3),
-        "MP_SH MH orderer (%)": round(summary_stats_mp_sh.loc['mean', 'MH orderer (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Log man (ms)": round(summary_stats_mp_sh.loc['mean', 'Log man (ms)'], 3),
-        "MP_SH Std Log man (ms)": round(summary_stats_mp_sh.loc['std', 'Log man (ms)'], 3),
-        "MP_SH Log man (%)": round(summary_stats_mp_sh.loc['mean', 'Log man (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Sched (ms)": round(summary_stats_mp_sh.loc['mean', 'Sched (ms)'], 3),
-        "MP_SH Std Sched (ms)": round(summary_stats_mp_sh.loc['std', 'Sched (ms)'], 3),
-        "MP_SH Sched (%)": round(summary_stats_mp_sh.loc['mean', 'Sched (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Lck man (ms)": round(summary_stats_mp_sh.loc['mean', 'Lck man (ms)'], 3),
-        "MP_SH Std Lck man (ms)": round(summary_stats_mp_sh.loc['std', 'Lck man (ms)'], 3),
-        "MP_SH Lck man (%)": round(summary_stats_mp_sh.loc['mean', 'Lck man (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Worker (ms)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'], 3),
-        "MP_SH Std Worker (ms)": round(summary_stats_mp_sh.loc['std', 'Worker (ms)'], 3),
-        "MP_SH Worker (%)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Wait (ms)": round(summary_stats_mp_sh.loc['mean', 'Wait (ms)'], 3),
-        "MP_SH Std Wait (ms)": round(summary_stats_mp_sh.loc['std', 'Wait (ms)'], 3),
-        "MP_SH Wait (%)": round(summary_stats_mp_sh.loc['mean', 'Wait (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
-        "MP_SH Avg Other (ms)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'], 3),
-        "MP_SH Std Other (ms)": round(summary_stats_mp_sh.loc['std', 'Other (ms)'], 3),
-        "MP_SH Other (%)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 3),
+        "MP_SH Avg Duration (ms)": round(summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Std Duration (ms)": round(summary_stats_mp_sh.loc['std', 'Duration (ms)'], 5),
+        "MP_SH Avg Server (ms)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'], 5),
+        "MP_SH Std Server (ms)": round(summary_stats_mp_sh.loc['std', 'Server (ms)'], 5),
+        "MP_SH Server (%)": round(summary_stats_mp_sh.loc['mean', 'Server (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Fwd (ms)": round(summary_stats_mp_sh.loc['mean', 'Fwd (ms)'], 5),
+        "MP_SH Std Fwd (ms)": round(summary_stats_mp_sh.loc['std', 'Fwd (ms)'], 5),
+        "MP_SH Fwd (%)": round(summary_stats_mp_sh.loc['mean', 'Fwd (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Seq (ms)": round(summary_stats_mp_sh.loc['mean', 'Seq (ms)'], 5),
+        "MP_SH Std Seq (ms)": round(summary_stats_mp_sh.loc['std', 'Seq (ms)'], 5),
+        "MP_SH Seq (%)": round(summary_stats_mp_sh.loc['mean', 'Seq (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg MH orderer (ms)": round(summary_stats_mp_sh.loc['mean', 'MH orderer (ms)'], 5),
+        "MP_SH Std MH orderer (ms)": round(summary_stats_mp_sh.loc['std', 'MH orderer (ms)'], 5),
+        "MP_SH MH orderer (%)": round(summary_stats_mp_sh.loc['mean', 'MH orderer (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Log man (ms)": round(summary_stats_mp_sh.loc['mean', 'Log man (ms)'], 5),
+        "MP_SH Std Log man (ms)": round(summary_stats_mp_sh.loc['std', 'Log man (ms)'], 5),
+        "MP_SH Log man (%)": round(summary_stats_mp_sh.loc['mean', 'Log man (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Sched (ms)": round(summary_stats_mp_sh.loc['mean', 'Sched (ms)'], 5),
+        "MP_SH Std Sched (ms)": round(summary_stats_mp_sh.loc['std', 'Sched (ms)'], 5),
+        "MP_SH Sched (%)": round(summary_stats_mp_sh.loc['mean', 'Sched (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Lck man (ms)": round(summary_stats_mp_sh.loc['mean', 'Lck man (ms)'], 5),
+        "MP_SH Std Lck man (ms)": round(summary_stats_mp_sh.loc['std', 'Lck man (ms)'], 5),
+        "MP_SH Lck man (%)": round(summary_stats_mp_sh.loc['mean', 'Lck man (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Worker (ms)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'], 5),
+        "MP_SH Std Worker (ms)": round(summary_stats_mp_sh.loc['std', 'Worker (ms)'], 5),
+        "MP_SH Worker (%)": round(summary_stats_mp_sh.loc['mean', 'Worker (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        #"MP_SH Avg Wait (ms)": round(summary_stats_mp_sh.loc['mean', 'Wait (ms)'], 5),
+        #"MP_SH Std Wait (ms)": round(summary_stats_mp_sh.loc['std', 'Wait (ms)'], 5),
+        #"MP_SH Wait (%)": round(summary_stats_mp_sh.loc['mean', 'Wait (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
+        "MP_SH Avg Other (ms)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'], 5),
+        "MP_SH Std Other (ms)": round(summary_stats_mp_sh.loc['std', 'Other (ms)'], 5),
+        "MP_SH Other (%)": round(summary_stats_mp_sh.loc['mean', 'Other (ms)'] / summary_stats_mp_sh.loc['mean', 'Duration (ms)'], 5),
         # MP MH Txns
-        "MP_MH Avg Duration (ms)": round(summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Std Duration (ms)": round(summary_stats_mp_mh.loc['std', 'Duration (ms)'], 3),
-        "MP_MH Avg Server (ms)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'], 3),
-        "MP_MH Std Server (ms)": round(summary_stats_mp_mh.loc['std', 'Server (ms)'], 3),
-        "MP_MH Server (%)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Fwd (ms)": round(summary_stats_mp_mh.loc['mean', 'Fwd (ms)'], 3),
-        "MP_MH Std Fwd (ms)": round(summary_stats_mp_mh.loc['std', 'Fwd (ms)'], 3),
-        "MP_MH Fwd (%)": round(summary_stats_mp_mh.loc['mean', 'Fwd (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Seq (ms)": round(summary_stats_mp_mh.loc['mean', 'Seq (ms)'], 3),
-        "MP_MH Std Seq (ms)": round(summary_stats_mp_mh.loc['std', 'Seq (ms)'], 3),
-        "MP_MH Seq (%)": round(summary_stats_mp_mh.loc['mean', 'Seq (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg MH orderer (ms)": round(summary_stats_mp_mh.loc['mean', 'MH orderer (ms)'], 3),
-        "MP_MH Std MH orderer (ms)": round(summary_stats_mp_mh.loc['std', 'MH orderer (ms)'], 3),
-        "MP_MH MH orderer (%)": round(summary_stats_mp_mh.loc['mean', 'MH orderer (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Log man (ms)": round(summary_stats_mp_mh.loc['mean', 'Log man (ms)'], 3),
-        "MP_MH Std Log man (ms)": round(summary_stats_mp_mh.loc['std', 'Log man (ms)'], 3),
-        "MP_MH Log man (%)": round(summary_stats_mp_mh.loc['mean', 'Log man (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Sched (ms)": round(summary_stats_mp_mh.loc['mean', 'Sched (ms)'], 3),
-        "MP_MH Std Sched (ms)": round(summary_stats_mp_mh.loc['std', 'Sched (ms)'], 3),
-        "MP_MH Sched (%)": round(summary_stats_mp_mh.loc['mean', 'Sched (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Lck man (ms)": round(summary_stats_mp_mh.loc['mean', 'Lck man (ms)'], 3),
-        "MP_MH Std Lck man (ms)": round(summary_stats_mp_mh.loc['std', 'Lck man (ms)'], 3),
-        "MP_MH Lck man (%)": round(summary_stats_mp_mh.loc['mean', 'Lck man (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Worker (ms)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'], 3),
-        "MP_MH Std Worker (ms)": round(summary_stats_mp_mh.loc['std', 'Worker (ms)'], 3),
-        "MP_MH Worker (%)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Wait (ms)": round(summary_stats_mp_mh.loc['mean', 'Wait (ms)'], 3),
-        "MP_MH Std Wait (ms)": round(summary_stats_mp_mh.loc['std', 'Wait (ms)'], 3),
-        "MP_MH Wait (%)": round(summary_stats_mp_mh.loc['mean', 'Wait (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
-        "MP_MH Avg Other (ms)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'], 3),
-        "MP_MH Std Other (ms)": round(summary_stats_mp_mh.loc['std', 'Other (ms)'], 3),
-        "MP_MH Other (%)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 3),
+        "MP_MH Avg Duration (ms)": round(summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Std Duration (ms)": round(summary_stats_mp_mh.loc['std', 'Duration (ms)'], 5),
+        "MP_MH Avg Server (ms)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'], 5),
+        "MP_MH Std Server (ms)": round(summary_stats_mp_mh.loc['std', 'Server (ms)'], 5),
+        "MP_MH Server (%)": round(summary_stats_mp_mh.loc['mean', 'Server (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Fwd (ms)": round(summary_stats_mp_mh.loc['mean', 'Fwd (ms)'], 5),
+        "MP_MH Std Fwd (ms)": round(summary_stats_mp_mh.loc['std', 'Fwd (ms)'], 5),
+        "MP_MH Fwd (%)": round(summary_stats_mp_mh.loc['mean', 'Fwd (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Seq (ms)": round(summary_stats_mp_mh.loc['mean', 'Seq (ms)'], 5),
+        "MP_MH Std Seq (ms)": round(summary_stats_mp_mh.loc['std', 'Seq (ms)'], 5),
+        "MP_MH Seq (%)": round(summary_stats_mp_mh.loc['mean', 'Seq (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg MH orderer (ms)": round(summary_stats_mp_mh.loc['mean', 'MH orderer (ms)'], 5),
+        "MP_MH Std MH orderer (ms)": round(summary_stats_mp_mh.loc['std', 'MH orderer (ms)'], 5),
+        "MP_MH MH orderer (%)": round(summary_stats_mp_mh.loc['mean', 'MH orderer (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Log man (ms)": round(summary_stats_mp_mh.loc['mean', 'Log man (ms)'], 5),
+        "MP_MH Std Log man (ms)": round(summary_stats_mp_mh.loc['std', 'Log man (ms)'], 5),
+        "MP_MH Log man (%)": round(summary_stats_mp_mh.loc['mean', 'Log man (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Sched (ms)": round(summary_stats_mp_mh.loc['mean', 'Sched (ms)'], 5),
+        "MP_MH Std Sched (ms)": round(summary_stats_mp_mh.loc['std', 'Sched (ms)'], 5),
+        "MP_MH Sched (%)": round(summary_stats_mp_mh.loc['mean', 'Sched (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Lck man (ms)": round(summary_stats_mp_mh.loc['mean', 'Lck man (ms)'], 5),
+        "MP_MH Std Lck man (ms)": round(summary_stats_mp_mh.loc['std', 'Lck man (ms)'], 5),
+        "MP_MH Lck man (%)": round(summary_stats_mp_mh.loc['mean', 'Lck man (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Worker (ms)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'], 5),
+        "MP_MH Std Worker (ms)": round(summary_stats_mp_mh.loc['std', 'Worker (ms)'], 5),
+        "MP_MH Worker (%)": round(summary_stats_mp_mh.loc['mean', 'Worker (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        #"MP_MH Avg Wait (ms)": round(summary_stats_mp_mh.loc['mean', 'Wait (ms)'], 5),
+        #"MP_MH Std Wait (ms)": round(summary_stats_mp_mh.loc['std', 'Wait (ms)'], 5),
+        #"MP_MH Wait (%)": round(summary_stats_mp_mh.loc['mean', 'Wait (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
+        "MP_MH Avg Other (ms)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'], 5),
+        "MP_MH Std Other (ms)": round(summary_stats_mp_mh.loc['std', 'Other (ms)'], 5),
+        "MP_MH Other (%)": round(summary_stats_mp_mh.loc['mean', 'Other (ms)'] / summary_stats_mp_mh.loc['mean', 'Duration (ms)'], 5),
     }])
     # Append row for current system to the combined DataFrame
     summary_combined = pd.concat([summary_combined, summary_flat], ignore_index=True)
@@ -439,6 +384,178 @@ for system in system_dirs:
 summary_combined.to_csv(os.path.join(output_folder, "latency_summary.csv"), index=False)
 
 print("\nSummary statistics:")
-print(summary_combined.round(3))
+print(summary_combined.round(5))
+
+print("Generating heatmap")
+'''columns_to_include = [
+    "Server (%)", "Fwd (%)", "Seq (%)", "MH orderer (%)", "Log man (%)", "Sched (%)", "Lck man (%)", "Worker (%)", "Other (%)",
+    "SP_SH Server (%)", "SP_SH Fwd (%)", "SP_SH Seq (%)", "SP_SH MH orderer (%)", "SP_SH Log man (%)", "SP_SH Sched (%)", "SP_SH Lck man (%)", "SP_SH Worker (%)", "SP_SH Other (%)",
+    "MP_SH Server (%)", "MP_SH Fwd (%)", "MP_SH Seq (%)", "MP_SH MH orderer (%)", "MP_SH Log man (%)", "MP_SH Sched (%)", "MP_SH Lck man (%)", "MP_SH Worker (%)", "MP_SH Other (%)",
+    "MP_MH Server (%)", "MP_MH Fwd (%)", "MP_MH Seq (%)", "MP_MH MH orderer (%)", "MP_MH Log man (%)", "MP_MH Sched (%)", "MP_MH Lck man (%)", "MP_MH Worker (%)", "MP_MH Other (%)",
+]'''
+columns_to_include_all = [
+    "Server (%)", "Fwd (%)", "Seq (%)", "MH orderer (%)", "Log man (%)", "Sched (%)", "Lck man (%)", "Worker (%)", "Other (%)",
+]
+columns_to_include_sp_sh = [
+    "SP_SH Server (%)", "SP_SH Fwd (%)", "SP_SH Seq (%)", "SP_SH MH orderer (%)", "SP_SH Log man (%)", "SP_SH Sched (%)", "SP_SH Lck man (%)", "SP_SH Worker (%)", "SP_SH Other (%)",
+]
+columns_to_include_mp_sh = [
+    "MP_SH Server (%)", "MP_SH Fwd (%)", "MP_SH Seq (%)", "MP_SH MH orderer (%)", "MP_SH Log man (%)", "MP_SH Sched (%)", "MP_SH Lck man (%)", "MP_SH Worker (%)", "MP_SH Other (%)",
+]
+columns_to_include_mp_mh = [
+    "MP_MH Server (%)", "MP_MH Fwd (%)", "MP_MH Seq (%)", "MP_MH MH orderer (%)", "MP_MH Log man (%)", "MP_MH Sched (%)", "MP_MH Lck man (%)", "MP_MH Worker (%)", "MP_MH Other (%)",
+]
+columns_names = ["Server (%)", "Forwarder (%)", "Seqencer (%)", "MH orderer (%)", "Log manager (%)", "Scheduler (%)", "Lock man (%)", "Worker (%)", "Other (%)"]
+
+fig, ax = plt.subplots(4,1, figsize=(5,7), constrained_layout=True)
+
+# General heatmap for all txns
+summary_percentages = 100 * summary_combined[columns_to_include_all]
+summary_percentages.replace('NaN', np.nan, inplace=True)
+summary_percentages = summary_percentages.to_numpy().round(5)
+annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+for row in range(len(annot)):
+    for cell in range(len(annot[row])):
+        if (float(annot[row][cell]) > 1):
+            annot[row][cell] = str(annot[row][cell])[:4]
+summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+
+h0 = sns.heatmap(
+    data=summary_percentages,
+    annot=annot,                         # Custom annotation matrix
+    fmt='',                              # Allow custom formatting
+    cmap="coolwarm", 
+    cbar=False,                          # Disable individual colorbars
+    linewidths=0.5,
+    cbar_kws={"shrink": 0.7}, 
+    mask=np.isnan(summary_percentages),  # Mask NaN values
+    vmin=0,
+    vmax=30,
+    norm=LogNorm(),
+    annot_kws={"size": 8},
+    ax=ax[0]
+)
+# Move the x-axis to the top
+ax[0].xaxis.set_ticks_position('top')
+ax[0].set_xticklabels(columns_names, rotation=90, fontsize=8)
+sys_names = summary_combined["System"]
+sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
+ax[0].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
+
+# Heatmap for SP SH txns
+summary_percentages = 100 * summary_combined[columns_to_include_sp_sh]
+summary_percentages.replace('NaN', np.nan, inplace=True)
+summary_percentages = summary_percentages.to_numpy().round(5)
+annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+for row in range(len(annot)):
+    for cell in range(len(annot[row])):
+        if (float(annot[row][cell]) > 1):
+            annot[row][cell] = str(annot[row][cell])[:4]
+summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+
+h1 = sns.heatmap(
+    data=summary_percentages,
+    annot=annot,                         # Custom annotation matrix
+    fmt='',                              # Allow custom formatting
+    cmap="coolwarm", 
+    cbar=False,                          # Disable individual colorbars
+    linewidths=0.5,
+    cbar_kws={"shrink": 0.7}, 
+    mask=np.isnan(summary_percentages),  # Mask NaN values
+    vmin=0,
+    vmax=30,
+    norm=LogNorm(),
+    annot_kws={"size": 8},
+    ax=ax[1]
+)
+ax[1].set_xticks(ticks=[], labels=[]) # Remove x-ticks for further subplots
+sys_names = summary_combined["System"]
+sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
+ax[1].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
+
+# Heatmap for MP SH txns
+summary_percentages = 100 * summary_combined[columns_to_include_mp_sh]
+summary_percentages.replace('NaN', np.nan, inplace=True)
+summary_percentages = summary_percentages.to_numpy().round(5)
+annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+for row in range(len(annot)):
+    for cell in range(len(annot[row])):
+        if (float(annot[row][cell]) > 1):
+            annot[row][cell] = str(annot[row][cell])[:4]
+summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+
+h2 = sns.heatmap(
+    data=summary_percentages,
+    annot=annot,                         # Custom annotation matrix
+    fmt='',                              # Allow custom formatting
+    cmap="coolwarm", 
+    cbar=False,                          # Disable individual colorbars
+    linewidths=0.5,
+    cbar_kws={"shrink": 0.7}, 
+    mask=np.isnan(summary_percentages),  # Mask NaN values
+    vmin=0,
+    vmax=30,
+    norm=LogNorm(),
+    annot_kws={"size": 8},
+    ax=ax[2]
+)
+ax[2].set_xticks(ticks=[], labels=[]) # Remove x-ticks for further subplots
+sys_names = summary_combined["System"]
+sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
+ax[2].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
+
+# Heatmap for MP MH txns
+summary_percentages = 100 * summary_combined[columns_to_include_mp_mh]
+summary_percentages.replace('NaN', np.nan, inplace=True)
+summary_percentages = summary_percentages.to_numpy().round(5)
+mask = np.isnan(summary_percentages)
+annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+for row in range(len(annot)):
+    for cell in range(len(annot[row])):
+        if annot[row][cell] != 'N/A' and (float(annot[row][cell]) > 1):
+            annot[row][cell] = str(annot[row][cell])[:4]
+summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+
+h3 = sns.heatmap(
+    data=summary_percentages,
+    annot=annot,                         # Custom annotation matrix
+    fmt='',                              # Allow custom formatting
+    cmap="coolwarm", 
+    cbar=False,                          # Disable individual colorbars
+    linewidths=0.5,
+    cbar_kws={"shrink": 0.7}, 
+    mask=np.isnan(summary_percentages),  # Mask NaN values
+    vmin=0,
+    vmax=30,
+    norm=LogNorm(),
+    annot_kws={"size": 8},
+    ax=ax[3],
+)
+ax[3].set_xticks(ticks=[], labels=[]) # Remove x-ticks for further subplots
+sys_names = summary_combined["System"]
+sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
+ax[3].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
+
+# Create a single colorbar for all plots
+cbar = fig.colorbar(
+    h1.collections[0],         # Use the first heatmap's mappable
+    ax=ax,
+    orientation='vertical',
+    shrink=0.7,
+    pad=0.02,
+    aspect=30
+)
+#plt.tight_layout() Doesn't work with subplots
+
+# Save the plot
+output_path = 'plots/output/latency_decomposition'
+jpg_path = output_path + '.jpg'
+pdf_path = output_path + '.pdf'
+plt.savefig(jpg_path, dpi=300, bbox_inches='tight')
+plt.savefig(pdf_path, bbox_inches='tight')
+plt.show()
+
+
+
 
 print("Done")

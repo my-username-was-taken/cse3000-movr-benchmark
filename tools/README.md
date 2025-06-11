@@ -31,9 +31,13 @@ We will test on the following systems:
 1. Spin up the cluster as above if you heaven't already done so.
 2. Run a single scenario (you will have to tweak this script to work for your scenario) `python3 tools/run_config_on_remote.py -i [docker_image] -m [machine] -s [scenario] -w [workload] -c [conf_file] -u [username] -db [database_system]` (see file for full list of params). For example, `python3 tools/run_config_on_remote.py -i omraz/seq_eval:latest -m st5 -s baseline -w ycsb -c examples/ycsb/tu_cluster_ycsb_ddr_ts.conf -u omraz -db Detock`
 3. Collect results from remote machine. E.g., `scp -r st5:/home/omraz/Detock/data/packet_loss plots/raw_data/ycsb`. Your log files should end up in `plots/raw_data/{workload}/{scenario}`
-4. Process the resutls (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsb`
+4. Process the results (you will have to tweak this script to work for your scenario) `python3 plots/extract_exp_results.py -s [scenario] -w [workload]` For example, `python3 plots/extract_exp_results.py -s baseline -w ycsb`
 
 This should produce your plots.
+
+### Latency breakdown
+
+For the latency breakdown plot we use a special data extraction (and plotting) script: `python3 plots/extract_latency_breakdown.py -df [data_folder] -w [output_folder] -of [output_folder]` For example, `python3 plots/extract_exp_results.py -df plots/raw_data/ycsb/lat_breakdown -w ycsb -of plots/data/final/ycsb/latency_breakdown`
 
 ## Running all databases for a given scenario
 
