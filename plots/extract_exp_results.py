@@ -41,7 +41,7 @@ BASE_DIR_PATH = join("plots/raw_data", workload, scenario)
 
 out_csv = f'{scenario}.csv'
 OUT_CSV_PATH = join("plots/data/final", workload, out_csv)
-SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Caerus', 'Mencius']
+SYSTEMS_LIST = ['Calvin', 'SLOG', 'Detock', 'Janus', 'Caerus', 'Mencius']
 METRICS_LIST = ['throughput', 'p50', 'p90', 'p95', 'p99', 'aborts', 'bytes', 'cost']
 
 MAX_YCSBT_HOT_RECORDS = 250.0 # Check whether this needs to be adjusted per current exp setup
@@ -375,7 +375,10 @@ for x_val in x_vals:
     x_val = x_val.split('/')[-1]
     new_row = {col: np.nan for col in df.columns}
     if scenario == 'skew':
-        new_row['x_var'] = (MAX_YCSBT_HOT_RECORDS - float(x_val)) / MAX_YCSBT_HOT_RECORDS
+        if workload == 'movr':
+            new_row['x_var'] = float(x_val)
+        else:
+            new_row['x_var'] = (MAX_YCSBT_HOT_RECORDS - float(x_val)) / MAX_YCSBT_HOT_RECORDS
     else:
         new_row['x_var'] = float(x_val)
     for system in system_dirs:

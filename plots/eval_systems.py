@@ -31,6 +31,8 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
         x_lab = 'Extra delay (ms)'
     elif plot == 'packet_loss':
         x_lab = 'Packets lost (%)'
+    elif plot == 'sunflower':
+        x_lab = 'Sunflower falloff'
     elif plot == 'example':
         x_lab = 'Example x-axis'
 
@@ -46,6 +48,8 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
         xaxis_points = [0, 4, 8, 15, 20, 25, 29, 32, 34, 36, 38, 39]
     elif workload == 'tpcc' and plot == 'skew':
         xaxis_points = [250 - point for point in xaxis_points]
+    elif workload == 'movr' and plot == 'baseline':
+        xaxis_points = [x * 0.35 for x in xaxis_points]
 
     #metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
     metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
@@ -58,9 +62,9 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
         'Cost ($)'
     ]
     subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
-    databases = ['Calvin', 'SLOG', 'Detock', 'janus', 'Caerus', 'ddr_only']
-    line_styles = ['-', '--', '-.', ':', '-', '--']
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown']
+    databases = ['Calvin', 'SLOG', 'Detock', 'Janus']
+    line_styles = ['-', '--', '-.', ':']
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
 
     # Configure Matplotlib global font size
     plt.rcParams.update({
@@ -105,8 +109,12 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
         ax.set_xlabel(x_lab)
         ax.grid(True)
         if plot == 'baseline':
-            ax.set_xticks(np.linspace(0, 100, 6))  # 0%, 20%, ..., 100%
-            ax.set_xlim(0, 100)
+            if workload == 'movr':
+                ax.set_xticks(np.linspace(0, 35, 6))  # 0%, 7.5%, ..., 35%
+                ax.set_xlim(0, 35)
+            else:
+                ax.set_xticks(np.linspace(0, 100, 6))  # 0%, 20%, ..., 100%
+                ax.set_xlim(0, 100)
         elif plot == 'skew':
             ax.set_xticks(np.linspace(0.0, 1.0, 6))  # 0.0, 0.2, ..., 1.0
             ax.set_xlim(0, 1)
@@ -117,6 +125,9 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
             ax.set_xlim(left=0)
         elif plot == 'packet_loss':
             ax.set_xlim(0, 10)
+        elif plot == 'sunflower':
+            ax.set_xticks(np.linspace(0.0, 1.0, 6))  # 0.0, 0.2, ..., 1.0
+            ax.set_xlim(0, 1)
         ax.set_ylim(bottom=0)  # Remove extra whitespace below y=0
 
     # Add legend and adjust layout
@@ -127,17 +138,17 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
 
     # Save figures
     output_path = f'plots/output/{workload}/{plot}'
-    jpg_path = output_path + '.jpg'
+    png_path = output_path + '.png'
     pdf_path = output_path + '.pdf'
     os.makedirs('/'.join(output_path.split('/')[:-1]), exist_ok=True)
-    plt.savefig(jpg_path, dpi=300, bbox_inches='tight')
+    plt.savefig(png_path, dpi=300, bbox_inches='tight')
     plt.savefig(pdf_path, bbox_inches='tight')
     plt.show()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
-    parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "example"], help="The name of the experiment we want to plot.")
-    parser.add_argument("-w",  "--workload", default="ycsb", choices=["ycsb", "tpcc"], help="The workload that was evaluated.")
+    parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "sunflower", "example"], help="The name of the experiment we want to plot.")
+    parser.add_argument("-w",  "--workload", default="ycsb", choices=["ycsb", "tpcc", "movr"], help="The workload that was evaluated.")
     parser.add_argument("-lp", "--latency_percentiles", default="50;95;99", help="The latency percentiles to plot")
     args = parser.parse_args()
 
