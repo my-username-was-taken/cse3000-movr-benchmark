@@ -147,7 +147,7 @@ for system in system_dirs:
     event_groups = events_csv.groupby("txn_id")
     # Prepare list to collect results
     results = []
-    #txns_csv = txns_csv.tail(100) # For debugging purposes only, use the first 100 txns to speed up the script
+    txns_csv = txns_csv.tail(100) # For debugging purposes only, use the first 100 txns to speed up the script
     for _, txn in txns_csv.iterrows():
         txn_id = txn["txn_id"]
         sent_at = txn["sent_at"]
@@ -405,63 +405,85 @@ columns_to_include_mp_sh = [
 columns_to_include_mp_mh = [
     "MP_MH Server (%)", "MP_MH Fwd (%)", "MP_MH Seq (%)", "MP_MH MH orderer (%)", "MP_MH Log man (%)", "MP_MH Sched (%)", "MP_MH Lck man (%)", "MP_MH Worker (%)", "MP_MH Other (%)",
 ]
-columns_names = ["Server (%)", "Forwarder (%)", "Seqencer (%)", "MH orderer (%)", "Log manager (%)", "Scheduler (%)", "Lock man (%)", "Worker (%)", "Other (%)"]
+column_super_categories = {
+    'Server (%)': ['Server (%)', 'Fwd (%)', 'Worker (%)'],
+    'Sequencer (%)': ['Seq (%)', 'MH orderer (%)', 'Log man (%)'],
+    'Scheduler (%)': ['Sched (%)', 'Lck man (%)'],
+    'Other (%)': ['Other (%)']
+}
+#columns_names = ["Server (%)", "Forwarder (%)", "Sequencer (%)", "MH orderer (%)", "Log manager (%)", "Scheduler (%)", "Lock manager (%)", "Worker (%)", "Other (%)"]
+columns_names = ["Server", "Sequencer", "Scheduler", "Other"]
 
-fig, ax = plt.subplots(4,1, figsize=(5,7), constrained_layout=True)
+fig, ax = plt.subplots(3,1, figsize=(5,7), constrained_layout=True)
 
-# General heatmap for all txns
-summary_percentages = 100 * summary_combined[columns_to_include_all]
-summary_percentages.replace('NaN', np.nan, inplace=True)
-summary_percentages = summary_percentages.to_numpy().round(5)
-annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+# Heatmap for SP SH txns
+summary_percentages = 100 * summary_combined[columns_to_include_sp_sh]
+# New DataFrame to hold merged categories
+merged_summary = pd.DataFrame()
+# For each supercategory, find matching columns and sum them
+for supercat, substrings in column_super_categories.items():
+    matched_cols = [col for col in summary_percentages.columns if any(sub in col for sub in substrings)]
+    merged_summary[supercat] = summary_percentages[matched_cols].sum(axis=1)
+merged_summary.replace('NaN', np.nan, inplace=True)
+merged_summary = merged_summary.to_numpy().round(5)
+annot = np.where(np.isnan(merged_summary), 'N/A', merged_summary.astype(float)).astype(str)  # Annotation matrix
 for row in range(len(annot)):
     for cell in range(len(annot[row])):
         if (float(annot[row][cell]) > 1):
-            annot[row][cell] = str(annot[row][cell])[:4]
-summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+            annot[row][cell] = str(annot[row][cell])[:4] + ' %'
+        else:
+            annot[row][cell] = str(annot[row][cell])[:6] + ' %'
+merged_summary += 0.00000001 # Small hack to avoid problems with log of 0
 
 h0 = sns.heatmap(
-    data=summary_percentages,
+    data=merged_summary,
     annot=annot,                         # Custom annotation matrix
     fmt='',                              # Allow custom formatting
     cmap="coolwarm", 
     cbar=False,                          # Disable individual colorbars
     linewidths=0.5,
     cbar_kws={"shrink": 0.7}, 
-    mask=np.isnan(summary_percentages),  # Mask NaN values
+    mask=np.isnan(merged_summary),  # Mask NaN values
     vmin=0,
     vmax=30,
     norm=LogNorm(),
     annot_kws={"size": 8},
     ax=ax[0]
 )
-# Move the x-axis to the top
 ax[0].xaxis.set_ticks_position('top')
-ax[0].set_xticklabels(columns_names, rotation=90, fontsize=8)
+ax[0].set_xticklabels(columns_names, rotation=90, fontsize=8) # Remove x-ticks for further subplots
 sys_names = summary_combined["System"]
 sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
 ax[0].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
 
-# Heatmap for SP SH txns
-summary_percentages = 100 * summary_combined[columns_to_include_sp_sh]
-summary_percentages.replace('NaN', np.nan, inplace=True)
-summary_percentages = summary_percentages.to_numpy().round(5)
-annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
+# Heatmap for MP SH txns
+summary_percentages = 100 * summary_combined[columns_to_include_mp_sh]
+# New DataFrame to hold merged categories
+merged_summary = pd.DataFrame()
+# For each supercategory, find matching columns and sum them
+for supercat, substrings in column_super_categories.items():
+    matched_cols = [col for col in summary_percentages.columns if any(sub in col for sub in substrings)]
+    merged_summary[supercat] = summary_percentages[matched_cols].sum(axis=1)
+merged_summary.replace('NaN', np.nan, inplace=True)
+merged_summary = merged_summary.to_numpy().round(5)
+annot = np.where(np.isnan(merged_summary), 'N/A', merged_summary.astype(float)).astype(str)  # Annotation matrix
 for row in range(len(annot)):
     for cell in range(len(annot[row])):
         if (float(annot[row][cell]) > 1):
-            annot[row][cell] = str(annot[row][cell])[:4]
-summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+            annot[row][cell] = str(annot[row][cell])[:4] + ' %'
+        else:
+            annot[row][cell] = str(annot[row][cell])[:6] + ' %'
+merged_summary += 0.00000001 # Small hack to avoid problems with log of 0
 
 h1 = sns.heatmap(
-    data=summary_percentages,
+    data=merged_summary,
     annot=annot,                         # Custom annotation matrix
     fmt='',                              # Allow custom formatting
     cmap="coolwarm", 
     cbar=False,                          # Disable individual colorbars
     linewidths=0.5,
     cbar_kws={"shrink": 0.7}, 
-    mask=np.isnan(summary_percentages),  # Mask NaN values
+    mask=np.isnan(merged_summary),  # Mask NaN values
     vmin=0,
     vmax=30,
     norm=LogNorm(),
@@ -473,68 +495,48 @@ sys_names = summary_combined["System"]
 sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
 ax[1].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
 
-# Heatmap for MP SH txns
-summary_percentages = 100 * summary_combined[columns_to_include_mp_sh]
-summary_percentages.replace('NaN', np.nan, inplace=True)
-summary_percentages = summary_percentages.to_numpy().round(5)
-annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
-for row in range(len(annot)):
-    for cell in range(len(annot[row])):
-        if (float(annot[row][cell]) > 1):
-            annot[row][cell] = str(annot[row][cell])[:4]
-summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
+# Heatmap for MP MH txns
+summary_percentages = 100 * summary_combined[columns_to_include_mp_mh]
+# New DataFrame to hold merged categories
+merged_summary = pd.DataFrame()
+# For each supercategory, find matching columns and sum them
+for supercat, substrings in column_super_categories.items():
+    matched_cols = [col for col in summary_percentages.columns if any(sub in col for sub in substrings)]
+    merged_summary[supercat] = summary_percentages[matched_cols].sum(axis=1)
+merged_summary = merged_summary.apply(pd.to_numeric, errors='coerce')
+merged_summary.iloc[0] = np.nan # Janus has no 'MH' txns
+merged_summary.iloc[2] = np.nan # Calvin has no 'MH' txns
+# Prepare annotation matrix
+annot = merged_summary.copy()
+for i in range(annot.shape[0]):
+    for j in range(annot.shape[1]):
+        val = annot.iat[i, j]
+        if pd.isna(val):
+            annot.iat[i, j] = "N/A"
+        elif val > 1:
+            annot.iat[i, j] = f"{val:.1f} %"
+        else:
+            annot.iat[i, j] = f"{val:.3f} %"
 
 h2 = sns.heatmap(
-    data=summary_percentages,
-    annot=annot,                         # Custom annotation matrix
-    fmt='',                              # Allow custom formatting
-    cmap="coolwarm", 
-    cbar=False,                          # Disable individual colorbars
+    data=merged_summary,
+    annot=annot.values,
+    fmt='',
+    cmap="coolwarm",
+    cbar=False,
     linewidths=0.5,
-    cbar_kws={"shrink": 0.7}, 
-    mask=np.isnan(summary_percentages),  # Mask NaN values
-    vmin=0,
+    linecolor='white',
+    mask=merged_summary.isna(),
+    vmin=0.1,
     vmax=30,
-    norm=LogNorm(),
+    norm=LogNorm(vmin=0.1, vmax=30),
     annot_kws={"size": 8},
-    ax=ax[2]
+    ax=ax[2],
 )
 ax[2].set_xticks(ticks=[], labels=[]) # Remove x-ticks for further subplots
 sys_names = summary_combined["System"]
 sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
 ax[2].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
-
-# Heatmap for MP MH txns
-summary_percentages = 100 * summary_combined[columns_to_include_mp_mh]
-summary_percentages.replace('NaN', np.nan, inplace=True)
-summary_percentages = summary_percentages.to_numpy().round(5)
-mask = np.isnan(summary_percentages)
-annot = np.where(np.isnan(summary_percentages), 'N/A', summary_percentages.astype(float)).astype(str)  # Annotation matrix
-for row in range(len(annot)):
-    for cell in range(len(annot[row])):
-        if annot[row][cell] != 'N/A' and (float(annot[row][cell]) > 1):
-            annot[row][cell] = str(annot[row][cell])[:4]
-summary_percentages += 0.00000001 # Small hack to avoid problems with log of 0
-
-h3 = sns.heatmap(
-    data=summary_percentages,
-    annot=annot,                         # Custom annotation matrix
-    fmt='',                              # Allow custom formatting
-    cmap="coolwarm", 
-    cbar=False,                          # Disable individual colorbars
-    linewidths=0.5,
-    cbar_kws={"shrink": 0.7}, 
-    mask=np.isnan(summary_percentages),  # Mask NaN values
-    vmin=0,
-    vmax=30,
-    norm=LogNorm(),
-    annot_kws={"size": 8},
-    ax=ax[3],
-)
-ax[3].set_xticks(ticks=[], labels=[]) # Remove x-ticks for further subplots
-sys_names = summary_combined["System"]
-sys_names = [SYSNAME_MAP[system] if system in SYSNAME_MAP else system for system in sys_names]
-ax[3].set_yticklabels(sys_names, rotation=0, fontsize=8)  # Keep region labels readable
 
 # Create a single colorbar for all plots
 cbar = fig.colorbar(
@@ -548,6 +550,7 @@ cbar = fig.colorbar(
 #plt.tight_layout() Doesn't work with subplots
 
 # Save the plot
+print("Saving heatmap")
 output_path = 'plots/output/latency_decomposition'
 jpg_path = output_path + '.jpg'
 pdf_path = output_path + '.pdf'

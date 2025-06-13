@@ -38,7 +38,7 @@ def execute_remote_command(ssh_client, command):
     """
     Execute a command on a remote server over SSH.
     """
-    stdin, stdout, stderr = ssh_client.exec_command(command)
+    _, stdout, stderr = ssh_client.exec_command(command)
     print(stdout.read().decode())
     print(stderr.read().decode())
 
@@ -264,7 +264,7 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
                     row.append("N/A")  # Skip self-connectivity
                 else:
                     # Execute ping command on the remote VM
-                    stdin, stdout, stderr = ssh_client.exec_command(f"ping -c 1 {dest_ip}")
+                    _, stdout, stderr = ssh_client.exec_command(f"ping -c 1 {dest_ip}")
                     ping_output = stdout.read().decode()
                     rtt_time = "N/A"
                     if "time=" in ping_output:
@@ -425,6 +425,7 @@ if __name__ == "__main__":
         test_connectivity_between_regions(region_ips)
     elif args.action == "setup_db":
         update_conf_file_ips()
-        spawn_db_service(workload='YCSB', image=image)
+        # Will be handled by Python script inside machine
+        #spawn_db_service(workload='YCSB', image=image)
     elif args.action == "stop":
         stop_cluster()
