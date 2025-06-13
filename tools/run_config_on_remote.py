@@ -7,14 +7,15 @@ import argparse
 
 import simulate_network
 
-VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower']
+VALID_SCENARIOS = ['baseline', 'skew', 'scalability', 'network', 'packet_loss', 'sunflower', 'lat_breakdown', 'vary_hw']
 VALID_WORKLOADS = ['ycsb', 'tpcc', 'movr'] # TODO: Add your own benchmark to this list
-VALID_DATABASES = ['Detock', 'ddr_only', 'slog', 'calvin', 'janus']
+VALID_DATABASES = ['Detock', 'ddr_ts', 'ddr_only', 'slog', 'calvin', 'janus']
 
 parser = argparse.ArgumentParser(description="Run Detock experiment with a given scenario.")
 parser.add_argument('-s',  '--scenario', default='skew', choices=VALID_SCENARIOS, help='Type of experiment scenario to run (default: baseline)')
 parser.add_argument('-w',  '--workload', default='ycsb', choices=VALID_WORKLOADS, help='Workload to run (default: ycsb)')
 parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.conf file used for experiment')
+parser.add_argument('-i',  '--img', default='omraz/seq_eval:latest', help='The Docker image of your built Detock system')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
 parser.add_argument('-u',  '--user', default="wmarcu", help='Username when logging into a remote machine')
@@ -27,6 +28,7 @@ args = parser.parse_args()
 scenario = args.scenario
 workload = args.workload
 conf = args.conf
+image = args.img
 duration = args.duration
 dry_run = args.dry_run
 user = args.user
@@ -41,11 +43,9 @@ BASIC_IFTOP_CMD = 'iftop 2>&1'
 
 interfaces = {}
 
-#venv_activate = "source build_detock/bin/activate" # If running this script on the target machine, we will anyway have this env activated
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = [database]
 image = "wmarcu/detock-movr:latest"
-#tag = None #"2025-04-09-14-20-49" # This is extracted from the benchmark command stderr
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
@@ -63,7 +63,7 @@ if workload == 'tpcc':
         clients = 3000
         x_vals = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20]
     if scenario == 'skew':
-        benchmark_params = "\"mix=44:44:4:4:4,skew={}\"" # For the baseline scenario
+        benchmark_params = "\"mix=44:44:4:4:4,skew={}\""
         clients = 3000
         x_vals = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     elif scenario == 'scalability':
@@ -78,6 +78,14 @@ if workload == 'tpcc':
         benchmark_params = "\"mix=44:44:4:4:4\""
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+    elif scenario == 'lat_breakdown':
+        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the latency breakdown we just run our default YCSB
+        clients = 3000
+        x_vals = [0.01]
+    elif scenario == 'vary_hw':
+        benchmark_params = "\"mix=44:44:4:4:4,rem_item_prob={},rem_payment_prob={}\"" # For the varying HW we just run our default YCSB
+        clients = 3000
+        x_vals = [0.01]
     elif scenario == 'sunflower':
         raise Exception("The sunflower scenario is not yet implemented")
 elif workload == 'movr':
@@ -105,6 +113,10 @@ elif workload == 'movr':
         benchmark_params = "\"mh=50,mp=50,sunflower-falloff={},sunflower-max=40,sunflower-cycles=1\""
         clients = 3000
         x_vals = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    elif scenario == 'lat_breakdown':
+        benchmark_params = "\"mh={},mp={}\""
+        clients = 3000
+        x_vals = [20]
 else:
     if scenario == 'baseline':
         benchmark_params = "\"mh={},mp=50\"" # For the baseline scenario
@@ -126,6 +138,14 @@ else:
         benchmark_params = "\"mh=50,mp=50\""
         clients = 3000
         x_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10]
+    elif scenario == 'lat_breakdown':
+        benchmark_params = "\"mh={},mp=50\""  # For the latency breakdown we just run the vanila TPC-C
+        clients = 3000
+        x_vals = [50]
+    elif scenario == 'vary_hw':
+        benchmark_params = "\"mh={},mp=50\"" # For the varying HW we just run the vanila TPC-C
+        clients = 3000
+        x_vals = [50]
     elif scenario == 'sunflower':
         raise Exception("The sunflower scenario is not yet implemented")
 
@@ -177,7 +197,6 @@ def get_network_interfaces(ips_used):
             ssh_target = f"{user}@{ip}" if user else ip
             ssh_cmd = f"ssh {ssh_target} '{BASIC_IFTOP_CMD}'"
             result = run_subprocess(ssh_cmd, dry_run)
-            #print(f"Result is: {result}")
             cur_interface = result.stdout.split('\n')[0].split('interface: ')[1]
             print(f"IP {ip} uses interface {cur_interface}")
             interfaces[ip] = cur_interface
@@ -185,7 +204,7 @@ def get_network_interfaces(ips_used):
             print(f"Unable to find interface for IP: {ip}")
 
 def start_net_monitor(user, interfaces):
-    for ip, iface in interfaces.items():  # assuming interfaces is a dict {ip: iface}
+    for ip, iface in interfaces.items():  # assuming interfaces is a dict {ip: interface}
         cmd = (
             f"ssh {user}@{ip} '"
             f"echo \"timestamp_ms,bytes_sent\" > net_traffic.csv; "
@@ -350,18 +369,6 @@ for system in systems_to_test:
                 if not dry_run:
                     for line in result.stdout.split('\n'):
                         f.write(f"{line}\n")
-            ### OLD VERSION: Stored container logs in client subfolders, but may end up in the wrong subdirectory
-            '''client_folder = f'{client_count}-0'
-            ssh_cmd = f"ssh {user}@{client} '{collect_benchmark_container_cmd}'"
-            result = run_subprocess(ssh_cmd, dry_run)
-            if hasattr(result, "returncode") and result.returncode != 0:
-                print(f"collect_benchmark_container command failed with exit code {result.returncode}!")
-                break
-            with open(f"data/{tag}/client/{client_folder}/benchmark_container.log", 'w') as f:
-                if not dry_run:
-                    for line in result.stdout.split('\n'):
-                        f.write(f"{line}\n")
-            client_count += 1'''
         stop_and_collect_monitor(user, interfaces, cur_log_dir)
         # Save '.conf' file that was used to set up the cluster & experiment and ips with their respective regions
         shutil.copyfile(conf, os.path.join(cur_log_dir, conf.split('/')[-1]))
@@ -370,8 +377,14 @@ for system in systems_to_test:
         else:
             ips_file = 'aws/ips.json'
         shutil.copyfile(ips_file, os.path.join(cur_log_dir, 'ips.json'))
-        # Rename folder accordingly
-        shutil.move(f'data/{tag}', f'data/{workload}/{scenario}/{system}/{x_val}')
+        # Move and rename the folder accordingly
+        if scenario == 'lat_breakdown': # For the latency breakdown we anyway just have 1 x_val
+            target_folder = f'data/{workload}/{scenario}/{system}'
+        else:
+            target_folder = f'data/{workload}/{scenario}/{system}/{x_val}'
+        if os.path.exists(target_folder): # We need to do this to make sure 'shutil.move()' doesn't just dump the folder inside the target folder if it already exists
+            shutil.rmtree(target_folder)
+        shutil.move(f'data/{tag}', target_folder)
 
 print("#####################")
 print(f"\nAll {scenario} on {workload} experiments done. Zipping up files into {detock_dir}/data/{workload}/{scenario}.zip ....")

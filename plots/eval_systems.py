@@ -18,7 +18,7 @@ def lighten_color(color, factor):
     rgb = mcolors.to_rgb(color)
     return tuple(1 - (1 - c) * factor for c in rgb)
 
-def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]):
+def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99], skip_aborts=False):
 
     # For the resource demads and cost, we use a different script
     if plot == 'baseline':
@@ -51,17 +51,26 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
     elif workload == 'movr' and plot == 'baseline':
         xaxis_points = [x * 0.35 for x in xaxis_points]
 
-    #metrics = ['throughput', LATENCY_PERCENTILE, 'aborts', 'bytes', 'cost']
-    metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
-    y_labels = [
-        'Throughput (txn/s)',
-        #f'{LATENCY_PERCENTILE} Latency (ms)',
-        'Latency (ms)',
-        'Aborts (%)',
-        'Bytes Transferred (MB)',
-        'Cost ($)'
-    ]
-    subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
+    if not skip_aborts:
+        metrics = ['throughput', 'latency', 'aborts', 'bytes', 'cost']
+        y_labels = [
+            'Throughput (txn/s)',
+            'Latency (ms)',
+            'Aborts (%)',
+            'Bytes Transferred (MB)',
+            'Cost ($)'
+        ]
+        subplot_titles = ['Throughput', 'Latency', 'Aborts', 'Bytes', 'Cost']
+    else:
+        metrics = ['throughput', 'latency', 'bytes', 'cost']
+        y_labels = [
+            'Throughput (txn/s)',
+            'Latency (ms)',
+            'Bytes Transferred (MB)',
+            'Cost ($)'
+        ]
+        subplot_titles = ['Throughput', 'Latency', 'Bytes', 'Cost']
+    
     databases = ['Calvin', 'SLOG', 'Detock', 'Janus']
     line_styles = ['-', '--', '-.', ':']
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
@@ -77,7 +86,7 @@ def make_plot(plot='baseline', workload='ycsb', latency_percentiles=[50, 95, 99]
     })
 
     # Create figure and subplots
-    fig, axes = plt.subplots(1, 5, figsize=(15, 3), sharex=True)
+    fig, axes = plt.subplots(1, len(metrics), figsize=(15, 3), sharex=True)
 
     for ax, metric, y_label, subplot_title in zip(axes, metrics, y_labels, subplot_titles):
         for db, color, style in zip(databases, colors, line_styles):
@@ -149,11 +158,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="System Evaluation Script")
     parser.add_argument("-p",  "--plot", default="baseline", choices=["baseline", "skew", "scalability", "network", "packet_loss", "sunflower", "example"], help="The name of the experiment we want to plot.")
     parser.add_argument("-w",  "--workload", default="ycsb", choices=["ycsb", "tpcc", "movr"], help="The workload that was evaluated.")
+    parser.add_argument("-sa", "--skip_aborts", default=False, help="Whether or not to plot the aborts (since many workloads don't have any).")
     parser.add_argument("-lp", "--latency_percentiles", default="50;95;99", help="The latency percentiles to plot")
     args = parser.parse_args()
 
     latencies = [int(latency) for latency in args.latency_percentiles.split(';')]
 
-    make_plot(plot=args.plot, workload=args.workload, latency_percentiles=latencies)
+    make_plot(plot=args.plot, workload=args.workload, latency_percentiles=latencies, skip_aborts=args.skip_aborts)
 
     print("Done")
