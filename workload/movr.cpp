@@ -33,14 +33,14 @@ namespace {
 constexpr char PARTITION[] = "partition"; // Use specific partition, -1 for random
 constexpr char HOMES[] = "homes";         // Max number of regions accessed in a multi-home txn
 constexpr char MH_ZIPF[] = "mh_zipf";     // Zipf coefficient for selecting remote regions
-constexpr char TXN_MIX[] = "txn_mix";     // Colon-separated percentages for MovR txn types
-constexpr char SH_ONLY[] = "sh_only";     // Force single-home transactions
+constexpr char TXN_MIX[] = "txn-mix";     // Colon-separated percentages for MovR txn types
+constexpr char SH_ONLY[] = "sh-only";     // Force single-home transactions
 
 // MovR specific parameters         
 constexpr char MULTI_HOME_PCT[] = "mh";                   // Percentage of transactions that are multi-home (0-100)
 constexpr char MULTI_PARTITION_PCT[] = "mp";              // Percentage of transactions that are multi-partition (0-100)
 constexpr char SKEW[] = "skew";                           // Skew factor for record access (e.g., Zipf theta, 0 = uniform)
-constexpr char REGION_REQUEST_MIX[] = "reg_mix";          // Colon-separated percentages for request origins per region
+constexpr char REGION_REQUEST_MIX[] = "reg-mix";          // Colon-separated percentages for request origins per region
 constexpr char SUNFLOWER_MAX[] = "sunflower-max";         // Max % of txn from peak region (e.g. 50)
 constexpr char SUNFLOWER_FALLOFF[] = "sunflower-falloff"; // Falloff (0.0 to 1.0)
 constexpr char SUNFLOWER_CYCLES[] = "sunflower-cycles";   // Number of times the 'sun' orbits each region during the experiment
