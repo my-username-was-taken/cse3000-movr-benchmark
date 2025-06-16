@@ -15,7 +15,7 @@ The schema features the following tables:
 * *promo_codes*: stores all global promotional codes available to users.
 * *user_promo_codes*: keeps track of which promotional code is applied by which user and how many times the code has been applied.
 
-[MovR Schema](assets\movr-schema.png)
+![MovR Schema](assets\movr-schema.png)
 
 ### Transactions
 
