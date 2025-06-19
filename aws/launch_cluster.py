@@ -2,6 +2,7 @@ import boto3
 import os
 import sys
 import time
+from datetime import datetime
 import json
 import argparse
 import paramiko
@@ -11,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 IPS_FILE = 'aws/ips.json'
-YCSB_CONF_FILE = 'examples/aws_cluster_ycsb.conf'
-TPCC_CONF_FILE = 'examples/aws_cluster_tpcc.conf'
+YCSB_CONF_FILE = 'aws/conf_files/ycsb/aws_ycsb_ddr_ts.conf' # TODO: Update this for all conf files (for all systems)
+TPCC_CONF_FILE = 'aws/conf_files/tpcc/aws_tpcc_ddr_ts.conf'
 
 LOGGING_FILE = 'aws/VM_launch_logging.log'
 
@@ -281,38 +282,16 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
         rtt_matrix.append(row)
 
     # Save RTT matrix as CSV
-    output_file = "aws/rtt_matrix_regions.csv"
+    cur_time = int(time.time())
+    cur_timestamp = str(datetime.utcfromtimestamp(cur_time)).replace(' ', '_').replace(':','_')[:19]
+    output_file = f"aws/rtts/rtt_matrix_regions_{cur_timestamp}.csv"
     with open(output_file, mode="w", newline="") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerows(rtt_matrix)
     print(f"RTT matrix saved to {output_file}")
 
 
-def test_connectivity(public_ips):
-    """
-    Tests connectivity between the instances by pinging each pair.
-    """
-    print("Testing connectivity between VMs...")
-    rtt_table = [["Origin", "Destination", "RTT (ms)"]]
-    for src_ip in public_ips:
-        for dest_ip in public_ips:
-            if src_ip != dest_ip:
-                rtt = sp.run(
-                    ["ping", "-c", "1", dest_ip],
-                    capture_output=True,
-                    text=True,
-                )
-                rtt_time = "N/A"
-                if rtt.returncode == 0:
-                    for line in rtt.stdout.splitlines():
-                        if "time=" in line:
-                            rtt_time = line.split("time=")[1].split(" ")[0]
-                rtt_table.append([src_ip, dest_ip, rtt_time])
-                print(f"RTT from {src_ip} to {dest_ip}: {rtt_time} ms")
-
-    return rtt_table
-
-
+# TODO: Add separate functionality for Calvin (it only has 1 region)
 def update_conf_file_ips():
     print(f"Updating IPs in .conf files")
 
