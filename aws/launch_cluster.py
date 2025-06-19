@@ -81,12 +81,12 @@ def launch_instances(config, key_folder):
     """
     Launches one EC2 instance in each region specified in the configuration.
     """
-    for region, client in ec2_clients.items():
+    for region, _ in ec2_clients.items():
         region_config = REGIONS[region]
         ensure_key_pair(region, key_folder)  # Ensure the key pair exists
         key_name = f"my_aws_key_{region}"
 
-        print(f"Launching instance in {region}...")
+        print(f"Launching instances in {region}...")
         ec2_session = ec2_sessions[region]
         instances = ec2_session.create_instances(
             ImageId=region_config["ami_id"],
@@ -177,13 +177,14 @@ def setup_vm(public_ip, key_path, github_credentials):
         print("Detock Repository cloned.")
 
         # Clone iftop repo
-        clone_command = """
+        # For now let's just estimate the average cost
+        '''clone_command = """
         export GIT_ASKPASS=/bin/echo &&
         echo {} > /tmp/token &&
         git clone https://{}:{}@github.com/delftdata/iftop.git
         """.format(github_credentials["token"], github_credentials["username"], github_credentials["token"])
         execute_remote_command(ssh, clone_command)
-        print("Iftop Repository cloned.")
+        print("Iftop Repository cloned.")'''
 
         # Run the setup script
         setup_command = "bash /home/ubuntu/Detock/aws/setup.sh"
@@ -208,9 +209,6 @@ def setup_vms(all_instances):
     # Setup all VMs concurrently
     with ThreadPoolExecutor() as executor:
         executor.map(setup_task, all_instances)
-    
-    # Prepare logging file
-
 
 
 def stop_cluster():
@@ -388,7 +386,7 @@ def spawn_db_service(workload='YCSB', image='omraz/seq_eval:latest'):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
-    parser.add_argument("action", choices=["start", "status", "stop", "setup_db"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("-a", "--action", default="start", choices=["start", "status", "stop", "setup_db"], help="Action to perform: start or stop the cluster.")
     parser.add_argument("-cfg", default="aws/aws.json", help="Path to the config file.")
     parser.add_argument("-img", default="omraz/seq_eval:latest", help="Docker img to use.")
     args = parser.parse_args()
