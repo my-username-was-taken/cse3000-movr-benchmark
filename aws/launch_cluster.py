@@ -2,6 +2,7 @@ import boto3
 import os
 import sys
 import time
+from datetime import datetime
 import json
 import argparse
 import paramiko
@@ -11,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 IPS_FILE = 'aws/ips.json'
-YCSB_CONF_FILE = 'examples/aws_cluster_ycsb.conf'
-TPCC_CONF_FILE = 'examples/aws_cluster_tpcc.conf'
+YCSB_CONF_FILE = 'aws/conf_files/ycsb/aws_ycsb_ddr_ts.conf' # TODO: Update this for all conf files (for all systems)
+TPCC_CONF_FILE = 'aws/conf_files/tpcc/aws_tpcc_ddr_ts.conf'
 
 LOGGING_FILE = 'aws/VM_launch_logging.log'
 
@@ -38,7 +39,7 @@ def execute_remote_command(ssh_client, command):
     """
     Execute a command on a remote server over SSH.
     """
-    stdin, stdout, stderr = ssh_client.exec_command(command)
+    _, stdout, stderr = ssh_client.exec_command(command)
     print(stdout.read().decode())
     print(stderr.read().decode())
 
@@ -81,12 +82,12 @@ def launch_instances(config, key_folder):
     """
     Launches one EC2 instance in each region specified in the configuration.
     """
-    for region, client in ec2_clients.items():
+    for region, _ in ec2_clients.items():
         region_config = REGIONS[region]
         ensure_key_pair(region, key_folder)  # Ensure the key pair exists
         key_name = f"my_aws_key_{region}"
 
-        print(f"Launching instance in {region}...")
+        print(f"Launching instances in {region}...")
         ec2_session = ec2_sessions[region]
         instances = ec2_session.create_instances(
             ImageId=region_config["ami_id"],
@@ -177,13 +178,14 @@ def setup_vm(public_ip, key_path, github_credentials):
         print("Detock Repository cloned.")
 
         # Clone iftop repo
-        clone_command = """
+        # For now let's just estimate the average cost
+        '''clone_command = """
         export GIT_ASKPASS=/bin/echo &&
         echo {} > /tmp/token &&
         git clone https://{}:{}@github.com/delftdata/iftop.git
         """.format(github_credentials["token"], github_credentials["username"], github_credentials["token"])
         execute_remote_command(ssh, clone_command)
-        print("Iftop Repository cloned.")
+        print("Iftop Repository cloned.")'''
 
         # Run the setup script
         setup_command = "bash /home/ubuntu/Detock/aws/setup.sh"
@@ -208,9 +210,6 @@ def setup_vms(all_instances):
     # Setup all VMs concurrently
     with ThreadPoolExecutor() as executor:
         executor.map(setup_task, all_instances)
-    
-    # Prepare logging file
-
 
 
 def stop_cluster():
@@ -264,7 +263,7 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
                     row.append("N/A")  # Skip self-connectivity
                 else:
                     # Execute ping command on the remote VM
-                    stdin, stdout, stderr = ssh_client.exec_command(f"ping -c 1 {dest_ip}")
+                    _, stdout, stderr = ssh_client.exec_command(f"ping -c 1 {dest_ip}")
                     ping_output = stdout.read().decode()
                     rtt_time = "N/A"
                     if "time=" in ping_output:
@@ -283,38 +282,16 @@ def test_connectivity_between_regions(region_ips, username='ubuntu'):
         rtt_matrix.append(row)
 
     # Save RTT matrix as CSV
-    output_file = "aws/rtt_matrix_regions.csv"
+    cur_time = int(time.time())
+    cur_timestamp = str(datetime.utcfromtimestamp(cur_time)).replace(' ', '_').replace(':','_')[:19]
+    output_file = f"aws/rtts/rtt_matrix_regions_{cur_timestamp}.csv"
     with open(output_file, mode="w", newline="") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerows(rtt_matrix)
     print(f"RTT matrix saved to {output_file}")
 
 
-def test_connectivity(public_ips):
-    """
-    Tests connectivity between the instances by pinging each pair.
-    """
-    print("Testing connectivity between VMs...")
-    rtt_table = [["Origin", "Destination", "RTT (ms)"]]
-    for src_ip in public_ips:
-        for dest_ip in public_ips:
-            if src_ip != dest_ip:
-                rtt = sp.run(
-                    ["ping", "-c", "1", dest_ip],
-                    capture_output=True,
-                    text=True,
-                )
-                rtt_time = "N/A"
-                if rtt.returncode == 0:
-                    for line in rtt.stdout.splitlines():
-                        if "time=" in line:
-                            rtt_time = line.split("time=")[1].split(" ")[0]
-                rtt_table.append([src_ip, dest_ip, rtt_time])
-                print(f"RTT from {src_ip} to {dest_ip}: {rtt_time} ms")
-
-    return rtt_table
-
-
+# TODO: Add separate functionality for Calvin (it only has 1 region)
 def update_conf_file_ips():
     print(f"Updating IPs in .conf files")
 
@@ -388,7 +365,7 @@ def spawn_db_service(workload='YCSB', image='omraz/seq_eval:latest'):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AWS Cluster Management Script")
-    parser.add_argument("action", choices=["start", "status", "stop", "setup_db"], help="Action to perform: start or stop the cluster.")
+    parser.add_argument("-a", "--action", default="start", choices=["start", "status", "stop", "setup_db"], help="Action to perform: start or stop the cluster.")
     parser.add_argument("-cfg", default="aws/aws.json", help="Path to the config file.")
     parser.add_argument("-img", default="omraz/seq_eval:latest", help="Docker img to use.")
     args = parser.parse_args()
@@ -425,6 +402,7 @@ if __name__ == "__main__":
         test_connectivity_between_regions(region_ips)
     elif args.action == "setup_db":
         update_conf_file_ips()
-        spawn_db_service(workload='YCSB', image=image)
+        # Will be handled by Python script inside machine
+        #spawn_db_service(workload='YCSB', image=image)
     elif args.action == "stop":
         stop_cluster()

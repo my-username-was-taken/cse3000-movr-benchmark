@@ -51,14 +51,14 @@ sudo apt install cmake build-essential pkg-config -y
 #sudo apt install iftop
 
 # Compile custom iftop
-cd iftop
-chmod +x bootstrap 
-./bootstrap
-chmod +x configure 
-./configure
-make
-sudo make install
-cd ..
+#cd iftop
+#chmod +x bootstrap 
+#./bootstrap
+#chmod +x configure 
+#./configure
+#make
+#sudo make install
+#cd ..
 
 # Setups specific for Detock
 cd Detock
