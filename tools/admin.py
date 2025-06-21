@@ -32,12 +32,11 @@ USER = "wmarcu"
 CONTAINER_DATA_DIR = "/home/wmarcu/data"
 HOST_DATA_DIR = "/home/wmarcu/data"
 
-SLOG_IMG = "wmarcu/detock-movr:latest"
-SLOG_CONTAINER_NAME = "wmarcu_slog"
-SLOG_BENCHMMARK_CONTAINER_NAME = "wmarcu_benchmark"
-SLOG_CLIENT_CONTAINER_NAME = "wmarcu_slog_client"
+SLOG_IMG = "ctring/slog"
+SLOG_CONTAINER_NAME = "slog"
+SLOG_CLIENT_CONTAINER_NAME = "slog_client"
+SLOG_BENCHMARK_CONTAINER_NAME = "benchmark"
 SLOG_DATA_MOUNT = docker.types.Mount(target=CONTAINER_DATA_DIR, source=HOST_DATA_DIR, type="bind")
-BENCHMARK_CONTAINER_NAME = "wmarcu_benchmark"
 
 RemoteProcess = collections.namedtuple(
     "RemoteProcess",
@@ -174,6 +173,9 @@ class AdminCommand(Command):
         parser.add_argument("config", nargs="?", default="", metavar="config_file", help="Path to a config file",)
         parser.add_argument("--no-pull", action="store_true", help="Skip image pulling step")
         parser.add_argument("--image", default=SLOG_IMG, help="Name of the Docker image to use")
+        parser.add_argument("--server-container", default=SLOG_CONTAINER_NAME, help="Name of the server container")
+        parser.add_argument("--benchmark-container", default=SLOG_BENCHMARK_CONTAINER_NAME, help="Name of the benchmark container")
+        parser.add_argument("--client-container", default=SLOG_CLIENT_CONTAINER_NAME, help="Name of the client container")
         parser.add_argument("--user", "-u", default=USER, help="Username of the target machines")
 
     def initialize_and_do_command(self, args):
@@ -281,7 +283,7 @@ class StartCommand(AdminCommand):
         # mess up with broker synchronization of the new session
         def clean_up(remote_proc):
             client, addr, *_ = remote_proc
-            cleanup_container(client, SLOG_CONTAINER_NAME, addr=addr)
+            cleanup_container(client, args.server_container, addr=addr)
 
         with Pool(processes=len(self.remote_procs)) as pool:
             pool.map(clean_up, self.remote_procs)
@@ -291,7 +293,7 @@ class StartCommand(AdminCommand):
             shell_cmd = (f"{args.bin} " f"--config {config_path} " f"--address {priv_address} " f"--data-dir {CONTAINER_DATA_DIR} ")
             client.containers.run(
                 args.image,
-                name=SLOG_CONTAINER_NAME,
+                name=args.server_container,
                 command=["/bin/sh", "-c", f"{sync_config_cmd} && {shell_cmd}"],
                 # Mount a directory on the host into the container
                 mounts=[SLOG_DATA_MOUNT],
@@ -324,7 +326,7 @@ class StopCommand(AdminCommand):
         def stop_container(remote_proc):
             try:
                 LOG.info("Stopping SLOG on %s...", remote_proc.public_address)
-                c = remote_proc.docker_client.containers.get(SLOG_CONTAINER_NAME)
+                c = remote_proc.docker_client.containers.get(args.server_container)
                 # Set timeout to 0 to kill the container immediately
                 c.stop(timeout=0)
             except docker.errors.NotFound:
@@ -350,7 +352,7 @@ class StatusCommand(AdminCommand):
         for reg, g in itertools.groupby(remote_procs, key_func):
             print(f"Region {reg}:")
             for client, addr, _, _, part, *_ in g:
-                status = get_container_status(client, SLOG_CONTAINER_NAME)
+                status = get_container_status(client, args.server_container)
                 print(f"\tPartition {part} ({addr}): {status}")
 
 class LogsCommand(AdminCommand):
@@ -427,9 +429,9 @@ class LogsCommand(AdminCommand):
         if args.container is not None:
             container = args.container
         elif args.client:
-            container = SLOG_BENCHMMARK_CONTAINER_NAME
+            container = SLOG_BENCHMARK_CONTAINER_NAME
         else:
-            container = SLOG_CONTAINER_NAME
+            container = args.server_container
         try:
             c = self.client.containers.get(container)
         except docker.errors.NotFound:
@@ -687,7 +689,7 @@ class BenchmarkCommand(AdminCommand):
         # Clean up everything
         def clean_up(remote_proc):
             client, addr, *_ = remote_proc
-            cleanup_container(client, BENCHMARK_CONTAINER_NAME, addr=addr)
+            cleanup_container(client, args.benchmark_container, addr=addr)
             cleanup_container(client, "benchmark_test", addr=addr)
             # Test for benchmark starting delay
             start_time = time.time()
@@ -745,7 +747,7 @@ class BenchmarkCommand(AdminCommand):
             time.sleep(delay)
             container = client.containers.run(
                 args.image,
-                name=f"{BENCHMARK_CONTAINER_NAME}",
+                name=f"{args.benchmark_container}",
                 command=["/bin/sh", "-c", f"{sync_config_cmd} && {rmdir_cmd} && {mkdir_cmd} && {shell_cmd}"],
                 # Mount a directory on the host into the container
                 mounts=[SLOG_DATA_MOUNT],
@@ -834,12 +836,12 @@ class CollectServerCommand(AdminCommand):
             def trigger_flushing_metrics(enumerated_address):
                 i, address = enumerated_address
                 out_dir = os.path.join(CONTAINER_DATA_DIR, args.tag)
-                container_name = f"{SLOG_CLIENT_CONTAINER_NAME}_{i}"
+                container_name = f"{args.client_container}_{i}"
                 LOG.info("Cleaning container %s (if necessary)", container_name)
                 cleanup_container(docker_client, container_name)
                 run_cmd = ["/bin/sh", "-c", f"client metrics {out_dir} --host {address} --port {self.config.server_port}"]
                 LOG.info("Running command %s", run_cmd)
-                docker_client.containers.run(args.image, name=f"{SLOG_CLIENT_CONTAINER_NAME}_{i}", command=run_cmd, remove=True)
+                docker_client.containers.run(args.image, name=f"{args.client_container}_{i}", command=run_cmd, remove=True)
                 LOG.info("%s: Triggered flushing metrics to disk", address)
 
             with Pool(processes=len(addresses)) as pool:

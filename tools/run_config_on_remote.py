@@ -18,10 +18,10 @@ parser.add_argument('-c',  '--conf', default='examples/tu_cluster.conf', help='.
 parser.add_argument('-i',  '--img', default='omraz/seq_eval:latest', help='The Docker image of your built Detock system')
 parser.add_argument('-d',  '--duration', default=60, help='Duration (in seconds) of a single experiment')
 parser.add_argument('-dr', '--dry_run', default=False, help='Whether to run this as a dry run')
-parser.add_argument('-u',  '--user', default="wmarcu", help='Username when logging into a remote machine')
-parser.add_argument('-m',  '--machine', default="st1", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
-parser.add_argument('-b',  '--benchmark_container', default="wmarcu_benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
-parser.add_argument('-sc', '--server_container', default="wmarcu_slog", help='The name of the server container')
+parser.add_argument('-u',  '--user', default="omraz", help='Username when logging into a remote machine')
+parser.add_argument('-m',  '--machine', default="st5", help='The machine from which this script is (used to write out the scp command for collecting the results.)')
+parser.add_argument('-b',  '--benchmark_container', default="benchmark", help='The name of the benchmark container (so your experiment doesn\'t interfere with others)')
+parser.add_argument('-sc', '--server_container', default="slog", help='The name of the server container')
 parser.add_argument('-db', '--database', default='Detock', choices=VALID_DATABASES, help='The database to test')
 
 args = parser.parse_args()
@@ -45,7 +45,6 @@ interfaces = {}
 
 detock_dir = os.path.expanduser("~/Detock")
 systems_to_test = [database]
-image = "wmarcu/detock-movr:latest"
 short_benchmark_log = "benchmark_cmd.log"
 log_dir = "data/{}/raw_logs"
 cur_log_dir = None
