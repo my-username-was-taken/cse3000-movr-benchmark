@@ -66,7 +66,7 @@ Since most tables have 'city' as part of their composite keys, we partition the 
      detock-net
    ```
 3. Setup configuration file
-   Template configuration files for each databae system (Detock, SLOG, Calvin, and Janus) can found in `examples/movr`. The next steps make use of the `examples/movr/movr-2-regions.conf` configuration which is for local use. Note: when running the latency decomposition scenario, make sure that the configuration file includes the following: `enabled_events: ALL`.
+   Template configuration files for each databae system (Detock, SLOG, Calvin, and Janus) can found in `examples/movr`. The next steps make use of the `examples/movr/movr-2-regions.conf` configuration which is for local use. Note: when running the latency decomposition scenario, make sure that the configuration file includes the following: `enabled_events: ALL` (use the configuration files in examples/movr/lat_breakdown).
 4. Start the containers
 
    ```bash
@@ -115,14 +115,34 @@ Since most tables have 'city' as part of their composite keys, we partition the 
 
 ## How to run a Whole Experiment
 
-An experiment consists of multiple benchmarks which are executed sequentially with different parameters. Each experiment targets a specific scenario, outlined below, and measures throughput, latency, aborts, bytes transfered and cost. To run an experiment for a specific scenario, use the `tools/run_config_on_remote.py` and `tools/admin.py` scripts. Instructions for how to use these scripts in the ST cluster environment can be found in this [README](https://github.com/delftdata/Detock/blob/main/tools/README.md) file. After installing the necessary dependencies and spinning up the cluster, run a scenario using:
+An experiment consists of multiple benchmarks which are executed sequentially with different parameters. Each experiment targets a specific scenario, outlined below, and measures throughput, latency, aborts, bytes transfered and cost. To run an experiment for a specific scenario, use the `tools/run_config_on_remote.py` and `tools/admin.py` scripts. Instructions for how to use these scripts in the ST cluster environment can be found in this [README](https://github.com/delftdata/Detock/blob/main/tools/README.md) file.
+
+Setup Python environment:
+
+```bash
+python3.8 -m venv build_detock && source build_detock/bin/activate
+```
+
+Install requirements:
+
+```bash
+pip install -r tools/requirements.txt
+```
+
+Start the cluster:
+
+```bash
+python3 tools/admin.py start --image your-username/detock-movr:latest examples/movr/movr-tu-cluster.conf -u your-username -e GLOG_v=1 --bin slog
+```
+
+Run a scenario:
 
 ```bash
 python3 tools/run_config_on_remote.py \
    -m st1 \
    -s baseline \
    -w movr \
-   -c examples/movr/movr-tu-cluster.conf \
+   -c examples/movr/movr-tu-cluster-detock.conf \
    -u username \
    -db Detock \
    -b benchmark-container-name \
@@ -139,7 +159,7 @@ The scenario is set using the `-s` flag in the above command. Currently, the fol
 * `network`: slowly introduces artificial network delay during benchmark execution
 * `packet_loss`: slowly increases the probability for the network to drop packets at random
 * `sunflower`: varies the sunflower falloff used to determine how active neighbouring regions are compared to the peak region
-* `lat_breakdown`: measures the time spent during the benchmark across various system components: server, forwarder, sequencer, multi-home orderer, log manager, scheduler, lock manager, worker, other.
+* `lat_breakdown`: measures the time spent during the benchmark across various system components: server, forwarder, sequencer, multi-home orderer, log manager, scheduler, lock manager, worker, other. Note: the configuration file must have `enabled_events: ALL`.
 
 ## How to Generate the Plots
 
