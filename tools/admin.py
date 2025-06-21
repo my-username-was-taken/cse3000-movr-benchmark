@@ -429,7 +429,7 @@ class LogsCommand(AdminCommand):
         if args.container is not None:
             container = args.container
         elif args.client:
-            container = SLOG_BENCHMARK_CONTAINER_NAME
+            container = args.benchmark_container
         else:
             container = args.server_container
         try:
