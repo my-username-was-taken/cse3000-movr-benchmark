@@ -1,3 +1,5 @@
+This repo contains work done for the [Research Project](https://github.com/TU-Delft-CSE/Research-Project) in 2025 Q4 at [TU Delft](https://https//github.com/TU-Delft-CSE). We build on top of the work done on [Detock](https://github.com/umd-dslam/Detock) by Cuong Nguyen et al.
+
 # Detock
 
 [![Build Status](https://github.com/ctring/Detock/workflows/Build%20and%20Test/badge.svg)](https://github.com/ctring/Detock/actions)
